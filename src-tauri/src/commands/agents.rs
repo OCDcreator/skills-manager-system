@@ -3,12 +3,18 @@ use std::path::Path;
 use tauri::Manager;
 
 use crate::core::agents::config::AgentConfigStore;
-use crate::core::agents::discovery::{load_agent_inventory, AgentInventorySnapshot, AgentSystemDirs};
-use crate::core::agents::sync::{apply_agent_sync as apply_agent_sync_core, ApplyAgentSyncResponse};
+use crate::core::agents::discovery::{
+    load_agent_inventory, AgentInventorySnapshot, AgentSystemDirs,
+};
+use crate::core::agents::sync::{
+    apply_agent_sync as apply_agent_sync_core, ApplyAgentSyncResponse,
+};
 use crate::core::settings::SettingsStore;
 
 fn app_config_dir(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
-    app.path().app_config_dir().map_err(|error| error.to_string())
+    app.path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())
 }
 
 fn load_repo_path(app: &tauri::AppHandle) -> Result<String, String> {

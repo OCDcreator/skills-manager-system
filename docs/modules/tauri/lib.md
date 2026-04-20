@@ -22,7 +22,7 @@ Downstream: src-tauri/src/commands/mod.rs, src-tauri/src/core/mod.rs, tauri_plug
 
 ## Core Logic
 
-The function initializes the dialog plugin, registers settings commands plus skill scan/document/state commands and phase-three agent inventory/config/apply commands with `tauri::generate_handler!`, runs the generated Tauri context, and panics with a fixed message if runtime startup fails.
+The function initializes the dialog plugin, registers settings commands, skill scan/document/state commands, phase-three agent inventory/config/apply commands, and git sync commands with `tauri::generate_handler!`, runs the generated Tauri context, and panics with a fixed message if runtime startup fails.
 
 ## Data Flow
 

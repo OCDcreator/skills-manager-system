@@ -7,7 +7,10 @@ use crate::core::skills::scan::{scan_repo_skills, ScanSkillsResponse};
 use crate::core::skills::state::{SkillStateSnapshot, SkillStateStore};
 
 fn load_repo_path(app: &tauri::AppHandle) -> Result<String, String> {
-    let config_dir = app.path().app_config_dir().map_err(|error| error.to_string())?;
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())?;
     let settings = SettingsStore::new(config_dir)
         .load()
         .map_err(|error| error.to_string())?;
@@ -25,7 +28,10 @@ pub fn scan_skills(app: tauri::AppHandle) -> Result<ScanSkillsResponse, String> 
 }
 
 #[tauri::command]
-pub fn get_skill_document(app: tauri::AppHandle, relative_path: String) -> Result<SkillDocument, String> {
+pub fn get_skill_document(
+    app: tauri::AppHandle,
+    relative_path: String,
+) -> Result<SkillDocument, String> {
     let repo_path = load_repo_path(&app)?;
 
     read_skill_document(Path::new(&repo_path), &relative_path).map_err(|error| error.to_string())
@@ -34,7 +40,10 @@ pub fn get_skill_document(app: tauri::AppHandle, relative_path: String) -> Resul
 #[tauri::command]
 pub fn get_skill_state(app: tauri::AppHandle) -> Result<SkillStateSnapshot, String> {
     let repo_path = load_repo_path(&app)?;
-    let config_dir = app.path().app_config_dir().map_err(|error| error.to_string())?;
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())?;
 
     SkillStateStore::new(config_dir)
         .load_for_repo(Path::new(&repo_path))
@@ -52,7 +61,10 @@ pub fn set_skill_enabled(
     }
 
     let repo_path = load_repo_path(&app)?;
-    let config_dir = app.path().app_config_dir().map_err(|error| error.to_string())?;
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())?;
 
     SkillStateStore::new(config_dir)
         .set_skill_enabled(Path::new(&repo_path), &skill_id, enabled)

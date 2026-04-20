@@ -42,4 +42,4 @@ Uses the Tauri app config directory and the existing repo-path setting from `set
 
 ## Change Notes
 
-If more agent actions are added, keep the command layer thin and reuse `AgentSystemDirs::current()` rather than duplicating path logic.
+If more agent actions are added, keep the command layer thin and reuse `AgentSystemDirs::current()` rather than duplicating path logic. Git sync operations are in a separate `commands::git` module.

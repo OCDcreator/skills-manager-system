@@ -41,4 +41,4 @@ Uses the persisted repo path from `settings.json`.
 
 ## Change Notes
 
-Do not add scanning, parsing, repo-key normalization, or persistence rules here; keep those rules in `src-tauri/src/core/skills/`.
+Do not add scanning, parsing, repo-key normalization, or persistence rules here; keep those rules in `src-tauri/src/core/skills/`. Git operations are handled by the separate `commands::git` module.

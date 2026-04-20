@@ -6,7 +6,10 @@ use crate::core::settings::SettingsStore;
 
 #[tauri::command]
 pub fn get_repo_path(app: tauri::AppHandle) -> Result<Option<String>, String> {
-    let config_dir = app.path().app_config_dir().map_err(|error| error.to_string())?;
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())?;
     SettingsStore::new(config_dir)
         .load()
         .map(|settings| settings.repo_path)
@@ -22,7 +25,10 @@ pub fn set_repo_path(app: tauri::AppHandle, path: String) -> Result<Option<Strin
         Some(Path::new(trimmed))
     };
 
-    let config_dir = app.path().app_config_dir().map_err(|error| error.to_string())?;
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())?;
     SettingsStore::new(config_dir)
         .save_repo_path(normalized)
         .map(|settings| settings.repo_path)

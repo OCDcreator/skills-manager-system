@@ -39,4 +39,4 @@ Uses Tauri's app config directory as the storage base.
 
 ## Change Notes
 
-Keep path normalization rules minimal here; deeper validation should live in `core/settings.rs` or a dedicated core module.
+Keep path normalization rules minimal here; deeper validation should live in `core/settings.rs` or a dedicated core module. The git commands module reuses the same repo-path loading pattern.

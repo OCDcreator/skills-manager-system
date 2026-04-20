@@ -11,7 +11,7 @@ Owns the top-level React application composition. It wires the global app provid
 
 ```text
 Upstream: src/main.tsx
-Downstream: src/components/AppShell.tsx, src/context/AppContext.tsx, src/views/AgentsView.tsx, src/views/SettingsView.tsx, src/views/SkillsView.tsx
+Downstream: src/components/AppShell.tsx, src/context/AppContext.tsx, src/views/AgentsView.tsx, src/views/GitView.tsx, src/views/SettingsView.tsx, src/views/SkillsView.tsx
 ```
 
 ## Public Surface
@@ -22,7 +22,7 @@ Downstream: src/components/AppShell.tsx, src/context/AppContext.tsx, src/views/A
 
 ## Core Logic
 
-`AppBody` reads `activeView` from context and renders `SkillsView`, `AgentsView`, or `SettingsView`. `App` wraps that body in `AppProvider`.
+`AppBody` reads `activeView` from context and renders `SkillsView`, `AgentsView`, `GitView`, or `SettingsView`. `App` wraps that body in `AppProvider`.
 
 ## Data Flow
 

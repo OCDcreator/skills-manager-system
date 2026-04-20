@@ -2,7 +2,7 @@ import type { PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppContext, type AppView } from "../context/AppContext";
 
-const NAV_ITEMS: AppView[] = ["skills", "agents", "settings"];
+const NAV_ITEMS: AppView[] = ["skills", "agents", "git", "settings"];
 
 export function AppShell({ children }: PropsWithChildren) {
   const { t } = useTranslation();
