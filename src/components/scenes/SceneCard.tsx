@@ -1,4 +1,6 @@
 import {
+  ArrowDown,
+  ArrowUp,
   CheckCircle,
   CheckSquare,
   Circle,
@@ -33,6 +35,7 @@ export interface SceneCardProps {
   onToggleConfigure: () => void;
   onToggleSkill: (skillId: string) => void;
   onToggleAgent: (agentKey: string) => void;
+  onMoveSkill: (skillId: string, direction: "up" | "down") => void;
 }
 
 export function SceneCard({
@@ -57,9 +60,24 @@ export function SceneCard({
   onToggleConfigure,
   onToggleSkill,
   onToggleAgent,
+  onMoveSkill,
 }: SceneCardProps) {
   const allSkillsEnabled = scene.disabledSkillIds.length === 0;
   const enabledSkillCount = skills.length - scene.disabledSkillIds.length;
+
+  const enabledSkills = skills.filter(
+    (s) => !scene.disabledSkillIds.includes(s.id),
+  );
+  const disabledSkills = skills.filter((s) =>
+    scene.disabledSkillIds.includes(s.id),
+  );
+
+  const orderIndex = new Map(scene.skillOrder.map((id, i) => [id, i]));
+  const orderedEnabled = [...enabledSkills].sort((a, b) => {
+    const ai = orderIndex.get(a.id) ?? Infinity;
+    const bi = orderIndex.get(b.id) ?? Infinity;
+    return ai - bi;
+  });
 
   return (
     <div
@@ -166,29 +184,56 @@ export function SceneCard({
               })}
             </div>
             <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
-              {skills.map((skill) => {
-                const enabled = !scene.disabledSkillIds.includes(skill.id);
-                return (
-                  <label
-                    key={skill.id}
-                    className="flex cursor-pointer items-center gap-2 text-xs text-slate-300"
+              {orderedEnabled.map((skill, idx) => (
+                <div
+                  key={skill.id}
+                  className="flex items-center gap-2 text-xs text-slate-300"
+                >
+                  <button
+                    className="text-slate-400 hover:text-sky-400"
+                    onClick={() => onToggleSkill(skill.id)}
+                    aria-label={skill.name}
+                    type="button"
                   >
-                    <button
-                      className="text-slate-400 hover:text-sky-400"
-                      onClick={() => onToggleSkill(skill.id)}
-                      aria-label={skill.name}
-                      type="button"
-                    >
-                      {enabled ? (
-                        <CheckSquare className="h-4 w-4" />
-                      ) : (
-                        <Square className="h-4 w-4" />
-                      )}
-                    </button>
-                    <span>{skill.name}</span>
-                  </label>
-                );
-              })}
+                    <CheckSquare className="h-4 w-4" />
+                  </button>
+                  <span className="flex-1">{skill.name}</span>
+                  <button
+                    className="rounded p-0.5 text-slate-500 hover:text-sky-400 disabled:opacity-20"
+                    disabled={idx === 0}
+                    onClick={() => onMoveSkill(skill.id, "up")}
+                    title={t("scenes.card.moveUp")}
+                    type="button"
+                  >
+                    <ArrowUp className="h-3 w-3" />
+                  </button>
+                  <button
+                    className="rounded p-0.5 text-slate-500 hover:text-sky-400 disabled:opacity-20"
+                    disabled={idx === orderedEnabled.length - 1}
+                    onClick={() => onMoveSkill(skill.id, "down")}
+                    title={t("scenes.card.moveDown")}
+                    type="button"
+                  >
+                    <ArrowDown className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {disabledSkills.map((skill) => (
+                <div
+                  key={skill.id}
+                  className="flex items-center gap-2 text-xs text-slate-500"
+                >
+                  <button
+                    className="text-slate-400 hover:text-sky-400"
+                    onClick={() => onToggleSkill(skill.id)}
+                    aria-label={skill.name}
+                    type="button"
+                  >
+                    <Square className="h-4 w-4" />
+                  </button>
+                  <span>{skill.name}</span>
+                </div>
+              ))}
             </div>
           </div>
 

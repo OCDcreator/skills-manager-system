@@ -101,6 +101,8 @@
   "scenes.card.duplicateSuffix": "Copy",
   "scenes.card.apply": "Apply Scene",
   "scenes.card.applying": "Applying…",
+  "scenes.card.moveUp": "Move up",
+  "scenes.card.moveDown": "Move down",
   "nav.projects": "Projects",
   "projects.title": "Project Assignment",
   "projects.description": "Assign skills to specific project directories for per-project agent configuration.",

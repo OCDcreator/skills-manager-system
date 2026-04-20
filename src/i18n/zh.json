@@ -101,6 +101,8 @@
   "scenes.card.duplicateSuffix": "副本",
   "scenes.card.apply": "应用场景",
   "scenes.card.applying": "正在应用……",
+  "scenes.card.moveUp": "上移",
+  "scenes.card.moveDown": "下移",
   "nav.projects": "项目",
   "projects.title": "项目分配",
   "projects.description": "将技能分配到特定项目目录，实现按项目的 Agent 配置。",

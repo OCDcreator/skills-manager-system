@@ -6,6 +6,7 @@ export interface SceneEntry {
   description: string;
   disabledSkillIds: string[];
   enabledAgentKeys: string[];
+  skillOrder: string[];
 }
 
 export interface SceneConfigSnapshot {
@@ -43,6 +44,9 @@ export const setSceneSkills = (id: string, disabledSkillIds: string[]) =>
 
 export const setSceneAgents = (id: string, enabledAgentKeys: string[]) =>
   invoke<SceneConfigSnapshot>("set_scene_agents", { id, enabledAgentKeys });
+
+export const setSceneSkillOrder = (id: string, skillOrder: string[]) =>
+  invoke<SceneConfigSnapshot>("set_scene_skill_order", { id, skillOrder });
 
 export const applyScene = (id: string) =>
   invoke<ApplySceneResult>("apply_scene", { id });

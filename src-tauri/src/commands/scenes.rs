@@ -98,6 +98,17 @@ pub fn set_scene_agents(
 }
 
 #[tauri::command]
+pub fn set_scene_skill_order(
+    app: tauri::AppHandle,
+    id: String,
+    skill_order: Vec<String>,
+) -> Result<SceneConfigSnapshot, String> {
+    scene_store(&app)?
+        .set_scene_skill_order(&id, skill_order)
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 pub fn apply_scene(app: tauri::AppHandle, id: String) -> Result<ApplySceneResult, String> {
     let repo_path = load_repo_path(&app)?;
     let config_dir = app_config_dir(&app)?;

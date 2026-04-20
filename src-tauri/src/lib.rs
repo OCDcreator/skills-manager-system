@@ -31,6 +31,7 @@ pub fn run() {
             commands::scenes::set_active_scene,
             commands::scenes::set_scene_skills,
             commands::scenes::set_scene_agents,
+            commands::scenes::set_scene_skill_order,
             commands::scenes::apply_scene,
             commands::settings::get_repo_path,
             commands::settings::set_repo_path,

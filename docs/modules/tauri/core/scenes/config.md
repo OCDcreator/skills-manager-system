@@ -17,7 +17,7 @@ Persists scene configuration (scene list + active scene) to `scene-config.json` 
 
 ## Core Logic
 
-`SceneConfigStore` provides atomic CRUD operations that load → mutate → save. Each method returns the full updated snapshot. The store validates scene IDs and handles active scene cleanup on deletion.
+`SceneConfigStore` provides atomic CRUD operations that load → mutate → save. Each method returns the full updated snapshot. The store validates scene IDs and handles active scene cleanup on deletion. `SceneEntry.skill_order` tracks skill priority order; `set_scene_skill_order` persists a reordered skill ID list.
 
 ## Interactions
 

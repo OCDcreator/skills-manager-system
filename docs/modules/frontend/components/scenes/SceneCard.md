@@ -28,9 +28,15 @@ Card component for displaying and configuring a single scene, including skill en
 | `onToggleConfigure` | `() => void` | Toggle config panel |
 | `onToggleSkill` | `(id) => void` | Toggle skill enabled |
 | `onToggleAgent` | `(key) => void` | Toggle agent enabled |
+| `onMoveSkill` | `(id, "up"\|"down") => void` | Reorder skill priority |
 | `onEditNameChange` | `(v) => void` | Update edit name |
 | `onEditDescChange` | `(v) => void` | Update edit description |
+
+## Rendering Logic
+
+Enabled skills are sorted by `scene.skillOrder` (skills not in the order list appear at the end). Each enabled skill shows up/down arrow buttons for priority reordering. Disabled skills are listed after enabled ones without reorder controls.
 
 ## Interactions
 
 - Used by `ScenesView.tsx` to render each scene
+- i18n keys: `scenes.card.moveUp`, `scenes.card.moveDown`

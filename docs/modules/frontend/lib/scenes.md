@@ -11,9 +11,9 @@ TypeScript types and Tauri invoke wrappers for the scene management backend.
 
 | Export | Purpose |
 |---|---|
-| `SceneEntry`, `SceneConfigSnapshot` | Scene config types |
+| `SceneEntry`, `SceneConfigSnapshot` | Scene config types (`skillOrder` field on `SceneEntry`) |
 | `ApplySceneResult` | Apply result type |
-| `getSceneConfig`, `createScene`, etc. | Invoke wrappers |
+| `getSceneConfig`, `createScene`, `setSceneSkillOrder`, etc. | Invoke wrappers |
 
 ## Interactions
 

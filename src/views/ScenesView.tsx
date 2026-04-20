@@ -140,6 +140,37 @@ export function ScenesView() {
     }
   };
 
+  const handleMoveSkill = async (
+    sceneId: string,
+    skillId: string,
+    direction: "up" | "down",
+  ) => {
+    const scene = config?.scenes[sceneId];
+    if (!scene) return;
+    const disabled = new Set(scene.disabledSkillIds);
+    const enabledSkills = (scanResult?.skills ?? []).filter(
+      (s) => !disabled.has(s.id),
+    );
+    const orderIndex = new Map(scene.skillOrder.map((id, i) => [id, i]));
+    const ordered = [...enabledSkills].sort((a, b) => {
+      const ai = orderIndex.get(a.id) ?? Infinity;
+      const bi = orderIndex.get(b.id) ?? Infinity;
+      return ai - bi;
+    });
+    const idx = ordered.findIndex((s) => s.id === skillId);
+    if (idx < 0) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= ordered.length) return;
+    [ordered[idx], ordered[swapIdx]] = [ordered[swapIdx], ordered[idx]];
+    const newOrder = ordered.map((s) => s.id);
+    try {
+      const snapshot = await scenesApi.setSceneSkillOrder(sceneId, newOrder);
+      setConfig(snapshot);
+    } catch (error) {
+      setLastResult(error instanceof Error ? error.message : String(error));
+    }
+  };
+
   if (!repoPath) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
@@ -251,6 +282,7 @@ export function ScenesView() {
                 )
               }
               onToggleSkill={(skillId) => void handleToggleSkill(scene.id, skillId)}
+              onMoveSkill={(skillId, dir) => void handleMoveSkill(scene.id, skillId, dir)}
               t={t}
             />
           ))}

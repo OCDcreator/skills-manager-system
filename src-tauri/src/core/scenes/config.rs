@@ -12,6 +12,8 @@ pub struct SceneEntry {
     pub description: String,
     pub disabled_skill_ids: Vec<String>,
     pub enabled_agent_keys: Vec<String>,
+    #[serde(default)]
+    pub skill_order: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -74,6 +76,7 @@ impl SceneConfigStore {
                     description: description.trim().to_string(),
                     disabled_skill_ids: Vec::new(),
                     enabled_agent_keys: Vec::new(),
+                    skill_order: Vec::new(),
                 },
             );
             Ok(())
@@ -151,6 +154,21 @@ impl SceneConfigStore {
                 .get_mut(id)
                 .ok_or_else(|| anyhow::anyhow!("Scene '{}' not found", id))?;
             entry.enabled_agent_keys = enabled_agent_keys;
+            Ok(())
+        })
+    }
+
+    pub fn set_scene_skill_order(
+        &self,
+        id: &str,
+        skill_order: Vec<String>,
+    ) -> Result<SceneConfigSnapshot> {
+        self.update(|snapshot| {
+            let entry = snapshot
+                .scenes
+                .get_mut(id)
+                .ok_or_else(|| anyhow::anyhow!("Scene '{}' not found", id))?;
+            entry.skill_order = skill_order;
             Ok(())
         })
     }

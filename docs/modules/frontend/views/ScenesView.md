@@ -22,7 +22,7 @@ Downstream: App.tsx (routing)
 
 ## Core Logic
 
-Manages local state for scene config, editing mode, configure mode, creation form, and apply results. Auto-loads scene config on mount. Delegates per-scene rendering to `components/scenes/SceneCard` and wires toggle handlers for disabled skill IDs and enabled agent keys.
+Manages local state for scene config, editing mode, configure mode, creation form, and apply results. Auto-loads scene config on mount. Delegates per-scene rendering to `components/scenes/SceneCard` and wires toggle handlers for disabled skill IDs, enabled agent keys, and skill priority ordering via `handleMoveSkill`.
 
 ## Interactions
 
