@@ -1,0 +1,11 @@
+{
+  "name": "skills-manager-system",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "test:architecture": "node --test scripts/check-architecture.test.mjs",
+    "verify": "npm run check:architecture"
+  }
+}
