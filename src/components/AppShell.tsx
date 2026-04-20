@@ -1,6 +1,8 @@
 import type { PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
-import { useAppContext } from "../context/AppContext";
+import { useAppContext, type AppView } from "../context/AppContext";
+
+const NAV_ITEMS: AppView[] = ["skills", "agents", "settings"];
 
 export function AppShell({ children }: PropsWithChildren) {
   const { t } = useTranslation();
@@ -15,7 +17,7 @@ export function AppShell({ children }: PropsWithChildren) {
             <p className="text-sm text-slate-400">{t("app.subtitle")}</p>
           </div>
           <nav className="flex gap-2">
-            {(["skills", "settings"] as const).map((view) => (
+            {NAV_ITEMS.map((view) => (
               <button
                 key={view}
                 className={`rounded-lg px-4 py-2 text-sm ${
@@ -25,7 +27,7 @@ export function AppShell({ children }: PropsWithChildren) {
                 }`}
                 onClick={() => setActiveView(view)}
               >
-                {view === "skills" ? t("nav.skills") : t("nav.settings")}
+                {t(`nav.${view}`)}
               </button>
             ))}
           </nav>

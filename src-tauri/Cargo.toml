@@ -21,6 +21,7 @@ tauri = { version = "2.10.0", features = [] }
 tauri-plugin-dialog = "2"
 serde_yaml = "0.9"
 walkdir = "2.5"
+dirs = "6.0"
 
 [dev-dependencies]
 tempfile = "3.26.0"
