@@ -4,6 +4,7 @@ import { GitActions } from "../components/git/GitActions";
 import { GitDiffViewer } from "../components/git/GitDiffViewer";
 import { GitFileList } from "../components/git/GitFileList";
 import { GitLogList } from "../components/git/GitLogList";
+import { GitOperationLog, type OperationLogEntry } from "../components/git/GitOperationLog";
 import { GitStatusBar } from "../components/git/GitStatusBar";
 import { useAppContext } from "../context/AppContext";
 import * as gitApi from "../lib/git";
@@ -21,6 +22,7 @@ export function GitView() {
   const [isFetching, setIsFetching] = useState(false);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [diffMode, setDiffMode] = useState<"staged" | "unstaged">("unstaged");
+  const [opLog, setOpLog] = useState<OperationLogEntry[]>([]);
 
   const refreshStatus = useCallback(async () => {
     setIsLoadingStatus(true);
@@ -95,6 +97,10 @@ export function GitView() {
     void refreshLog();
   }, [refreshStatus, refreshLog]);
 
+  const handleLogEntry = useCallback((entry: OperationLogEntry) => {
+    setOpLog((prev) => [entry, ...prev].slice(0, 50));
+  }, []);
+
   useEffect(() => {
     if (!repoPath) return;
     void refreshStatus();
@@ -139,7 +145,9 @@ export function GitView() {
         />
       </div>
 
-      <GitActions isRunning={false} onOperationComplete={handleOperationComplete} />
+      <GitActions isRunning={false} onOperationComplete={handleOperationComplete} onLogEntry={handleLogEntry} />
+
+      <GitOperationLog entries={opLog} />
 
       <GitLogList entries={log?.entries ?? []} isLoading={isLoadingLog} />
     </div>

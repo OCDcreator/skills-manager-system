@@ -2,31 +2,33 @@ import { useState } from "react";
 import { ArrowDownToLine, ArrowUpFromLine, GitCommitHorizontal, RefreshCw, Upload } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import * as gitApi from "../../lib/git";
+import type { OperationLogEntry } from "./GitOperationLog";
 
 interface GitActionsProps {
   isRunning: boolean;
   onOperationComplete: () => void;
+  onLogEntry: (entry: OperationLogEntry) => void;
 }
 
-export function GitActions({ isRunning, onOperationComplete }: GitActionsProps) {
+export function GitActions({ isRunning, onOperationComplete, onLogEntry }: GitActionsProps) {
   const { t } = useTranslation();
   const [commitMessage, setCommitMessage] = useState("");
   const [committing, setCommitting] = useState(false);
   const [pulling, setPulling] = useState(false);
   const [pushing, setPushing] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [lastResult, setLastResult] = useState<gitApi.GitOperationResult | null>(null);
 
   const runOp = async (label: string, op: () => Promise<gitApi.GitOperationResult>) => {
+    let result: gitApi.GitOperationResult;
     try {
-      const result = await op();
-      setLastResult(result);
+      result = await op();
     } catch (error) {
-      setLastResult({
+      result = {
         success: false,
         message: error instanceof Error ? error.message : String(error),
-      });
+      };
     }
+    onLogEntry({ timestamp: new Date(), label, success: result.success, message: result.message });
     onOperationComplete();
   };
 
@@ -108,18 +110,6 @@ export function GitActions({ isRunning, onOperationComplete }: GitActionsProps) 
           {committing ? t("git.operation.running") : t("git.actions.commit")}
         </button>
       </div>
-
-      {lastResult ? (
-        <div
-          className={`rounded-lg px-4 py-2 text-sm ${
-            lastResult.success
-              ? "bg-emerald-950/40 text-emerald-300"
-              : "bg-rose-950/40 text-rose-300"
-          }`}
-        >
-          {lastResult.message}
-        </div>
-      ) : null}
     </div>
   );
 }

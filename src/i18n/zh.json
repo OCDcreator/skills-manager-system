@@ -72,6 +72,7 @@
   "git.log.title": "最近提交",
   "git.log.empty": "暂无提交。",
   "git.operation.running": "执行中……",
+  "git.opLog.title": "操作日志",
   "scenes.title": "场景管理",
   "scenes.description": "创建和切换不同的技能启用方案和 Agent 目标配置。",
   "scenes.unconfigured": "尚未配置仓库路径",

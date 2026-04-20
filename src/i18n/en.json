@@ -72,6 +72,7 @@
   "git.log.title": "Recent Commits",
   "git.log.empty": "No commits yet.",
   "git.operation.running": "Running…",
+  "git.opLog.title": "Operation Log",
   "scenes.title": "Scene Management",
   "scenes.description": "Create and switch between configurations of enabled skills and agent targets.",
   "scenes.unconfigured": "Repository path is not configured",
