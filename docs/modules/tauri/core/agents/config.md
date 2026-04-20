@@ -41,3 +41,5 @@ Writes `agent-config.json` under the app config directory.
 ## Change Notes
 
 Keep this store limited to target enablement and override paths; do not fold repo-path settings or sync ledger state into it.
+
+`path_override_round_trips` uses a tempdir-derived absolute path instead of a hardcoded Windows path to pass on both Windows and Unix.

@@ -34,7 +34,8 @@ impl AgentConfigStore {
             return Ok(AgentConfigSnapshot::default());
         }
 
-        let raw = fs::read_to_string(&path).with_context(|| format!("Failed to read {:?}", path))?;
+        let raw =
+            fs::read_to_string(&path).with_context(|| format!("Failed to read {:?}", path))?;
         serde_json::from_str::<AgentConfigSnapshot>(&raw)
             .with_context(|| format!("Failed to parse {:?}", path))
     }
@@ -107,8 +108,6 @@ fn normalize_path_override(path: &str) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
-
     use tempfile::tempdir;
 
     #[test]
@@ -135,11 +134,12 @@ mod tests {
     #[test]
     fn path_override_round_trips() {
         let dir = tempdir().unwrap();
-        let override_path = PathBuf::from("C:/Users/test/.codex/skills");
+        let override_path = dir.path().join("mock-agent-skills");
+        let override_str = override_path.to_string_lossy().to_string();
         let store = AgentConfigStore::new(dir.path().to_path_buf());
 
         store
-            .set_agent_path_override("codex", override_path.to_string_lossy().as_ref())
+            .set_agent_path_override("codex", override_str.as_str())
             .unwrap();
 
         let snapshot = store.load().unwrap();
@@ -150,7 +150,7 @@ mod tests {
                 .unwrap()
                 .path_override
                 .as_deref(),
-            Some("C:/Users/test/.codex/skills")
+            Some(override_str.as_str())
         );
 
         store.clear_agent_path_override("codex").unwrap();
