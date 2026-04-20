@@ -9,7 +9,7 @@ use crate::core::skills::state::SkillStateStore;
 use super::discovery::{load_agent_inventory, AgentInventoryItem, AgentPathMode, AgentSystemDirs};
 use super::manifest::{
     apply_desired_entries, build_desired_skill_entries, cleanup_managed_entries, load_ledger,
-    save_ledger, AgentSyncLedgerEntry, DesiredSkillEntry,
+    save_ledger, AgentSyncLedgerEntry, DesiredSkillEntry, SyncMode,
 };
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -45,6 +45,7 @@ pub fn apply_agent_sync(
     config_dir: &Path,
     repo_path: &Path,
     system_dirs: &AgentSystemDirs,
+    mode: SyncMode,
 ) -> Result<ApplyAgentSyncResponse> {
     let inventory = load_agent_inventory(config_dir, system_dirs)?;
     let enabled_skills = load_enabled_skills(config_dir, repo_path)?;
@@ -64,6 +65,7 @@ pub fn apply_agent_sync(
             current_target_dir.as_deref(),
             previous_target_dir.as_deref(),
             &desired_entries,
+            mode,
         ) {
             Ok(result) => {
                 if agent.enabled && current_target_dir.is_some() {
@@ -128,6 +130,7 @@ fn apply_for_agent(
     current_target_dir: Option<&Path>,
     previous_target_dir: Option<&Path>,
     desired_entries: &std::collections::BTreeMap<String, DesiredSkillEntry>,
+    mode: SyncMode,
 ) -> Result<AgentApplyResult> {
     let removed_count = cleanup_previous_target(agent, current_target_dir, previous_target_dir)?;
 
@@ -137,6 +140,7 @@ fn apply_for_agent(
             current_target_dir,
             previous_target_dir,
             removed_count,
+            mode,
         );
     }
 
@@ -148,7 +152,7 @@ fn apply_for_agent(
         ));
     };
 
-    let mut stats = apply_desired_entries(current_target_dir, &agent.key, desired_entries)?;
+    let mut stats = apply_desired_entries(current_target_dir, &agent.key, desired_entries, mode)?;
     stats.removed_count += removed_count;
     let message = if stats.conflict_count > 0 {
         format!(
@@ -195,12 +199,14 @@ fn disabled_agent_result(
     current_target_dir: Option<&Path>,
     previous_target_dir: Option<&Path>,
     mut removed_count: usize,
+    mode: SyncMode,
 ) -> Result<AgentApplyResult> {
     if let Some(current_target_dir) = current_target_dir {
         removed_count += apply_desired_entries(
             current_target_dir,
             &agent.key,
             &std::collections::BTreeMap::new(),
+            mode,
         )?
         .removed_count;
     }

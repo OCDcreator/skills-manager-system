@@ -17,6 +17,7 @@ mod manifest_impl {
 
 use manifest_impl::{
     apply_desired_entries, build_desired_skill_entries, cleanup_managed_entries, DesiredSkillEntry,
+    SyncMode,
 };
 
 const PROJECT_LEDGER_FILE_NAME: &str = "project-sync-ledger.json";
@@ -92,7 +93,12 @@ fn apply_for_project(
         let result = match find_agent(agent_key) {
             Some(agent) => {
                 let target_dir = Path::new(&project.project_path).join(agent.skills_dir_rule);
-                let stats = apply_desired_entries(&target_dir, agent_key, &desired_entries)?;
+                let stats = apply_desired_entries(
+                    &target_dir,
+                    agent_key,
+                    &desired_entries,
+                    SyncMode::Copy,
+                )?;
                 ledger.assignments.insert(
                     key,
                     ProjectSyncLedgerEntry {

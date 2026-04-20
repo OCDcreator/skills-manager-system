@@ -5,6 +5,7 @@ use tempfile::tempdir;
 
 use crate::core::agents::config::AgentConfigStore;
 use crate::core::agents::discovery::AgentSystemDirs;
+use crate::core::agents::manifest::SyncMode;
 use crate::core::agents::sync::apply_agent_sync;
 use crate::core::skills::state::SkillStateStore;
 
@@ -43,6 +44,7 @@ fn apply_copies_only_enabled_skills() {
             home_dir: target_dir.path().join("home"),
             config_dir: Some(target_dir.path().join("config")),
         },
+        SyncMode::Copy,
     )
     .unwrap();
 
@@ -78,6 +80,7 @@ fn disabled_skills_are_not_written() {
             home_dir: target_dir.path().join("home"),
             config_dir: Some(target_dir.path().join("config")),
         },
+        SyncMode::Copy,
     )
     .unwrap();
 
@@ -109,6 +112,7 @@ fn reapply_removes_stale_managed_entries() {
             home_dir: target_dir.path().join("home"),
             config_dir: Some(target_dir.path().join("config")),
         },
+        SyncMode::Copy,
     )
     .unwrap();
 
@@ -123,6 +127,7 @@ fn reapply_removes_stale_managed_entries() {
             home_dir: target_dir.path().join("home"),
             config_dir: Some(target_dir.path().join("config")),
         },
+        SyncMode::Copy,
     )
     .unwrap();
 
@@ -153,6 +158,7 @@ fn unmanaged_entries_are_not_deleted() {
             home_dir: target_dir.path().join("home"),
             config_dir: Some(target_dir.path().join("config")),
         },
+        SyncMode::Copy,
     )
     .unwrap();
 
@@ -169,6 +175,7 @@ fn unmanaged_entries_are_not_deleted() {
             home_dir: target_dir.path().join("home"),
             config_dir: Some(target_dir.path().join("config")),
         },
+        SyncMode::Copy,
     )
     .unwrap();
 
@@ -201,6 +208,7 @@ fn path_override_target_is_used() {
             home_dir: target_dir.path().join("home"),
             config_dir: Some(target_dir.path().join("config")),
         },
+        SyncMode::Copy,
     )
     .unwrap();
 

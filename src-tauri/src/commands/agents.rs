@@ -6,6 +6,7 @@ use crate::core::agents::config::AgentConfigStore;
 use crate::core::agents::discovery::{
     load_agent_inventory, AgentInventorySnapshot, AgentSystemDirs,
 };
+use crate::core::agents::manifest::SyncMode;
 use crate::core::agents::sync::{
     apply_agent_sync as apply_agent_sync_core, ApplyAgentSyncResponse,
 };
@@ -78,11 +79,18 @@ pub fn clear_agent_path_override(
 }
 
 #[tauri::command]
-pub fn apply_agent_sync(app: tauri::AppHandle) -> Result<ApplyAgentSyncResponse, String> {
+pub fn apply_agent_sync(
+    app: tauri::AppHandle,
+    sync_mode: Option<String>,
+) -> Result<ApplyAgentSyncResponse, String> {
     let repo_path = load_repo_path(&app)?;
     let config_dir = app_config_dir(&app)?;
     let system_dirs = AgentSystemDirs::current().map_err(|error| error.to_string())?;
+    let mode = match sync_mode.as_deref() {
+        Some("symlink") => SyncMode::Symlink,
+        _ => SyncMode::Copy,
+    };
 
-    apply_agent_sync_core(&config_dir, Path::new(&repo_path), &system_dirs)
+    apply_agent_sync_core(&config_dir, Path::new(&repo_path), &system_dirs, mode)
         .map_err(|error| error.to_string())
 }

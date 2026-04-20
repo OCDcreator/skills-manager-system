@@ -5,7 +5,7 @@
 
 ## Overview
 
-Owns the low-level manifest, ledger, and copy-only target-reconciliation helpers used by agent sync.
+Owns the low-level manifest, ledger, and copy/symlink target-reconciliation helpers used by agent sync.
 
 ## Import Relationships
 
@@ -18,6 +18,7 @@ Downstream: serde_json, std::fs
 
 | Export | Purpose |
 |---|---|
+| `SyncMode` | Enum for copy vs symlink deployment mode. |
 | `AgentSyncLedger` | App-local record of the last applied target directory per agent. |
 | `AgentSyncLedgerEntry` | One ledger row for a supported agent. |
 | `DesiredSkillEntry` | Internal desired-output description built from scan results. |
@@ -29,7 +30,7 @@ Downstream: serde_json, std::fs
 
 ## Core Logic
 
-Tracks a target-local manifest and an app-local ledger, copies directories recursively in copy mode, skips `.git`, removes stale managed entries, and protects unmanaged content from deletion or overwrite.
+Tracks a target-local manifest and an app-local ledger, supports both copy and symlink modes via `SyncMode`, deploys skill directories recursively, skips `.git`, removes stale managed entries, and protects unmanaged content from deletion or overwrite. Symlink mode creates individual file symlinks inside the target directory; on Windows this requires developer mode.
 
 ## Data Flow
 
@@ -45,4 +46,4 @@ Writes `.skills-manager-system-manifest.json` inside managed target directories 
 
 ## Change Notes
 
-Keep these helpers copy-only in phase three; symlink behavior belongs in a future expansion.
+Keep these helpers supporting both copy and symlink modes; the mode is chosen by the caller.

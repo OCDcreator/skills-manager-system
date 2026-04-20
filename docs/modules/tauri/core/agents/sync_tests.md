@@ -20,7 +20,7 @@ This is a test-only module and exports no runtime API.
 
 ## Core Logic
 
-Builds disposable repositories and target directories to verify copy-only apply behavior, disabled-skill exclusion, stale managed-entry cleanup, unmanaged-content preservation, and override-path precedence.
+Builds disposable repositories and target directories to verify copy/symlink apply behavior, disabled-skill exclusion, stale managed-entry cleanup, unmanaged-content preservation, and override-path precedence. All tests use `SyncMode::Copy` for reproducibility.
 
 ## Data Flow
 

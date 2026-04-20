@@ -5,7 +5,7 @@
 
 ## Overview
 
-Page-level view for scene management. Supports creating, editing, deleting, and applying scenes.
+Page-level view for scene management. Supports creating, editing, deleting, duplicating, configuring, and applying scenes.
 
 ## Import Relationships
 
@@ -22,10 +22,11 @@ Downstream: App.tsx (routing)
 
 ## Core Logic
 
-Manages local state for scene config, editing mode, creation form, and apply results. Auto-loads scene config on mount. SceneCard sub-component renders individual scenes with inline edit, delete, and apply actions.
+Manages local state for scene config, editing mode, configure mode, creation form, and apply results. Auto-loads scene config on mount. Delegates per-scene rendering to `components/scenes/SceneCard` and wires toggle handlers for disabled skill IDs and enabled agent keys.
 
 ## Interactions
 
 - `context/AppContext` — reads repoPath, scanResult, agentInventory
+- `components/scenes/SceneCard` — scene card UI and configure panels
 - `lib/scenes` — all API calls
 - `i18n` keys: `scenes.*`

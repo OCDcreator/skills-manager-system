@@ -10,6 +10,14 @@ const APP_ID: &str = "skills-manager-system";
 const MANIFEST_FILE_NAME: &str = ".skills-manager-system-manifest.json";
 const LEDGER_FILE_NAME: &str = "agent-sync-ledger.json";
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum SyncMode {
+    #[default]
+    Copy,
+    Symlink,
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct AgentSyncLedger {
@@ -73,6 +81,7 @@ pub(crate) fn apply_desired_entries(
     target_dir: &Path,
     agent_key: &str,
     desired_entries: &BTreeMap<String, DesiredSkillEntry>,
+    mode: SyncMode,
 ) -> Result<TargetApplyStats> {
     let mut manifest = load_manifest(target_dir, agent_key)?;
     let managed_entry_names = manifest
@@ -103,7 +112,7 @@ pub(crate) fn apply_desired_entries(
         }
 
         remove_target(&target_path)?;
-        copy_dir_recursive(&desired_entry.source_dir, &target_path)?;
+        deploy_skill(&desired_entry.source_dir, &target_path, mode)?;
         stats.written_count += 1;
         next_entries.insert(
             entry_name.clone(),
@@ -202,6 +211,54 @@ fn remove_manifest(target_dir: &Path) -> Result<()> {
     if path.exists() {
         fs::remove_file(&path).with_context(|| format!("Failed to remove {:?}", path))?;
     }
+    Ok(())
+}
+
+fn deploy_skill(source_dir: &Path, target_dir: &Path, mode: SyncMode) -> Result<()> {
+    match mode {
+        SyncMode::Symlink => symlink_dir_contents(source_dir, target_dir),
+        SyncMode::Copy => copy_dir_recursive(source_dir, target_dir),
+    }
+}
+
+fn symlink_dir_contents(source_dir: &Path, target_dir: &Path) -> Result<()> {
+    fs::create_dir_all(target_dir).with_context(|| format!("Failed to create {:?}", target_dir))?;
+
+    for entry in
+        fs::read_dir(source_dir).with_context(|| format!("Failed to read {:?}", source_dir))?
+    {
+        let entry = entry?;
+        let file_name = entry.file_name();
+        if file_name == ".git" {
+            continue;
+        }
+
+        let link_path = target_dir.join(&file_name);
+        let original = entry.path();
+
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(&original, &link_path)
+                .with_context(|| format!("Failed to symlink {:?} -> {:?}", original, link_path))?;
+        }
+
+        #[cfg(windows)]
+        {
+            if entry.file_type()?.is_dir() {
+                std::os::windows::fs::symlink_dir(&original, &link_path).with_context(|| {
+                    format!(
+                        "Failed to symlink dir {:?} -> {:?} (developer mode may be required)",
+                        original, link_path
+                    )
+                })?;
+            } else {
+                std::os::windows::fs::symlink_file(&original, &link_path).with_context(|| {
+                    format!("Failed to symlink {:?} -> {:?}", original, link_path)
+                })?;
+            }
+        }
+    }
+
     Ok(())
 }
 

@@ -21,11 +21,11 @@ Downstream: src-tauri/src/core/agents/discovery.rs, src-tauri/src/core/agents/ma
 | `AgentApplyStatus` | Per-agent result status enum returned to the frontend. |
 | `AgentApplyResult` | Per-agent manual apply summary. |
 | `ApplyAgentSyncResponse` | Aggregate apply response including enabled-skill count. |
-| `apply_agent_sync` | Runs one manual copy-only apply pass across the supported agents. |
+| `apply_agent_sync` | Runs one manual apply pass across the supported agents with configurable copy/symlink mode. |
 
 ## Core Logic
 
-Loads the current inventory snapshot, computes enabled skills from scan results minus disabled IDs, reconciles old/current target directories per agent, removes managed entries for disabled targets, and returns a per-agent result summary without deleting unmanaged content.
+Loads the current inventory snapshot, computes enabled skills from scan results minus disabled IDs, reconciles old/current target directories per agent, removes managed entries for disabled targets, and returns a per-agent result summary without deleting unmanaged content. Accepts a `SyncMode` to choose between copy and symlink deployment.
 
 ## Data Flow
 

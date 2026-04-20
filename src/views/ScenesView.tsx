@@ -2,16 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import * as scenesApi from "../lib/scenes";
 import type { SceneConfigSnapshot, SceneEntry } from "../lib/scenes";
+import { SceneCard } from "../components/scenes/SceneCard";
 import { useAppContext } from "../context/AppContext";
-import {
-  CheckCircle,
-  Circle,
-  Copy,
-  Pencil,
-  Plus,
-  Power,
-  Trash2,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 
 export function ScenesView() {
   const { t } = useTranslation();
@@ -19,6 +12,7 @@ export function ScenesView() {
   const [config, setConfig] = useState<SceneConfigSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [configuringId, setConfiguringId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [creating, setCreating] = useState(false);
@@ -75,7 +69,11 @@ export function ScenesView() {
     try {
       const result = await scenesApi.applyScene(id);
       setLastResult(
-        `Applied "${result.sceneName}": ${result.enabledAgentCount} agents, ${result.disabledSkillCount} disabled skills`,
+        t("scenes.applyResult", {
+          scene: result.sceneName,
+          agents: result.enabledAgentCount,
+          disabledSkills: result.disabledSkillCount,
+        }),
       );
       await refresh();
     } catch (error) {
@@ -99,6 +97,47 @@ export function ScenesView() {
     setEditingId(scene.id);
     setEditName(scene.name);
     setEditDesc(scene.description);
+  };
+
+  const handleToggleSkill = async (sceneId: string, skillId: string) => {
+    const scene = config?.scenes[sceneId];
+    if (!scene) return;
+    const disabled = new Set(scene.disabledSkillIds);
+    if (disabled.has(skillId)) disabled.delete(skillId);
+    else disabled.add(skillId);
+    try {
+      const snapshot = await scenesApi.setSceneSkills(sceneId, [...disabled].sort());
+      setConfig(snapshot);
+    } catch (error) {
+      setLastResult(error instanceof Error ? error.message : String(error));
+    }
+  };
+
+  const handleToggleAgent = async (sceneId: string, agentKey: string) => {
+    const scene = config?.scenes[sceneId];
+    if (!scene) return;
+    const enabled = new Set(scene.enabledAgentKeys);
+    if (enabled.has(agentKey)) enabled.delete(agentKey);
+    else enabled.add(agentKey);
+    try {
+      const snapshot = await scenesApi.setSceneAgents(sceneId, [...enabled].sort());
+      setConfig(snapshot);
+    } catch (error) {
+      setLastResult(error instanceof Error ? error.message : String(error));
+    }
+  };
+
+  const handleDuplicate = async (scene: SceneEntry) => {
+    try {
+      const snapshot = await scenesApi.createScene(
+        `${scene.id}-copy`,
+        `${scene.name} (${t("scenes.card.duplicateSuffix")})`,
+        scene.description,
+      );
+      setConfig(snapshot);
+    } catch (error) {
+      setLastResult(error instanceof Error ? error.message : String(error));
+    }
   };
 
   if (!repoPath) {
@@ -150,7 +189,7 @@ export function ScenesView() {
           </label>
           <input
             className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
-            placeholder="work"
+            placeholder={t("scenes.create.idPlaceholder")}
             value={newId}
             onChange={(e) => setNewId(e.target.value)}
           />
@@ -161,7 +200,7 @@ export function ScenesView() {
           </label>
           <input
             className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
-            placeholder="Work Scene"
+            placeholder={t("scenes.create.namePlaceholder")}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => {
@@ -191,6 +230,7 @@ export function ScenesView() {
               agents={agents}
               isActive={config?.activeSceneId === scene.id}
               isApplying={applying === scene.id}
+              isConfiguring={configuringId === scene.id}
               isEditing={editingId === scene.id}
               scene={scene}
               skills={skills}
@@ -199,157 +239,23 @@ export function ScenesView() {
               onApply={() => void handleApply(scene.id)}
               onCancelEdit={() => setEditingId(null)}
               onDelete={() => void handleDelete(scene.id)}
+              onDuplicate={() => void handleDuplicate(scene)}
               onSaveEdit={() => void handleSaveEdit(scene.id)}
               onStartEdit={() => startEdit(scene)}
               onEditDescChange={setEditDesc}
               onEditNameChange={setEditName}
+              onToggleAgent={(agentKey) => void handleToggleAgent(scene.id, agentKey)}
+              onToggleConfigure={() =>
+                setConfiguringId((current) =>
+                  current === scene.id ? null : scene.id,
+                )
+              }
+              onToggleSkill={(skillId) => void handleToggleSkill(scene.id, skillId)}
               t={t}
             />
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-interface SceneCardProps {
-  scene: SceneEntry;
-  isActive: boolean;
-  isEditing: boolean;
-  isApplying: boolean;
-  skills: { id: string; name: string }[];
-  agents: { key: string; displayName: string }[];
-  editName: string;
-  editDesc: string;
-  t: (key: string, options?: Record<string, unknown>) => string;
-  onStartEdit: () => void;
-  onCancelEdit: () => void;
-  onSaveEdit: () => void;
-  onDelete: () => void;
-  onApply: () => void;
-  onEditNameChange: (v: string) => void;
-  onEditDescChange: (v: string) => void;
-}
-
-function SceneCard({
-  scene,
-  skills,
-  isActive,
-  isEditing,
-  isApplying,
-  editName,
-  editDesc,
-  t,
-  onStartEdit,
-  onCancelEdit,
-  onSaveEdit,
-  onDelete,
-  onApply,
-  onEditNameChange,
-  onEditDescChange,
-}: SceneCardProps) {
-  const allSkillsEnabled = scene.disabledSkillIds.length === 0;
-  const enabledSkillCount = skills.length - scene.disabledSkillIds.length;
-
-  return (
-    <div
-      className={`rounded-2xl border p-5 ${
-        isActive
-          ? "border-sky-700 bg-sky-950/20"
-          : "border-slate-800 bg-slate-900"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          {isActive ? (
-            <CheckCircle className="h-5 w-5 text-sky-400" />
-          ) : (
-            <Circle className="h-5 w-5 text-slate-600" />
-          )}
-          <div>
-            {isEditing ? (
-              <div className="flex items-center gap-2">
-                <input
-                  className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-200"
-                  value={editName}
-                  onChange={(e) => onEditNameChange(e.target.value)}
-                />
-                <input
-                  className="flex-1 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-200"
-                  placeholder={t("scenes.card.description")}
-                  value={editDesc}
-                  onChange={(e) => onEditDescChange(e.target.value)}
-                />
-                <button
-                  className="rounded bg-sky-600 px-3 py-1 text-xs text-white"
-                  onClick={onSaveEdit}
-                >
-                  {t("scenes.card.save")}
-                </button>
-                <button
-                  className="rounded bg-slate-700 px-3 py-1 text-xs text-slate-300"
-                  onClick={onCancelEdit}
-                >
-                  {t("scenes.card.cancel")}
-                </button>
-              </div>
-            ) : (
-              <>
-                <h3 className="font-semibold text-slate-100">{scene.name}</h3>
-                <p className="text-xs text-slate-400">
-                  {scene.description || t("scenes.card.noDescription")}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-        {!isEditing && (
-          <div className="flex items-center gap-1">
-            <button
-              className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              title={t("scenes.card.edit")}
-              onClick={onStartEdit}
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
-            <button
-              className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              title={t("scenes.card.duplicate")}
-            >
-              <Copy className="h-4 w-4" />
-            </button>
-            <button
-              className="rounded p-1.5 text-slate-400 hover:bg-rose-900/40 hover:text-rose-300"
-              title={t("scenes.card.delete")}
-              onClick={onDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
-        <span>
-          {allSkillsEnabled
-            ? t("scenes.card.allSkills", { count: skills.length })
-            : t("scenes.card.skills", { count: enabledSkillCount })}
-        </span>
-        <span>
-          {t("scenes.card.agents", { count: scene.enabledAgentKeys.length })}
-        </span>
-      </div>
-
-      <div className="mt-3">
-        <button
-          className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-50"
-          disabled={isApplying}
-          onClick={onApply}
-        >
-          <Power className="h-4 w-4" />
-          {isApplying ? t("scenes.card.applying") : t("scenes.card.apply")}
-        </button>
-      </div>
     </div>
   );
 }

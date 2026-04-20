@@ -21,6 +21,7 @@ Downstream: src-tauri/src/core/agents/catalog.rs, src-tauri/src/core/agents/conf
 | `catalog` | Built-in supported-agent definitions. |
 | `config` | Persistent enabled/override config. |
 | `discovery` | Runtime target-path inventory assembly. |
+| `manifest` | Skill deployment engine with copy/symlink modes. |
 | `sync` | Manual apply orchestration and public sync DTOs. |
 
 ## Core Logic
