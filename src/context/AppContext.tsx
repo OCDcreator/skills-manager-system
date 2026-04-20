@@ -16,7 +16,7 @@ import type {
   SkillSummary,
 } from "../lib/tauri";
 
-export type AppView = "skills" | "agents" | "git" | "scenes" | "settings";
+export type AppView = "skills" | "agents" | "git" | "scenes" | "projects" | "settings";
 
 interface AppContextValue {
   activeView: AppView;
