@@ -242,3 +242,18 @@ cargo test --manifest-path src-tauri/Cargo.toml   # Rust 测试
 - 文件系统操作注意 Windows (反斜杠) 与 macOS (正斜杠) 的路径差异
 - symlink 在 Windows 上需要开发者模式或管理员权限，copy 模式作为备选
 - 没有统一 formatter 配置时，匹配周围代码风格
+
+## Module Documentation Guard
+
+- `src/**/*.ts`、`src/**/*.tsx` 的模块文档一对一映射到 `docs/modules/frontend/**/*.md`
+- `src-tauri/src/**/*.rs` 的模块文档一对一映射到 `docs/modules/tauri/**/*.md`
+- 新增源码文件时，必须同时新增对应模块文档
+- 修改源码文件时，必须在同一分支同步更新对应模块文档
+- 删除源码文件时，必须删除对应模块文档
+- 重命名源码文件时，必须同步重命名或替换对应模块文档
+- 允许不参与覆盖校验的仅限 `docs/modules/README.md`、`docs/modules/_TEMPLATE.md`、`docs/modules/_WORKFLOW.md`、`docs/modules/frontend/README.md`、`docs/modules/tauri/README.md`，其他例外必须写进 `module-docs.config.json`
+- 提交前必须运行：
+  - `node scripts/check-module-doc-coverage.mjs`
+  - `node scripts/check-module-doc-diff.mjs --range <base>...HEAD`
+- `check-module-doc-diff` 默认会把 `<base>...HEAD` 与当前工作区（staged / unstaged / untracked）一起纳入校验，避免“文档已写但尚未提交”或“改了源码但本地还没补文档”漏检
+- 需要定位当前分支必须更新哪些文档时，运行 `node scripts/list-module-doc-targets-from-diff.mjs --range <base>...HEAD`

@@ -1,0 +1,42 @@
+# Skill Documents
+
+> **Source**: `src-tauri/src/core/skills/documents.rs`
+> **Status**: [REVIEW]
+
+## Overview
+
+Reads a single skill directory's `SKILL.md`, validates the requested relative path, and returns document content plus metadata for the frontend.
+
+## Import Relationships
+
+```text
+Upstream: src-tauri/src/commands/skills.rs
+Downstream: src-tauri/src/core/skills/metadata.rs, src-tauri/src/core/skills/scan.rs, std::fs
+```
+
+## Public Surface
+
+| Export | Purpose |
+|---|---|
+| `SkillDocument` | Serializable document payload for the frontend detail panel. |
+| `read_skill_document` | Loads content and metadata for a repo-relative skill directory. |
+
+## Core Logic
+
+The module rejects parent-directory, root, and prefix path components before reading `SKILL.md`. It classifies source type from `custom/` or `external/`, derives a fallback name from the directory name, and builds the stable skill id with `build_skill_id`.
+
+## Data Flow
+
+Command input supplies `relative_path`; the module reads the filesystem and metadata parser output, then returns a serialized `SkillDocument`.
+
+## Interactions
+
+Must stay aligned with scanner id generation and TypeScript `SkillDocument` fields.
+
+## Configuration
+
+Only `custom/` and `external/` relative paths are accepted.
+
+## Change Notes
+
+Path traversal validation is the security boundary for document reads; keep tests updated when path rules change.

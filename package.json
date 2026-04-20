@@ -5,14 +5,18 @@
   "type": "module",
   "scripts": {
     "check:architecture": "node scripts/check-architecture.mjs",
+    "check:module-docs:coverage": "node scripts/check-module-doc-coverage.mjs",
+    "check:module-docs:diff": "node scripts/check-module-doc-diff.mjs",
+    "check:module-docs": "npm run check:module-docs:coverage && npm run check:module-docs:diff",
     "test:architecture": "node --test scripts/check-architecture.test.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "list:module-docs": "node scripts/list-module-doc-targets-from-diff.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
     "tauri:build": "tauri build",
-    "verify": "npm run check:architecture && npm run test:architecture && npm run build && cargo check --manifest-path src-tauri/Cargo.toml && cargo test --manifest-path src-tauri/Cargo.toml"
+    "verify": "npm run check:module-docs && npm run check:architecture && npm run test:architecture && npm run build && cargo check --manifest-path src-tauri/Cargo.toml && cargo test --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.10.1",
