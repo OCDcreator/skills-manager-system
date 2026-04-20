@@ -22,7 +22,7 @@ Downstream: src/context/AppContext.tsx, src/i18n/index.ts
 
 ## Core Logic
 
-The shell reads `activeView`, `errorMessage`, and `setActiveView` from context. It renders the translated app title/subtitle, four view buttons (skills, agents, git, settings), and an error strip when a context-level error exists.
+The shell reads `activeView`, `errorMessage`, and `setActiveView` from context. It renders the translated app title/subtitle, five view buttons (skills, agents, git, scenes, settings), and an error strip when a context-level error exists.
 
 ## Data Flow
 

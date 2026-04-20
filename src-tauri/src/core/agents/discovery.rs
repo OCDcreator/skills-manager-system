@@ -48,7 +48,10 @@ pub struct AgentInventorySnapshot {
     pub agents: Vec<AgentInventoryItem>,
 }
 
-pub fn load_agent_inventory(config_dir: &Path, system_dirs: &AgentSystemDirs) -> Result<AgentInventorySnapshot> {
+pub fn load_agent_inventory(
+    config_dir: &Path,
+    system_dirs: &AgentSystemDirs,
+) -> Result<AgentInventorySnapshot> {
     let snapshot = AgentConfigStore::new(config_dir.to_path_buf()).load()?;
     Ok(build_agent_inventory(&snapshot, system_dirs))
 }
@@ -62,7 +65,11 @@ pub fn build_agent_inventory(
         .map(|definition| {
             build_agent_inventory_item(
                 definition,
-                snapshot.agents.get(definition.key).cloned().unwrap_or_default(),
+                snapshot
+                    .agents
+                    .get(definition.key)
+                    .cloned()
+                    .unwrap_or_default(),
                 system_dirs,
             )
         })
@@ -76,10 +83,8 @@ fn build_agent_inventory_item(
     config: AgentConfigEntry,
     system_dirs: &AgentSystemDirs,
 ) -> AgentInventoryItem {
-    let default_skills_dir = select_existing_or_default(candidate_paths(
-        definition.skills_dir_rule,
-        system_dirs,
-    ));
+    let default_skills_dir =
+        select_existing_or_default(candidate_paths(definition.skills_dir_rule, system_dirs));
     let detected_skills_dir = detect_skills_dir(definition, system_dirs).map(path_to_string);
     let path_override = config.path_override;
 
@@ -103,7 +108,10 @@ fn build_agent_inventory_item(
     }
 }
 
-fn detect_skills_dir(definition: &AgentCatalogEntry, system_dirs: &AgentSystemDirs) -> Option<PathBuf> {
+fn detect_skills_dir(
+    definition: &AgentCatalogEntry,
+    system_dirs: &AgentSystemDirs,
+) -> Option<PathBuf> {
     candidate_paths(definition.skills_dir_rule, system_dirs)
         .into_iter()
         .zip(candidate_paths(definition.detect_dir_rule, system_dirs))
@@ -162,7 +170,11 @@ mod tests {
             },
         );
 
-        let codex = inventory.agents.iter().find(|agent| agent.key == "codex").unwrap();
+        let codex = inventory
+            .agents
+            .iter()
+            .find(|agent| agent.key == "codex")
+            .unwrap();
         assert_eq!(codex.path_mode, AgentPathMode::Detected);
         assert!(codex.detected_skills_dir.is_some());
         assert_eq!(codex.effective_skills_dir, codex.detected_skills_dir);

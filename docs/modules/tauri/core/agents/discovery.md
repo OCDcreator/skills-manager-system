@@ -10,7 +10,7 @@ Builds the frontend-facing agent inventory snapshot by combining catalog metadat
 ## Import Relationships
 
 ```text
-Upstream: src-tauri/src/commands/agents.rs, src-tauri/src/core/agents/sync.rs
+Upstream: src-tauri/src/commands/agents.rs, src-tauri/src/core/agents/sync.rs, src-tauri/src/core/scenes/manager.rs
 Downstream: src-tauri/src/core/agents/catalog.rs, src-tauri/src/core/agents/config.rs, dirs
 ```
 
@@ -27,7 +27,7 @@ Downstream: src-tauri/src/core/agents/catalog.rs, src-tauri/src/core/agents/conf
 
 ## Core Logic
 
-Resolves path candidates from catalog rules, handles `.config/...` dual-candidate lookup for OpenCode, determines detected/default/effective paths, and marks each agent as `override`, `detected`, or `missing`.
+Resolves path candidates from catalog rules, handles `.config/...` dual-candidate lookup, determines detected/default/effective paths, and marks each agent as `override`, `detected`, or `missing`. Supports all 11 agents in the expanded catalog.
 
 ## Data Flow
 

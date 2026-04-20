@@ -10,7 +10,7 @@ Scans the configured `my-skills` repository and builds sorted summaries for cust
 ## Import Relationships
 
 ```text
-Upstream: src-tauri/src/commands/skills.rs
+Upstream: src-tauri/src/commands/skills.rs, src-tauri/src/core/agents/sync.rs
 Downstream: src-tauri/src/core/skills/metadata.rs, walkdir
 ```
 

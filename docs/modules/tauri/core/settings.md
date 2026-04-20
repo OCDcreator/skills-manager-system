@@ -10,7 +10,7 @@ Owns persistence for app settings stored in a JSON file under the Tauri app conf
 ## Import Relationships
 
 ```text
-Upstream: src-tauri/src/commands/settings.rs, src-tauri/src/commands/skills.rs
+Upstream: src-tauri/src/commands/settings.rs, src-tauri/src/commands/skills.rs, src-tauri/src/commands/git.rs, src-tauri/src/commands/scenes.rs
 Downstream: std::fs, serde, anyhow
 ```
 

@@ -6,7 +6,7 @@ pub struct AgentCatalogEntry {
     pub detect_dir_rule: &'static str,
 }
 
-const AGENT_CATALOG: [AgentCatalogEntry; 3] = [
+const AGENT_CATALOG: [AgentCatalogEntry; 11] = [
     AgentCatalogEntry {
         key: "codex",
         display_name: "Codex",
@@ -25,6 +25,54 @@ const AGENT_CATALOG: [AgentCatalogEntry; 3] = [
         skills_dir_rule: ".config/opencode/skills",
         detect_dir_rule: ".config/opencode",
     },
+    AgentCatalogEntry {
+        key: "cursor",
+        display_name: "Cursor",
+        skills_dir_rule: ".claude/skills",
+        detect_dir_rule: ".cursor",
+    },
+    AgentCatalogEntry {
+        key: "amp",
+        display_name: "Amp",
+        skills_dir_rule: ".config/amp/skills",
+        detect_dir_rule: ".config/amp",
+    },
+    AgentCatalogEntry {
+        key: "kilo_code",
+        display_name: "Kilo Code",
+        skills_dir_rule: ".kilo/skills",
+        detect_dir_rule: ".kilo",
+    },
+    AgentCatalogEntry {
+        key: "roo_code",
+        display_name: "Roo Code",
+        skills_dir_rule: ".roo/rules",
+        detect_dir_rule: ".roo",
+    },
+    AgentCatalogEntry {
+        key: "goose",
+        display_name: "Goose",
+        skills_dir_rule: ".config/goose",
+        detect_dir_rule: ".config/goose",
+    },
+    AgentCatalogEntry {
+        key: "gemini_cli",
+        display_name: "Gemini CLI",
+        skills_dir_rule: ".gemini/skills",
+        detect_dir_rule: ".gemini",
+    },
+    AgentCatalogEntry {
+        key: "github_copilot",
+        display_name: "GitHub Copilot",
+        skills_dir_rule: ".copilot",
+        detect_dir_rule: ".copilot",
+    },
+    AgentCatalogEntry {
+        key: "windsurf",
+        display_name: "Windsurf",
+        skills_dir_rule: ".codeium/windsurf",
+        detect_dir_rule: ".codeium/windsurf",
+    },
 ];
 
 pub fn agent_catalog() -> &'static [AgentCatalogEntry] {
@@ -40,9 +88,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn catalog_contains_only_phase_three_agents() {
+    fn catalog_contains_all_supported_agents() {
         let keys: Vec<&str> = agent_catalog().iter().map(|agent| agent.key).collect();
 
-        assert_eq!(keys, vec!["codex", "claude_code", "opencode"]);
+        assert_eq!(
+            keys,
+            vec![
+                "codex",
+                "claude_code",
+                "opencode",
+                "cursor",
+                "amp",
+                "kilo_code",
+                "roo_code",
+                "goose",
+                "gemini_cli",
+                "github_copilot",
+                "windsurf",
+            ]
+        );
     }
 }

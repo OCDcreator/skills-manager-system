@@ -132,11 +132,20 @@ fn apply_for_agent(
     let removed_count = cleanup_previous_target(agent, current_target_dir, previous_target_dir)?;
 
     if !agent.enabled {
-        return disabled_agent_result(agent, current_target_dir, previous_target_dir, removed_count);
+        return disabled_agent_result(
+            agent,
+            current_target_dir,
+            previous_target_dir,
+            removed_count,
+        );
     }
 
     let Some(current_target_dir) = current_target_dir else {
-        return Ok(skipped_path_result(agent, previous_target_dir, removed_count));
+        return Ok(skipped_path_result(
+            agent,
+            previous_target_dir,
+            removed_count,
+        ));
     };
 
     let mut stats = apply_desired_entries(current_target_dir, &agent.key, desired_entries)?;

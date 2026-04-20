@@ -5,7 +5,7 @@
 
 ## Overview
 
-Owns the low-level manifest, ledger, and copy-only target-reconciliation helpers used by phase-three manual sync.
+Owns the low-level manifest, ledger, and copy-only target-reconciliation helpers used by agent sync.
 
 ## Import Relationships
 

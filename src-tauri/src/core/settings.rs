@@ -24,7 +24,8 @@ impl SettingsStore {
             return Ok(AppSettings::default());
         }
 
-        let raw = fs::read_to_string(&path).with_context(|| format!("Failed to read {:?}", path))?;
+        let raw =
+            fs::read_to_string(&path).with_context(|| format!("Failed to read {:?}", path))?;
         let settings = serde_json::from_str::<AppSettings>(&raw)
             .with_context(|| format!("Failed to parse {:?}", path))?;
         Ok(settings)
@@ -68,7 +69,9 @@ mod tests {
         let store = SettingsStore::new(dir.path().to_path_buf());
 
         store
-            .save_repo_path(Some(Path::new("C:/Users/test/Desktop/Write/custom-project/my-skills")))
+            .save_repo_path(Some(Path::new(
+                "C:/Users/test/Desktop/Write/custom-project/my-skills",
+            )))
             .unwrap();
 
         assert_eq!(

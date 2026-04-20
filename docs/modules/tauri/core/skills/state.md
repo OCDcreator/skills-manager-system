@@ -10,7 +10,7 @@ Persists repo-scoped skill enable/disable state as app-local JSON keyed by a nor
 ## Import Relationships
 
 ```text
-Upstream: src-tauri/src/commands/skills.rs
+Upstream: src-tauri/src/commands/skills.rs, src-tauri/src/core/scenes/manager.rs
 Downstream: serde_json, std::fs
 ```
 
@@ -41,4 +41,4 @@ Writes `skill-state.json` under the app config directory.
 
 ## Change Notes
 
-Keep scene/project overrides out of this module until those features exist.
+Keep scene/project overrides in the scenes module; this store handles only the base enable/disable state.

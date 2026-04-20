@@ -31,7 +31,7 @@ Command input supplies `relative_path`; the module reads the filesystem and meta
 
 ## Interactions
 
-Must stay aligned with scanner id generation and TypeScript `SkillDocument` fields.
+Must stay aligned with scanner id generation, TypeScript `SkillDocument` fields, and scene skill matching.
 
 ## Configuration
 

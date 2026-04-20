@@ -5,7 +5,7 @@
 
 ## Overview
 
-Defines the small built-in agent catalog for phase-three global sync.
+Defines the built-in agent catalog covering all supported AI coding tools. Currently 11 agents: Codex, Claude Code, OpenCode, Cursor, Amp, Kilo Code, Roo Code, Goose, Gemini CLI, GitHub Copilot, Windsurf.
 
 ## Import Relationships
 
@@ -24,7 +24,7 @@ Downstream: none
 
 ## Core Logic
 
-Stores the stable definitions for `codex`, `claude_code`, and `opencode`, including display name plus skills-dir/detect-dir rules.
+Stores the stable definitions for all supported agents, including display name plus skills-dir/detect-dir rules. Cursor shares `.claude/skills` with Claude Code. Goose and GitHub Copilot have project-only skills directories.
 
 ## Data Flow
 
@@ -32,7 +32,7 @@ Discovery uses the catalog to assemble inventory. Config validation uses it to r
 
 ## Interactions
 
-Phase-three scope is intentionally fixed to three agents. Additions here should remain explicit and deliberate.
+Catalog additions must be explicit and deliberate. Each entry must define valid skills-dir and detect-dir rules.
 
 ## Configuration
 
@@ -40,4 +40,4 @@ None.
 
 ## Change Notes
 
-Do not turn this into a dynamic adapter registry in this phase.
+Do not turn this into a dynamic adapter registry. Scene management uses agent keys from this catalog.

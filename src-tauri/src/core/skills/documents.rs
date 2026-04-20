@@ -53,7 +53,10 @@ pub fn read_skill_document(repo_root: &Path, relative_path: &str) -> Result<Skil
 fn validate_relative_path(relative_path: &str) -> Result<()> {
     let path = Path::new(relative_path);
     for component in path.components() {
-        if matches!(component, Component::ParentDir | Component::Prefix(_) | Component::RootDir) {
+        if matches!(
+            component,
+            Component::ParentDir | Component::Prefix(_) | Component::RootDir
+        ) {
             return Err(anyhow!("Invalid relative path"));
         }
     }

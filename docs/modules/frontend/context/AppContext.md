@@ -18,7 +18,7 @@ Downstream: src/lib/tauri.ts
 
 | Export | Purpose |
 |---|---|
-| `AppView` | Union of supported top-level views (`skills`, `agents`, `git`, `settings`). |
+| `AppView` | Union of supported top-level views (`skills`, `agents`, `git`, `scenes`, `settings`). |
 | `AppProvider` | Context provider that initializes settings and skill state. |
 | `useAppContext` | Consumer hook that enforces provider presence. |
 

@@ -5,7 +5,7 @@
 
 ## Overview
 
-Implements the high-level manual apply workflow for phase-three global agent sync.
+Implements the high-level manual apply workflow for global agent sync.
 
 ## Import Relationships
 

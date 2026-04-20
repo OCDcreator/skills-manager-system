@@ -67,7 +67,8 @@ pub fn scan_repo_skills(repo_root: &Path) -> Result<ScanSkillsResponse> {
             }
         }
     } else {
-        warnings.push("Missing external/ directory; continuing with remaining sources.".to_string());
+        warnings
+            .push("Missing external/ directory; continuing with remaining sources.".to_string());
     }
 
     skills.sort_by(|left, right| left.id.cmp(&right.id));
@@ -84,10 +85,16 @@ pub fn build_skill_id(source_type: &str, relative_path: &str) -> String {
 }
 
 fn should_walk(entry: &DirEntry) -> bool {
-    !IGNORED_DIRS.iter().any(|ignored| entry.file_name() == *ignored)
+    !IGNORED_DIRS
+        .iter()
+        .any(|ignored| entry.file_name() == *ignored)
 }
 
-fn build_skill_summary(repo_root: &Path, skill_dir: &Path, source_type: &str) -> Result<SkillSummary> {
+fn build_skill_summary(
+    repo_root: &Path,
+    skill_dir: &Path,
+    source_type: &str,
+) -> Result<SkillSummary> {
     let relative_path = normalize_relative_path(repo_root, skill_dir)?;
     let skill_md_path = skill_dir.join("SKILL.md");
     let metadata = parse_skill_metadata(&skill_md_path)?;
@@ -127,11 +134,23 @@ mod tests {
         let repo = tempdir().unwrap();
         fs::create_dir_all(repo.path().join("custom/searxng")).unwrap();
         fs::create_dir_all(repo.path().join("custom/group/sub-skill")).unwrap();
-        fs::write(repo.path().join("custom/searxng/SKILL.md"), "---\nname: searxng\n---").unwrap();
-        fs::write(repo.path().join("custom/group/sub-skill/SKILL.md"), "---\nname: nested\n---").unwrap();
+        fs::write(
+            repo.path().join("custom/searxng/SKILL.md"),
+            "---\nname: searxng\n---",
+        )
+        .unwrap();
+        fs::write(
+            repo.path().join("custom/group/sub-skill/SKILL.md"),
+            "---\nname: nested\n---",
+        )
+        .unwrap();
 
         let response = scan_repo_skills(repo.path()).unwrap();
-        let ids: Vec<_> = response.skills.iter().map(|skill| skill.id.as_str()).collect();
+        let ids: Vec<_> = response
+            .skills
+            .iter()
+            .map(|skill| skill.id.as_str())
+            .collect();
 
         assert!(ids.contains(&"custom:searxng"));
         assert!(!ids.contains(&"custom:group/sub-skill"));
@@ -142,11 +161,24 @@ mod tests {
         let repo = tempdir().unwrap();
         fs::create_dir_all(repo.path().join("external/html-ppt-skill")).unwrap();
         fs::create_dir_all(repo.path().join("external/awesome-design-md/apple")).unwrap();
-        fs::write(repo.path().join("external/html-ppt-skill/SKILL.md"), "---\nname: html-ppt\n---").unwrap();
-        fs::write(repo.path().join("external/awesome-design-md/apple/README.md"), "# reference").unwrap();
+        fs::write(
+            repo.path().join("external/html-ppt-skill/SKILL.md"),
+            "---\nname: html-ppt\n---",
+        )
+        .unwrap();
+        fs::write(
+            repo.path()
+                .join("external/awesome-design-md/apple/README.md"),
+            "# reference",
+        )
+        .unwrap();
 
         let response = scan_repo_skills(repo.path()).unwrap();
-        let ids: Vec<_> = response.skills.iter().map(|skill| skill.id.as_str()).collect();
+        let ids: Vec<_> = response
+            .skills
+            .iter()
+            .map(|skill| skill.id.as_str())
+            .collect();
 
         assert!(ids.contains(&"external:html-ppt-skill"));
         assert!(!ids.iter().any(|id| id.contains("awesome-design-md")));
@@ -156,16 +188,29 @@ mod tests {
     fn scan_ignores_noise_directories() {
         let repo = tempdir().unwrap();
         fs::create_dir_all(repo.path().join("external/node_modules/pkg")).unwrap();
-        fs::create_dir_all(repo.path().join("external/anthropics-skills/frontend-design")).unwrap();
-        fs::write(repo.path().join("external/node_modules/pkg/SKILL.md"), "---\nname: nope\n---").unwrap();
+        fs::create_dir_all(
+            repo.path()
+                .join("external/anthropics-skills/frontend-design"),
+        )
+        .unwrap();
         fs::write(
-            repo.path().join("external/anthropics-skills/frontend-design/SKILL.md"),
+            repo.path().join("external/node_modules/pkg/SKILL.md"),
+            "---\nname: nope\n---",
+        )
+        .unwrap();
+        fs::write(
+            repo.path()
+                .join("external/anthropics-skills/frontend-design/SKILL.md"),
             "---\nname: frontend-design\n---",
         )
         .unwrap();
 
         let response = scan_repo_skills(repo.path()).unwrap();
-        let ids: Vec<_> = response.skills.iter().map(|skill| skill.id.as_str()).collect();
+        let ids: Vec<_> = response
+            .skills
+            .iter()
+            .map(|skill| skill.id.as_str())
+            .collect();
 
         assert!(!ids.iter().any(|id| id.contains("node_modules")));
         assert!(ids.contains(&"external:anthropics-skills/frontend-design"));

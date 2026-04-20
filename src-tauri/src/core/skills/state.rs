@@ -96,7 +96,8 @@ impl SkillStateStore {
             return Ok(PersistedSkillStateFile::default());
         }
 
-        let raw = fs::read_to_string(&path).with_context(|| format!("Failed to read {:?}", path))?;
+        let raw =
+            fs::read_to_string(&path).with_context(|| format!("Failed to read {:?}", path))?;
         serde_json::from_str::<PersistedSkillStateFile>(&raw)
             .with_context(|| format!("Failed to parse {:?}", path))
     }
@@ -164,7 +165,10 @@ mod tests {
             .set_skill_enabled(repo.path(), "custom:searxng", false)
             .unwrap();
 
-        assert_eq!(snapshot.disabled_skill_ids, vec!["custom:searxng".to_string()]);
+        assert_eq!(
+            snapshot.disabled_skill_ids,
+            vec!["custom:searxng".to_string()]
+        );
         assert_eq!(
             store.load_for_repo(repo.path()).unwrap().disabled_skill_ids,
             vec!["custom:searxng".to_string()]
@@ -199,7 +203,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            store.load_for_repo(repo_a.path()).unwrap().disabled_skill_ids,
+            store
+                .load_for_repo(repo_a.path())
+                .unwrap()
+                .disabled_skill_ids,
             vec!["custom:searxng".to_string()]
         );
         assert!(store
@@ -227,10 +234,7 @@ mod tests {
 
         assert_eq!(
             snapshot.disabled_skill_ids,
-            vec![
-                "custom:a-skill".to_string(),
-                "external:z-skill".to_string()
-            ]
+            vec!["custom:a-skill".to_string(), "external:z-skill".to_string()]
         );
     }
 

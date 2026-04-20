@@ -11,7 +11,7 @@ Declares backend core domains used by Tauri command modules.
 
 ```text
 Upstream: src-tauri/src/commands/*
-Downstream: src-tauri/src/core/agents/mod.rs, src-tauri/src/core/git/mod.rs, src-tauri/src/core/settings.rs, src-tauri/src/core/skills/mod.rs
+Downstream: src-tauri/src/core/agents/mod.rs, src-tauri/src/core/git/mod.rs, src-tauri/src/core/scenes/mod.rs, src-tauri/src/core/settings.rs, src-tauri/src/core/skills/mod.rs
 ```
 
 ## Public Surface
@@ -20,6 +20,7 @@ Downstream: src-tauri/src/core/agents/mod.rs, src-tauri/src/core/git/mod.rs, src
 |---|---|
 | `agents` | Agent inventory and manual sync domain. |
 | `git` | Git CLI operations and status/diff/log domain. |
+| `scenes` | Scene configuration and application domain. |
 | `settings` | Settings persistence domain. |
 | `skills` | Skill scanning and document-reading domain. |
 

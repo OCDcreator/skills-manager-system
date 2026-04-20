@@ -176,10 +176,16 @@ fn load_manifest(target_dir: &Path, agent_key: &str) -> Result<AgentTargetManife
         .with_context(|| format!("Failed to parse {:?}", path))?;
 
     if manifest.app_id != APP_ID {
-        return Err(anyhow!("Managed manifest at {:?} belongs to a different app", path));
+        return Err(anyhow!(
+            "Managed manifest at {:?} belongs to a different app",
+            path
+        ));
     }
     if manifest.agent_key != agent_key {
-        return Err(anyhow!("Managed manifest at {:?} belongs to a different agent", path));
+        return Err(anyhow!(
+            "Managed manifest at {:?} belongs to a different agent",
+            path
+        ));
     }
 
     Ok(manifest)
@@ -200,10 +206,11 @@ fn remove_manifest(target_dir: &Path) -> Result<()> {
 }
 
 fn copy_dir_recursive(source_dir: &Path, target_dir: &Path) -> Result<()> {
-    fs::create_dir_all(target_dir)
-        .with_context(|| format!("Failed to create {:?}", target_dir))?;
+    fs::create_dir_all(target_dir).with_context(|| format!("Failed to create {:?}", target_dir))?;
 
-    for entry in fs::read_dir(source_dir).with_context(|| format!("Failed to read {:?}", source_dir))? {
+    for entry in
+        fs::read_dir(source_dir).with_context(|| format!("Failed to read {:?}", source_dir))?
+    {
         let entry = entry?;
         let file_type = entry.file_type()?;
         let file_name = entry.file_name();
@@ -247,7 +254,5 @@ fn manifest_path(target_dir: &Path) -> PathBuf {
 }
 
 fn managed_entry_name(skill_id: &str) -> String {
-    skill_id
-        .replace(':', "--")
-        .replace(['/', '\\'], "--")
+    skill_id.replace(':', "--").replace(['/', '\\'], "--")
 }
