@@ -5,7 +5,7 @@
 
 ## Overview
 
-Renders search, refresh, and source-filter controls for the skill browser.
+Renders search, refresh, source-filter, and status-filter controls for the skill browser.
 
 ## Import Relationships
 
@@ -18,11 +18,11 @@ Downstream: src/lib/skills/filters.ts, src/i18n/index.ts
 
 | Export | Purpose |
 |---|---|
-| `SkillFilters` | Controlled filter toolbar driven by parent state and source summaries. |
+| `SkillFilters` | Controlled filter toolbar driven by parent state plus source and status summaries. |
 
 ## Core Logic
 
-The component receives current search text, selected source filter, source counts, and refresh state. It renders a search input, refresh button, and one button per source summary.
+The component receives current search text, selected source/status filters, source/status counts, and refresh state. It renders a search input, refresh button, and one button per filter summary.
 
 ## Data Flow
 
@@ -30,7 +30,7 @@ Input changes and button clicks call callbacks owned by `SkillsView`; this compo
 
 ## Interactions
 
-Filter keys must match `SourceFilter` and `skills.source.*` i18n keys.
+Filter keys must match `SourceFilter`, `SkillStatusFilter`, and the related `skills.source.*` / `skills.status.*` i18n keys.
 
 ## Configuration
 

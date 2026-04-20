@@ -5,13 +5,13 @@
 
 ## Overview
 
-Declares the skills domain modules used by command handlers.
+Declares the skills domain modules used by command handlers, including repo-scoped local skill-state persistence.
 
 ## Import Relationships
 
 ```text
 Upstream: src-tauri/src/core/mod.rs, src-tauri/src/commands/skills.rs
-Downstream: src-tauri/src/core/skills/documents.rs, src-tauri/src/core/skills/metadata.rs, src-tauri/src/core/skills/scan.rs
+Downstream: src-tauri/src/core/skills/documents.rs, src-tauri/src/core/skills/metadata.rs, src-tauri/src/core/skills/scan.rs, src-tauri/src/core/skills/state.rs
 ```
 
 ## Public Surface
@@ -21,6 +21,7 @@ Downstream: src-tauri/src/core/skills/documents.rs, src-tauri/src/core/skills/me
 | `documents` | Skill document reading domain. |
 | `metadata` | `SKILL.md` metadata parser. |
 | `scan` | Repository scanning domain. |
+| `state` | Repo-scoped local skill enable/disable persistence. |
 
 ## Core Logic
 
@@ -40,4 +41,4 @@ None.
 
 ## Change Notes
 
-Keep this file declarative; add behavior to focused modules such as scanners, parsers, or synchronizers.
+Keep this file declarative; add behavior to focused modules such as scanners, parsers, persistence stores, or synchronizers.

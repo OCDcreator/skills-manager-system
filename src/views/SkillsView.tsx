@@ -6,14 +6,17 @@ import { SkillList } from "../components/skills/SkillList";
 import { useAppContext } from "../context/AppContext";
 import {
   buildSourceSummaries,
+  buildStatusSummaries,
   filterSkills,
   groupSkills,
+  type SkillStatusFilter,
   type SourceFilter,
 } from "../lib/skills/filters";
 
 export function SkillsView() {
   const { t } = useTranslation();
   const {
+    disabledSkillIds,
     errorMessage,
     isLoading,
     refreshSkills,
@@ -22,19 +25,41 @@ export function SkillsView() {
     selectSkill,
     selectedDocument,
     selectedSkill,
+    setSkillEnabled,
+    updatingSkillId,
   } = useAppContext();
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<SkillStatusFilter>("all");
+
+  const disabledSkillIdSet = useMemo(
+    () => new Set(disabledSkillIds),
+    [disabledSkillIds],
+  );
 
   const filteredSkills = useMemo(
-    () => filterSkills(scanResult.skills, search, sourceFilter),
-    [scanResult.skills, search, sourceFilter],
+    () =>
+      filterSkills(
+        scanResult.skills,
+        search,
+        sourceFilter,
+        statusFilter,
+        disabledSkillIdSet,
+      ),
+    [scanResult.skills, search, sourceFilter, statusFilter, disabledSkillIdSet],
   );
   const grouped = useMemo(() => groupSkills(filteredSkills), [filteredSkills]);
   const summaries = useMemo(
     () => buildSourceSummaries(scanResult.skills),
     [scanResult.skills],
   );
+  const statusSummaries = useMemo(
+    () => buildStatusSummaries(scanResult.skills, disabledSkillIdSet),
+    [scanResult.skills, disabledSkillIdSet],
+  );
+  const selectedSkillEnabled = selectedSkill
+    ? !disabledSkillIdSet.has(selectedSkill.id)
+    : true;
 
   return (
     <>
@@ -53,9 +78,12 @@ export function SkillsView() {
               onRefresh={refreshSkills}
               onSearchChange={setSearch}
               onSourceFilterChange={setSourceFilter}
+              onStatusFilterChange={setStatusFilter}
               search={search}
               sourceFilter={sourceFilter}
+              statusFilter={statusFilter}
               summaries={summaries}
+              statusSummaries={statusSummaries}
             />
 
             {scanResult.warnings.length > 0 ? (
@@ -72,21 +100,31 @@ export function SkillsView() {
 
             <div className="grid gap-6 lg:grid-cols-2">
               <SkillList
+                disabledSkillIds={disabledSkillIdSet}
                 onSelect={(skill) => void selectSkill(skill)}
+                onToggleEnabled={setSkillEnabled}
                 selectedSkillId={selectedSkill?.id ?? null}
                 skills={grouped.custom}
                 title={t("skills.section.custom")}
+                updatingSkillId={updatingSkillId}
               />
               <SkillList
+                disabledSkillIds={disabledSkillIdSet}
                 onSelect={(skill) => void selectSkill(skill)}
+                onToggleEnabled={setSkillEnabled}
                 selectedSkillId={selectedSkill?.id ?? null}
                 skills={grouped.external}
                 title={t("skills.section.external")}
+                updatingSkillId={updatingSkillId}
               />
             </div>
           </div>
 
-          <SkillDetailPanel document={selectedDocument} skill={selectedSkill} />
+          <SkillDetailPanel
+            document={selectedDocument}
+            isEnabled={selectedSkillEnabled}
+            skill={selectedSkill}
+          />
         </div>
       )}
     </>

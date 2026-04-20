@@ -22,7 +22,7 @@ Downstream: src-tauri/src/commands/mod.rs, src-tauri/src/core/mod.rs, tauri_plug
 
 ## Core Logic
 
-The function initializes the dialog plugin, registers settings and skill commands with `tauri::generate_handler!`, runs the generated Tauri context, and panics with a fixed message if runtime startup fails.
+The function initializes the dialog plugin, registers settings commands plus skill scan/document/state commands with `tauri::generate_handler!`, runs the generated Tauri context, and panics with a fixed message if runtime startup fails.
 
 ## Data Flow
 
@@ -30,7 +30,7 @@ Command handlers bridge frontend invocations into Rust command modules.
 
 ## Interactions
 
-Must stay aligned with every `#[tauri::command]` wrapper added under `src-tauri/src/commands/`.
+Must stay aligned with every `#[tauri::command]` wrapper added under `src-tauri/src/commands/`, including the phase-two skill-state commands.
 
 ## Configuration
 

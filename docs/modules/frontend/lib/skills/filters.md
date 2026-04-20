@@ -5,7 +5,7 @@
 
 ## Overview
 
-Provides pure frontend helpers for skill source summaries, search/source filtering, grouping, and description truncation.
+Provides pure frontend helpers for skill source summaries, status summaries, search/source/status filtering, grouping, and description truncation.
 
 ## Import Relationships
 
@@ -19,23 +19,26 @@ Downstream: src/lib/tauri.ts
 | Export | Purpose |
 |---|---|
 | `SourceFilter` | Union of supported source filter keys. |
+| `SkillStatusFilter` | Union of supported status filter keys. |
 | `SourceSummary` | Count payload used by filter controls. |
+| `StatusSummary` | Count payload used by status filter controls. |
 | `buildSourceSummaries` | Counts all, custom, and external skills. |
-| `filterSkills` | Applies source and text filtering. |
+| `buildStatusSummaries` | Counts all, enabled, and disabled skills. |
+| `filterSkills` | Applies source, status, and text filtering. |
 | `groupSkills` | Splits skills into custom and external arrays. |
 | `truncateDescription` | Shortens long descriptions with an ellipsis. |
 
 ## Core Logic
 
-Filtering trims and lowercases the search term, then matches against skill name, description, or relative path after applying the selected source filter.
+Filtering trims and lowercases the search term, applies source and status filters, then matches against skill name, description, or relative path. Status summaries are derived from the joined disabled-ID set supplied by the view layer.
 
 ## Data Flow
 
-`SkillSummary[]` values from Tauri are transformed into view-ready arrays and counts.
+`SkillSummary[]` values from Tauri plus the disabled-ID set from `AppContext` are transformed into view-ready arrays and counts.
 
 ## Interactions
 
-Source keys must stay in sync with backend `source_type` values, i18n `skills.source.*` keys, and UI filter controls.
+Source keys and status keys must stay in sync with backend DTOs, i18n `skills.source.*` and `skills.status.*` keys, and UI filter controls.
 
 ## Configuration
 

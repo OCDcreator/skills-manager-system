@@ -21,14 +21,17 @@ Downstream: @tauri-apps/api/core, src-tauri/src/commands/*
 | `SkillSummary` | Frontend shape for scan results. |
 | `ScanSkillsResponse` | Response payload for `scan_skills`. |
 | `SkillDocument` | Frontend shape for a loaded `SKILL.md`. |
+| `SkillStateSnapshot` | Frontend shape for repo-scoped disabled skill IDs. |
 | `getRepoPath` | Invokes `get_repo_path`. |
 | `setRepoPath` | Invokes `set_repo_path`. |
 | `scanSkills` | Invokes `scan_skills`. |
 | `getSkillDocument` | Invokes `get_skill_document`. |
+| `getSkillState` | Invokes `get_skill_state`. |
+| `setSkillEnabled` | Invokes `set_skill_enabled`. |
 
 ## Core Logic
 
-Each function delegates directly to `invoke` with the command name and required payload.
+Each function delegates directly to `invoke` with the command name and required payload, keeping frontend command wiring thin.
 
 ## Data Flow
 

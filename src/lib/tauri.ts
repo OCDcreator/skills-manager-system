@@ -24,6 +24,10 @@ export interface SkillDocument {
   content: string;
 }
 
+export interface SkillStateSnapshot {
+  disabledSkillIds: string[];
+}
+
 export const getRepoPath = () => invoke<string | null>("get_repo_path");
 
 export const setRepoPath = (path: string) =>
@@ -33,3 +37,9 @@ export const scanSkills = () => invoke<ScanSkillsResponse>("scan_skills");
 
 export const getSkillDocument = (relativePath: string) =>
   invoke<SkillDocument>("get_skill_document", { relativePath });
+
+export const getSkillState = () =>
+  invoke<SkillStateSnapshot>("get_skill_state");
+
+export const setSkillEnabled = (skillId: string, enabled: boolean) =>
+  invoke<SkillStateSnapshot>("set_skill_enabled", { skillId, enabled });

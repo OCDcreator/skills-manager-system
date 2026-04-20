@@ -18,13 +18,16 @@ interface AppContextValue {
   scanResult: ScanSkillsResponse;
   selectedSkill: SkillSummary | null;
   selectedDocument: SkillDocument | null;
+  disabledSkillIds: string[];
   isLoading: boolean;
   isSavingPath: boolean;
+  updatingSkillId: string | null;
   errorMessage: string | null;
   setActiveView: (view: AppView) => void;
   refreshSkills: () => Promise<void>;
   saveRepoPath: (nextPath: string) => Promise<void>;
   selectSkill: (skill: SkillSummary | null) => Promise<void>;
+  setSkillEnabled: (skillId: string, enabled: boolean) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -38,8 +41,10 @@ export function AppProvider({ children }: PropsWithChildren) {
   });
   const [selectedSkill, setSelectedSkill] = useState<SkillSummary | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<SkillDocument | null>(null);
+  const [disabledSkillIds, setDisabledSkillIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingPath, setIsSavingPath] = useState(false);
+  const [updatingSkillId, setUpdatingSkillId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const refreshSkills = useCallback(async () => {
@@ -47,6 +52,8 @@ export function AppProvider({ children }: PropsWithChildren) {
       setScanResult({ skills: [], warnings: [] });
       setSelectedSkill(null);
       setSelectedDocument(null);
+      setDisabledSkillIds([]);
+      setErrorMessage(null);
       return;
     }
 
@@ -54,7 +61,17 @@ export function AppProvider({ children }: PropsWithChildren) {
     try {
       const response = await api.scanSkills();
       setScanResult(response);
-      setErrorMessage(null);
+
+      let nextError: string | null = null;
+
+      try {
+        const state = await api.getSkillState();
+        setDisabledSkillIds(state.disabledSkillIds);
+      } catch (error) {
+        setDisabledSkillIds([]);
+        nextError = error instanceof Error ? error.message : String(error);
+      }
+
       setSelectedSkill((currentSkill) => {
         if (!currentSkill) {
           return null;
@@ -67,6 +84,8 @@ export function AppProvider({ children }: PropsWithChildren) {
         }
         return refreshedSkill;
       });
+
+      setErrorMessage(nextError);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
     } finally {
@@ -81,6 +100,7 @@ export function AppProvider({ children }: PropsWithChildren) {
       setRepoPath(savedPath);
       setSelectedSkill(null);
       setSelectedDocument(null);
+      setDisabledSkillIds([]);
       setActiveView("skills");
       setErrorMessage(null);
     } catch (error) {
@@ -89,6 +109,21 @@ export function AppProvider({ children }: PropsWithChildren) {
       throw error instanceof Error ? error : new Error(message);
     } finally {
       setIsSavingPath(false);
+    }
+  }, []);
+
+  const setSkillEnabled = useCallback(async (skillId: string, enabled: boolean) => {
+    setUpdatingSkillId(skillId);
+    try {
+      const snapshot = await api.setSkillEnabled(skillId, enabled);
+      setDisabledSkillIds(snapshot.disabledSkillIds);
+      setErrorMessage(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setErrorMessage(message);
+      throw error instanceof Error ? error : new Error(message);
+    } finally {
+      setUpdatingSkillId(null);
     }
   }, []);
 
@@ -133,13 +168,16 @@ export function AppProvider({ children }: PropsWithChildren) {
       scanResult,
       selectedSkill,
       selectedDocument,
+      disabledSkillIds,
       isLoading,
       isSavingPath,
+      updatingSkillId,
       errorMessage,
       setActiveView,
       refreshSkills,
       saveRepoPath,
       selectSkill,
+      setSkillEnabled,
     }),
     [
       activeView,
@@ -147,12 +185,15 @@ export function AppProvider({ children }: PropsWithChildren) {
       scanResult,
       selectedSkill,
       selectedDocument,
+      disabledSkillIds,
       isLoading,
       isSavingPath,
+      updatingSkillId,
       errorMessage,
       refreshSkills,
       saveRepoPath,
       selectSkill,
+      setSkillEnabled,
     ],
   );
 

@@ -5,7 +5,7 @@
 
 ## Overview
 
-Displays details and markdown content for the currently selected skill.
+Displays details, enabled/disabled metadata, and markdown content for the currently selected skill.
 
 ## Import Relationships
 
@@ -22,7 +22,7 @@ Downstream: react-markdown, remark-gfm, src/lib/tauri.ts, src/i18n/index.ts
 
 ## Core Logic
 
-When no skill is selected, the panel renders a translated selection prompt. When a skill exists, it shows name, description, source type, relative path, and either the loaded markdown document or a loading message.
+When no skill is selected, the panel renders a translated selection prompt. When a skill exists, it shows name, description, source type, current enabled/disabled status, relative path, and either the loaded markdown document or a loading message.
 
 ## Data Flow
 
@@ -30,7 +30,7 @@ When no skill is selected, the panel renders a translated selection prompt. When
 
 ## Interactions
 
-Depends on `SkillSummary` and `SkillDocument` type shapes from `src/lib/tauri.ts` and `skills.detail.*` i18n keys.
+Depends on `SkillSummary` and `SkillDocument` type shapes from `src/lib/tauri.ts` plus `skills.detail.*` and `skills.status.*` i18n keys.
 
 ## Configuration
 

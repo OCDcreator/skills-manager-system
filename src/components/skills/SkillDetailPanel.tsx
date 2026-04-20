@@ -6,9 +6,10 @@ import type { SkillDocument, SkillSummary } from "../../lib/tauri";
 interface SkillDetailPanelProps {
   skill: SkillSummary | null;
   document: SkillDocument | null;
+  isEnabled: boolean;
 }
 
-export function SkillDetailPanel({ document, skill }: SkillDetailPanelProps) {
+export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPanelProps) {
   const { t } = useTranslation();
 
   if (!skill) {
@@ -33,6 +34,8 @@ export function SkillDetailPanel({ document, skill }: SkillDetailPanelProps) {
               ? t("skills.source.custom")
               : t("skills.source.external")}
           </dd>
+          <dt className="text-slate-500">{t("skills.detail.statusLabel")}</dt>
+          <dd>{isEnabled ? t("skills.status.enabled") : t("skills.status.disabled")}</dd>
           <dt className="text-slate-500">{t("skills.detail.pathLabel")}</dt>
           <dd className="break-all">{skill.relativePath}</dd>
         </dl>

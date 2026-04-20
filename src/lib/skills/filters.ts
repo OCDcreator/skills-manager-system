@@ -1,9 +1,15 @@
 import type { SkillSummary } from "../tauri";
 
 export type SourceFilter = "all" | "custom" | "external";
+export type SkillStatusFilter = "all" | "enabled" | "disabled";
 
 export interface SourceSummary {
   key: SourceFilter;
+  count: number;
+}
+
+export interface StatusSummary {
+  key: SkillStatusFilter;
   count: number;
 }
 
@@ -18,15 +24,40 @@ export function buildSourceSummaries(skills: SkillSummary[]): SourceSummary[] {
   ];
 }
 
+export function buildStatusSummaries(
+  skills: SkillSummary[],
+  disabledSkillIds: ReadonlySet<string>,
+): StatusSummary[] {
+  const disabled = skills.filter((skill) => disabledSkillIds.has(skill.id)).length;
+  const enabled = skills.length - disabled;
+
+  return [
+    { key: "all", count: skills.length },
+    { key: "enabled", count: enabled },
+    { key: "disabled", count: disabled },
+  ];
+}
+
 export function filterSkills(
   skills: SkillSummary[],
   search: string,
   sourceFilter: SourceFilter,
+  statusFilter: SkillStatusFilter,
+  disabledSkillIds: ReadonlySet<string>,
 ) {
   const lowered = search.trim().toLowerCase();
 
   return skills.filter((skill) => {
     if (sourceFilter !== "all" && skill.sourceType !== sourceFilter) {
+      return false;
+    }
+
+    const isDisabled = disabledSkillIds.has(skill.id);
+    if (statusFilter === "enabled" && isDisabled) {
+      return false;
+    }
+
+    if (statusFilter === "disabled" && !isDisabled) {
       return false;
     }
 

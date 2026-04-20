@@ -9,7 +9,9 @@ pub fn run() {
             commands::settings::get_repo_path,
             commands::settings::set_repo_path,
             commands::skills::scan_skills,
-            commands::skills::get_skill_document
+            commands::skills::get_skill_document,
+            commands::skills::get_skill_state,
+            commands::skills::set_skill_enabled
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

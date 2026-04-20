@@ -1,12 +1,20 @@
 import { useTranslation } from "react-i18next";
-import type { SourceFilter, SourceSummary } from "../../lib/skills/filters";
+import type {
+  SkillStatusFilter,
+  SourceFilter,
+  SourceSummary,
+  StatusSummary,
+} from "../../lib/skills/filters";
 
 interface SkillFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
   sourceFilter: SourceFilter;
   onSourceFilterChange: (value: SourceFilter) => void;
+  statusFilter: SkillStatusFilter;
+  onStatusFilterChange: (value: SkillStatusFilter) => void;
   summaries: SourceSummary[];
+  statusSummaries: StatusSummary[];
   onRefresh: () => Promise<void>;
   isRefreshing: boolean;
 }
@@ -17,9 +25,12 @@ export function SkillFilters(props: SkillFiltersProps) {
     onRefresh,
     onSearchChange,
     onSourceFilterChange,
+    onStatusFilterChange,
     search,
     sourceFilter,
+    statusFilter,
     summaries,
+    statusSummaries,
   } = props;
   const { t } = useTranslation();
 
@@ -41,21 +52,49 @@ export function SkillFilters(props: SkillFiltersProps) {
           {t("skills.refresh")}
         </button>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {summaries.map((summary) => (
-          <button
-            key={summary.key}
-            className={`rounded-full px-3 py-1.5 text-sm ${
-              sourceFilter === summary.key
-                ? "bg-sky-400 text-slate-950"
-                : "bg-slate-800 text-slate-200"
-            }`}
-            onClick={() => onSourceFilterChange(summary.key)}
-            type="button"
-          >
-            {t(`skills.source.${summary.key}`)} ({summary.count})
-          </button>
-        ))}
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          {t("skills.filters.source")}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {summaries.map((summary) => (
+            <button
+              key={summary.key}
+              className={`rounded-full px-3 py-1.5 text-sm ${
+                sourceFilter === summary.key
+                  ? "bg-sky-400 text-slate-950"
+                  : "bg-slate-800 text-slate-200"
+              }`}
+              onClick={() => onSourceFilterChange(summary.key)}
+              type="button"
+            >
+              {t(`skills.source.${summary.key}`)} ({summary.count})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          {t("skills.filters.status")}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {statusSummaries.map((summary) => (
+            <button
+              key={summary.key}
+              className={`rounded-full px-3 py-1.5 text-sm ${
+                statusFilter === summary.key
+                  ? "bg-emerald-400 text-slate-950"
+                  : "bg-slate-800 text-slate-200"
+              }`}
+              onClick={() => onStatusFilterChange(summary.key)}
+              type="button"
+            >
+              {t(`skills.status.${summary.key}`)} ({summary.count})
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
