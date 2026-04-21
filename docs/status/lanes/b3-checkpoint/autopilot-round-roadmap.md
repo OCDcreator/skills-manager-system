@@ -2,7 +2,7 @@
 
 ## Queue
 
-### [NEXT] B3 - Checkpoint after first backlog batch
+### [DONE] B3 - Checkpoint after first backlog batch
 
 - **Lane**: Checkpoint
 - **Goal**: Review the CLI Foundation implementation outcome, record shipped command groups and remaining gaps, and decide whether another unattended batch is warranted.
@@ -15,4 +15,4 @@
 ## Lane state
 
 - This roadmap is lane-local.
-- When it has no remaining `[NEXT]` or `[QUEUED]` items, the overall preset is complete.
+- It has no remaining `[NEXT]` or `[QUEUED]` items, so the overall preset is complete unless a human adds another lane or queue item.
