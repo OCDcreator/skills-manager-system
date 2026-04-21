@@ -9,6 +9,8 @@ import { SkillsView } from "./views/SkillsView";
 
 function AppBody() {
   const { activeView } = useAppContext();
+  const contentWidthClassName =
+    activeView === "skills" ? "max-w-[min(96vw,1800px)]" : "max-w-7xl";
 
   const view =
     activeView === "skills" ? (
@@ -25,7 +27,7 @@ function AppBody() {
       <SettingsView />
     );
 
-  return <AppShell>{view}</AppShell>;
+  return <AppShell contentWidthClassName={contentWidthClassName}>{view}</AppShell>;
 }
 
 export default function App() {

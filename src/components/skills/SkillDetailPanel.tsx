@@ -11,17 +11,21 @@ interface SkillDetailPanelProps {
 
 export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPanelProps) {
   const { t } = useTranslation();
+  const basePanelClassName =
+    "min-w-0 rounded-2xl border border-slate-800 bg-slate-900 p-6";
+  const dockedPanelClassName =
+    "min-[1280px]:sticky min-[1280px]:top-8 min-[1280px]:max-h-[calc(100vh-7rem)]";
 
   if (!skill) {
     return (
-      <aside className="min-w-0 rounded-2xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-400">
+      <aside className={`${basePanelClassName} ${dockedPanelClassName} text-sm text-slate-400`}>
         {t("skills.selectPrompt")}
       </aside>
     );
   }
 
   return (
-    <aside className="min-w-0 space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+    <aside className={`${basePanelClassName} ${dockedPanelClassName} flex flex-col gap-4 min-[1280px]:overflow-hidden`}>
       <div className="space-y-2">
         <h3 className="text-xl font-semibold text-slate-100">{skill.name}</h3>
         <p className="text-sm text-slate-400">
@@ -41,9 +45,9 @@ export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPane
         </dl>
       </div>
 
-      <div className="min-w-0 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-4">
+      <div className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-4">
         {document ? (
-          <article className="prose prose-invert min-w-0 max-w-none overflow-x-auto break-words prose-pre:overflow-x-auto prose-pre:bg-slate-900 prose-code:text-sky-200">
+          <article className="prose prose-invert h-full min-w-0 max-w-none overflow-x-auto overflow-y-auto break-words pr-2 prose-headings:scroll-mt-20 prose-pre:overflow-x-auto prose-pre:bg-slate-900 prose-code:text-sky-200">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{document.content}</ReactMarkdown>
           </article>
         ) : (

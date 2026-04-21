@@ -22,7 +22,7 @@ Downstream: react-markdown, remark-gfm, src/lib/tauri.ts, src/i18n/index.ts
 
 ## Core Logic
 
-When no skill is selected, the panel renders a translated selection prompt. When a skill exists, it shows name, description, source type, current enabled/disabled status, relative path, and either the loaded markdown document or a loading message.
+When no skill is selected, the panel renders a translated selection prompt. When a skill exists, it shows name, description, source type, current enabled/disabled status, relative path, and either the loaded markdown document or a loading message. On wide windows the panel docks to the viewport and turns the markdown body into an internal scroll area.
 
 ## Data Flow
 
@@ -34,7 +34,7 @@ Depends on `SkillSummary` and `SkillDocument` type shapes from `src/lib/tauri.ts
 
 ## Configuration
 
-Markdown styling is controlled by Tailwind Typography class names. The panel must preserve `min-w-0` and contain horizontal overflow inside the markdown card so selected-skill content does not stretch the outer page grid.
+Markdown styling is controlled by Tailwind Typography class names. The panel must preserve `min-w-0`, contain horizontal overflow inside the markdown card, and cap its viewport height on wide screens so markdown reading happens inside the detail rail instead of stretching the whole page.
 
 ## Change Notes
 

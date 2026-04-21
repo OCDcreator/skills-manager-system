@@ -23,7 +23,7 @@ Downstream: src-tauri/src/core/skills/metadata.rs, src-tauri/src/core/skills/sca
 
 ## Core Logic
 
-The module rejects parent-directory, root, and prefix path components before reading `SKILL.md`. It classifies source type from `custom/` or `external/`, derives a fallback name from the directory name, and builds the stable skill id with `build_skill_id`.
+The module rejects parent-directory, root, and prefix path components before reading `SKILL.md`. It classifies source type from `custom/` or `external/`, derives a fallback name from the directory name, builds the stable skill id with `build_skill_id`, and strips YAML frontmatter from the returned markdown body so the frontend preview starts at the actual rendered content.
 
 ## Data Flow
 
@@ -39,4 +39,4 @@ Only `custom/` and `external/` relative paths are accepted.
 
 ## Change Notes
 
-Path traversal validation is the security boundary for document reads; keep tests updated when path rules change.
+Path traversal validation is the security boundary for document reads; keep tests updated when path rules change. If the markdown preview contract changes, document whether frontmatter is preserved or stripped before updating the frontend reader.

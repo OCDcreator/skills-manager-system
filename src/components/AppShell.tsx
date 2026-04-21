@@ -4,14 +4,19 @@ import { useAppContext, type AppView } from "../context/AppContext";
 
 const NAV_ITEMS: AppView[] = ["skills", "agents", "git", "scenes", "projects", "settings"];
 
-export function AppShell({ children }: PropsWithChildren) {
+interface AppShellProps extends PropsWithChildren {
+  contentWidthClassName?: string;
+}
+
+export function AppShell({ children, contentWidthClassName }: AppShellProps) {
   const { t } = useTranslation();
   const { activeView, errorMessage, setActiveView } = useAppContext();
+  const widthClassName = contentWidthClassName ?? "max-w-7xl";
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <div className={`mx-auto flex ${widthClassName} items-center justify-between px-6 py-4`}>
           <div>
             <h1 className="text-2xl font-semibold">{t("app.title")}</h1>
             <p className="text-sm text-slate-400">{t("app.subtitle")}</p>
@@ -39,7 +44,7 @@ export function AppShell({ children }: PropsWithChildren) {
         ) : null}
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
+      <main className={`mx-auto ${widthClassName} px-6 py-8`}>{children}</main>
     </div>
   );
 }
