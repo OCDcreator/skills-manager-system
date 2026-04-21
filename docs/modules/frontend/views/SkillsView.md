@@ -38,4 +38,4 @@ Initial source and status filters are `all`; search text starts empty.
 
 ## Change Notes
 
-Do not move skill scanning or document fetching into this view; those flows belong to `AppContext` and Tauri commands.
+Do not move skill scanning or document fetching into this view; those flows belong to `AppContext` and Tauri commands. The three-column shell also needs `minmax(0, …)` / `min-w-0` guards so long detail content cannot steal width from the skill lists.

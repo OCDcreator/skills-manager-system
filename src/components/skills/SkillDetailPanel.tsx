@@ -14,14 +14,14 @@ export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPane
 
   if (!skill) {
     return (
-      <aside className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-400">
+      <aside className="min-w-0 rounded-2xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-400">
         {t("skills.selectPrompt")}
       </aside>
     );
   }
 
   return (
-    <aside className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+    <aside className="min-w-0 space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6">
       <div className="space-y-2">
         <h3 className="text-xl font-semibold text-slate-100">{skill.name}</h3>
         <p className="text-sm text-slate-400">
@@ -41,9 +41,9 @@ export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPane
         </dl>
       </div>
 
-      <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+      <div className="min-w-0 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-4">
         {document ? (
-          <article className="prose prose-invert max-w-none prose-pre:bg-slate-900 prose-code:text-sky-200">
+          <article className="prose prose-invert min-w-0 max-w-none overflow-x-auto break-words prose-pre:overflow-x-auto prose-pre:bg-slate-900 prose-code:text-sky-200">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{document.content}</ReactMarkdown>
           </article>
         ) : (

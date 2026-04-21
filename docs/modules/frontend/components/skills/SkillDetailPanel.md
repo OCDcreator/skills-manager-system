@@ -34,7 +34,7 @@ Depends on `SkillSummary` and `SkillDocument` type shapes from `src/lib/tauri.ts
 
 ## Configuration
 
-Markdown styling is controlled by Tailwind Typography class names.
+Markdown styling is controlled by Tailwind Typography class names. The panel must preserve `min-w-0` and contain horizontal overflow inside the markdown card so selected-skill content does not stretch the outer page grid.
 
 ## Change Notes
 
