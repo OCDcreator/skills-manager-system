@@ -71,7 +71,7 @@ export function SkillsView() {
           <p className="mt-3 text-sm text-slate-400">{t("skills.unconfiguredBody")}</p>
         </section>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1.25fr)_minmax(0,1fr)]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_clamp(22rem,28vw,30rem)]">
           <div className="min-w-0 space-y-6 xl:col-span-2">
             <SkillFilters
               isRefreshing={isLoading}

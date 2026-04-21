@@ -38,4 +38,4 @@ Initial source and status filters are `all`; search text starts empty.
 
 ## Change Notes
 
-Do not move skill scanning or document fetching into this view; those flows belong to `AppContext` and Tauri commands. The three-column shell also needs `minmax(0, …)` / `min-w-0` guards so long detail content cannot steal width from the skill lists.
+Do not move skill scanning or document fetching into this view; those flows belong to `AppContext` and Tauri commands. The three-column shell also needs `minmax(0, …)` / `min-w-0` guards so long detail content cannot steal width from the skill lists, and the detail rail should use a bounded responsive width (for example `clamp(...)`) so it grows with the window without becoming too narrow or too wide.
