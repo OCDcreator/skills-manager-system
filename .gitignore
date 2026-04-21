@@ -36,3 +36,6 @@ Thumbs.db
 .cache/
 tmp/
 temp/
+automation/runtime/
+automation/**/__pycache__/
+automation/**/*.pyc
