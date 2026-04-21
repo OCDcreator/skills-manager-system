@@ -5,7 +5,7 @@
 
 ## Overview
 
-Displays a selectable list of skill summaries for one source group, including enable/disable state.
+Displays a selectable card grid of skill summaries for one source group, including enable/disable state.
 
 ## Import Relationships
 
@@ -22,7 +22,7 @@ Downstream: src/lib/skills/filters.ts, src/lib/tauri.ts, src/i18n/index.ts
 
 ## Core Logic
 
-The component renders the group title, count, an empty state, and one row per skill. Selected skills receive highlighted styling, disabled skills receive subdued styling plus a status badge, and each row exposes a toggle button while descriptions are truncated before display.
+The component renders the group title, count, an empty state, and a responsive card grid for skills. The grid uses an auto-fit minmax template so card count per row follows the available section width. Selected skills receive highlighted styling, disabled skills receive subdued styling plus a status badge, and each card exposes a toggle button while descriptions are truncated before display.
 
 ## Data Flow
 

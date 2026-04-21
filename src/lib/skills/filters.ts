@@ -1,6 +1,7 @@
 import type { SkillSummary } from "../tauri";
 
 export type SourceFilter = "all" | "custom" | "external";
+export type VisibleSource = Exclude<SourceFilter, "all">;
 export type SkillStatusFilter = "all" | "enabled" | "disabled";
 
 export interface SourceSummary {
@@ -78,6 +79,14 @@ export function groupSkills(skills: SkillSummary[]) {
     custom: skills.filter((skill) => skill.sourceType === "custom"),
     external: skills.filter((skill) => skill.sourceType === "external"),
   };
+}
+
+export function resolveVisibleSources(sourceFilter: SourceFilter): VisibleSource[] {
+  if (sourceFilter === "all") {
+    return ["custom", "external"];
+  }
+
+  return [sourceFilter];
 }
 
 export function truncateDescription(description: string, maxLength = 100) {

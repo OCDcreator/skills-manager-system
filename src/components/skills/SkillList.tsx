@@ -30,28 +30,28 @@ export function SkillList(props: SkillListProps) {
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{title}</h3>
         <span className="text-xs text-slate-500">{skills.length}</span>
       </header>
-      <div className="space-y-3">
-        {skills.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-700 px-4 py-6 text-sm text-slate-500">
-            {t("skills.empty")}
-          </div>
-        ) : null}
-        {skills.map((skill) => {
-          const isDisabled = disabledSkillIds.has(skill.id);
-          const isUpdating = updatingSkillId === skill.id;
+      {skills.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-700 px-4 py-6 text-sm text-slate-500">
+          {t("skills.empty")}
+        </div>
+      ) : null}
+      {skills.length > 0 ? (
+        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
+          {skills.map((skill) => {
+            const isDisabled = disabledSkillIds.has(skill.id);
+            const isUpdating = updatingSkillId === skill.id;
 
-          return (
-            <article
-              key={skill.id}
-              className={`rounded-xl border p-4 transition ${
-                selectedSkillId === skill.id
-                  ? "border-sky-400 bg-sky-400/10"
-                  : "border-slate-800 bg-slate-950"
-              } ${isDisabled ? "opacity-70" : ""}`}
-            >
-              <div className="flex items-start justify-between gap-3">
+            return (
+              <article
+                key={skill.id}
+                className={`flex h-full flex-col rounded-xl border p-4 transition ${
+                  selectedSkillId === skill.id
+                    ? "border-sky-400 bg-sky-400/10"
+                    : "border-slate-800 bg-slate-950"
+                } ${isDisabled ? "opacity-70" : ""}`}
+              >
                 <button
-                  className="min-w-0 flex-1 text-left"
+                  className="flex min-w-0 flex-1 flex-col text-left"
                   onClick={() => onSelect(skill)}
                   title={t("tooltip.skills.select")}
                   type="button"
@@ -75,28 +75,30 @@ export function SkillList(props: SkillListProps) {
                         : t("skills.status.enabled")}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-slate-400">
+                  <p className="mt-2 flex-1 text-sm text-slate-400">
                     {skill.description
                       ? truncateDescription(skill.description)
                       : t("skills.noDescription")}
                   </p>
-                  <p className="mt-2 text-xs text-slate-500">{skill.relativePath}</p>
+                  <p className="mt-3 text-xs text-slate-500">{skill.relativePath}</p>
                 </button>
 
-                <button
-                  className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 disabled:opacity-60"
-                  disabled={isUpdating}
-                  onClick={() => void onToggleEnabled(skill.id, isDisabled)}
-                  title={isDisabled ? t("tooltip.skills.toggle.enable") : t("tooltip.skills.toggle.disable")}
-                  type="button"
-                >
-                  {isDisabled ? t("skills.toggle.enable") : t("skills.toggle.disable")}
-                </button>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 disabled:opacity-60"
+                    disabled={isUpdating}
+                    onClick={() => void onToggleEnabled(skill.id, isDisabled)}
+                    title={isDisabled ? t("tooltip.skills.toggle.enable") : t("tooltip.skills.toggle.disable")}
+                    type="button"
+                  >
+                    {isDisabled ? t("skills.toggle.enable") : t("skills.toggle.disable")}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -11,6 +11,7 @@ import {
   groupSkills,
   type SkillStatusFilter,
   type SourceFilter,
+  resolveVisibleSources,
 } from "../lib/skills/filters";
 
 export function SkillsView() {
@@ -49,6 +50,10 @@ export function SkillsView() {
     [scanResult.skills, search, sourceFilter, statusFilter, disabledSkillIdSet],
   );
   const grouped = useMemo(() => groupSkills(filteredSkills), [filteredSkills]);
+  const visibleSources = useMemo(
+    () => resolveVisibleSources(sourceFilter),
+    [sourceFilter],
+  );
   const summaries = useMemo(
     () => buildSourceSummaries(scanResult.skills),
     [scanResult.skills],
@@ -98,25 +103,27 @@ export function SkillsView() {
               </div>
             ) : null}
 
-            <div className="grid gap-6 min-[1400px]:grid-cols-2">
-              <SkillList
-                disabledSkillIds={disabledSkillIdSet}
-                onSelect={(skill) => void selectSkill(skill)}
-                onToggleEnabled={setSkillEnabled}
-                selectedSkillId={selectedSkill?.id ?? null}
-                skills={grouped.custom}
-                title={t("skills.section.custom")}
-                updatingSkillId={updatingSkillId}
-              />
-              <SkillList
-                disabledSkillIds={disabledSkillIdSet}
-                onSelect={(skill) => void selectSkill(skill)}
-                onToggleEnabled={setSkillEnabled}
-                selectedSkillId={selectedSkill?.id ?? null}
-                skills={grouped.external}
-                title={t("skills.section.external")}
-                updatingSkillId={updatingSkillId}
-              />
+            <div
+              className={`grid gap-6 ${
+                visibleSources.length === 2 ? "min-[1400px]:grid-cols-2" : ""
+              }`}
+            >
+              {visibleSources.map((source) => (
+                <SkillList
+                  key={source}
+                  disabledSkillIds={disabledSkillIdSet}
+                  onSelect={(skill) => void selectSkill(skill)}
+                  onToggleEnabled={setSkillEnabled}
+                  selectedSkillId={selectedSkill?.id ?? null}
+                  skills={grouped[source]}
+                  title={
+                    source === "custom"
+                      ? t("skills.section.custom")
+                      : t("skills.section.external")
+                  }
+                  updatingSkillId={updatingSkillId}
+                />
+              ))}
             </div>
           </div>
 
