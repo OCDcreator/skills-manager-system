@@ -1,6 +1,10 @@
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
+pub use super::command_groups::{
+    AgentsCommand, GitCommand, ProjectsCommand, ScenesCommand, SettingsCommand, SkillsCommand,
+};
+
 #[derive(Debug, Parser, PartialEq, Eq)]
 #[command(
     name = "skills-manager",
@@ -45,6 +49,18 @@ pub enum RootCommand {
         #[command(subcommand)]
         command: AgentsCommand,
     },
+    Scenes {
+        #[command(subcommand)]
+        command: ScenesCommand,
+    },
+    Projects {
+        #[command(subcommand)]
+        command: ProjectsCommand,
+    },
+    Git {
+        #[command(subcommand)]
+        command: GitCommand,
+    },
 }
 
 impl RootCommand {
@@ -53,53 +69,9 @@ impl RootCommand {
             Self::Settings { command } => command.label(),
             Self::Skills { command } => command.label(),
             Self::Agents { command } => command.label(),
-        }
-    }
-}
-
-#[derive(Debug, Subcommand, PartialEq, Eq)]
-pub enum SettingsCommand {
-    GetRepoPath,
-    GetSyncMode,
-}
-
-impl SettingsCommand {
-    pub const fn label(&self) -> &'static str {
-        match self {
-            Self::GetRepoPath => "settings get-repo-path",
-            Self::GetSyncMode => "settings get-sync-mode",
-        }
-    }
-}
-
-#[derive(Debug, Subcommand, PartialEq, Eq)]
-pub enum SkillsCommand {
-    Scan,
-    State,
-    List,
-    Doc { target: String },
-}
-
-impl SkillsCommand {
-    pub const fn label(&self) -> &'static str {
-        match self {
-            Self::Scan => "skills scan",
-            Self::State => "skills state",
-            Self::List => "skills list",
-            Self::Doc { .. } => "skills doc",
-        }
-    }
-}
-
-#[derive(Debug, Subcommand, PartialEq, Eq)]
-pub enum AgentsCommand {
-    List,
-}
-
-impl AgentsCommand {
-    pub const fn label(&self) -> &'static str {
-        match self {
-            Self::List => "agents list",
+            Self::Scenes { command } => command.label(),
+            Self::Projects { command } => command.label(),
+            Self::Git { command } => command.label(),
         }
     }
 }
@@ -150,5 +122,63 @@ mod tests {
         );
         assert!(!args.pretty);
         assert!(!args.quiet);
+    }
+
+    #[test]
+    fn parses_mutation_and_extended_command_groups() {
+        let settings =
+            CliArgs::try_parse_from(["skills-manager", "settings", "set-sync-mode", "copy"])
+                .unwrap();
+        assert_eq!(
+            settings.command,
+            RootCommand::Settings {
+                command: SettingsCommand::SetSyncMode {
+                    sync_mode: "copy".to_string(),
+                },
+            }
+        );
+
+        let scenes = CliArgs::try_parse_from([
+            "skills-manager",
+            "scenes",
+            "set-skills",
+            "focus",
+            "custom:one",
+            "external:two",
+        ])
+        .unwrap();
+        assert_eq!(
+            scenes.command,
+            RootCommand::Scenes {
+                command: ScenesCommand::SetSkills {
+                    id: "focus".to_string(),
+                    disabled_skill_ids: vec!["custom:one".to_string(), "external:two".to_string()],
+                },
+            }
+        );
+
+        let git =
+            CliArgs::try_parse_from(["skills-manager", "git", "commit", "-m", "sync"]).unwrap();
+        assert_eq!(
+            git.command,
+            RootCommand::Git {
+                command: GitCommand::Commit {
+                    message: "sync".to_string(),
+                },
+            }
+        );
+    }
+
+    #[test]
+    fn projects_apply_rejects_path_argument() {
+        let error = CliArgs::try_parse_from([
+            "skills-manager",
+            "projects",
+            "apply",
+            "/tmp/should-not-be-accepted",
+        ])
+        .unwrap_err();
+
+        assert_eq!(error.kind(), clap::error::ErrorKind::UnknownArgument);
     }
 }

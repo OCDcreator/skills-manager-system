@@ -22,8 +22,8 @@ Downstream: serde
 | `GitStatusResponse` | Branch, remote, ahead/behind, and grouped status rows. |
 | `GitDiffResponse` | Diff text plus stat summary. |
 | `GitLogEntry` / `GitLogResponse` | Recent commit history payloads. |
-| `GitOperationResult` | Success/message wrapper for mutating git operations. |
+| `GitOperationResult` | Success/message/stdout/stderr/exit-code wrapper for git operations. |
 
 ## Core Logic
 
-No business logic lives here. Keeping DTOs separate lets `operations.rs` stay focused on command execution and parsing while command modules can import response types without depending on helper internals.
+No business logic lives here. Keeping DTOs separate lets `operations.rs` stay focused on command execution and parsing while command modules can import response types without depending on helper internals. Operation results preserve stdout, stderr, and exit code so the CLI can emit structured failure details without parsing the display message.

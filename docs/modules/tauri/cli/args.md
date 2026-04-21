@@ -5,13 +5,13 @@
 
 ## Overview
 
-Defines the `clap` derive command tree for the Phase 1a read-only CLI surface.
+Defines the root `clap` parser, global flags, and top-level command groups for the full CLI surface.
 
 ## Import Relationships
 
 ```text
 Upstream: src-tauri/src/cli/main.rs, src-tauri/src/cli/mod.rs
-Downstream: clap
+Downstream: clap, src-tauri/src/cli/command_groups.rs
 ```
 
 ## Public Surface
@@ -19,15 +19,13 @@ Downstream: clap
 | Export | Purpose |
 |---|---|
 | `CliArgs` | Root parser with global output/config/repo flags. |
-| `RootCommand` | Top-level command-group selector. |
-| `SettingsCommand` | Read-only settings subcommands. |
-| `SkillsCommand` | Read-only skill query subcommands. |
-| `AgentsCommand` | Read-only agent inventory subcommands. |
+| `RootCommand` | Top-level settings/skills/agents/scenes/projects/git selector. |
+| command re-exports | Leaf command enums re-exported from `command_groups.rs` for adapter imports. |
 
 ## Core Logic
 
-The parser keeps JSON as the default mode, allows `--pretty` as the human-readable escape hatch, and exposes label helpers so the runtime/output layer can emit stable `command` strings.
+The parser keeps JSON as the default mode, allows `--pretty` as the human-readable escape hatch, and exposes label helpers so the runtime/output layer can emit stable `command` strings. `projects apply` intentionally has no path argument.
 
 ## Interactions
 
-New CLI subcommands should extend these enums first, then add matching dispatch and module docs in the corresponding command adapters.
+New CLI command groups should extend `RootCommand`; new leaf subcommands belong in `command_groups.rs`, then need matching dispatch, adapter tests, and module docs.

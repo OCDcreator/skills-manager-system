@@ -34,28 +34,18 @@ fn run_git(cmd: &mut Command) -> Result<String> {
 
 fn run_git_result(cmd: &mut Command) -> GitOperationResult {
     match cmd.output() {
-        Ok(output) => {
-            let stdout = String::from_utf8_lossy(&output.stdout)
-                .trim_end()
-                .to_string();
-            let stderr = String::from_utf8_lossy(&output.stderr)
-                .trim_end()
-                .to_string();
-            if output.status.success() {
-                GitOperationResult {
-                    success: true,
-                    message: if stdout.is_empty() { stderr } else { stdout },
-                }
-            } else {
-                GitOperationResult {
-                    success: false,
-                    message: stderr,
-                }
-            }
-        }
+        Ok(output) => build_git_result(
+            output.status.success(),
+            &output.stdout,
+            &output.stderr,
+            output.status.code(),
+        ),
         Err(error) => GitOperationResult {
             success: false,
             message: error.to_string(),
+            stdout: None,
+            stderr: Some(error.to_string()),
+            exit_code: None,
         },
     }
 }
@@ -221,6 +211,9 @@ pub fn run_sync_script(repo_path: &Path) -> GitOperationResult {
         return GitOperationResult {
             success: false,
             message: format!("Sync script not found: {}", script_path.display()),
+            stdout: None,
+            stderr: Some(format!("Sync script not found: {}", script_path.display())),
+            exit_code: None,
         };
     }
 
@@ -237,29 +230,18 @@ pub fn run_sync_script(repo_path: &Path) -> GitOperationResult {
     };
 
     match result {
-        Ok(output) => {
-            let stdout = String::from_utf8_lossy(&output.stdout)
-                .trim_end()
-                .to_string();
-            let stderr = String::from_utf8_lossy(&output.stderr)
-                .trim_end()
-                .to_string();
-            GitOperationResult {
-                success: output.status.success(),
-                message: if output.status.success() {
-                    if stdout.is_empty() {
-                        stderr
-                    } else {
-                        stdout
-                    }
-                } else {
-                    stderr
-                },
-            }
-        }
+        Ok(output) => build_git_result(
+            output.status.success(),
+            &output.stdout,
+            &output.stderr,
+            output.status.code(),
+        ),
         Err(error) => GitOperationResult {
             success: false,
             message: error.to_string(),
+            stdout: None,
+            stderr: Some(error.to_string()),
+            exit_code: None,
         },
     }
 }
@@ -288,4 +270,38 @@ fn parse_indexed_entry(line: &str) -> GitStatusEntry {
         y,
         is_untracked: false,
     }
+}
+
+fn build_git_result(
+    success: bool,
+    stdout: &[u8],
+    stderr: &[u8],
+    exit_code: Option<i32>,
+) -> GitOperationResult {
+    let stdout = trimmed_text(stdout);
+    let stderr = trimmed_text(stderr);
+    let message = if success {
+        stdout
+            .clone()
+            .or_else(|| stderr.clone())
+            .unwrap_or_else(|| "Command completed successfully.".to_string())
+    } else {
+        stderr
+            .clone()
+            .or_else(|| stdout.clone())
+            .unwrap_or_else(|| "Git command failed.".to_string())
+    };
+
+    GitOperationResult {
+        success,
+        message,
+        stdout,
+        stderr,
+        exit_code,
+    }
+}
+
+fn trimmed_text(bytes: &[u8]) -> Option<String> {
+    let text = String::from_utf8_lossy(bytes).trim_end().to_string();
+    (!text.is_empty()).then_some(text)
 }

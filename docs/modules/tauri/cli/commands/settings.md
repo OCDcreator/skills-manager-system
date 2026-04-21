@@ -5,7 +5,7 @@
 
 ## Overview
 
-Implements the read-only `settings get-repo-path` and `settings get-sync-mode` commands.
+Implements `settings get-repo-path`, `settings set-repo-path`, `settings get-sync-mode`, and `settings set-sync-mode`.
 
 ## Import Relationships
 
@@ -22,8 +22,8 @@ Downstream: src-tauri/src/app_runtime/*, src-tauri/src/core/settings.rs
 
 ## Core Logic
 
-Repo-path output uses the effective runtime resolution order, so `--repo` wins over saved settings without mutating the underlying file. Sync-mode output reads the shared `settings.json` file and returns the persisted `copy` / `symlink` enum value in CLI JSON.
+Repo-path output uses the effective runtime resolution order, so `--repo` wins over saved settings without mutating the underlying file. Mutation commands acquire the advisory config lock and write through `SettingsStore`, preserving the shared `settings.json` schema. Sync-mode mutation validates `copy` / `symlink` and maps unsupported values to `invalid_sync_mode`.
 
 ## Interactions
 
-Must stay aligned with `SettingsStore`, `AppRuntimeContext.current_repo_path`, and the stable error code names emitted through `CliCommandError`.
+Must stay aligned with `SettingsStore`, `AppRuntimeContext.current_repo_path`, config-lock error mapping, and stable error code names emitted through `CliCommandError`.

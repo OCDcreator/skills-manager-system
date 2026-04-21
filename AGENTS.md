@@ -230,12 +230,15 @@ npm run verify                 # 当前最小 verify gate
 npm run lint                   # ESLint 检查
 cargo check --manifest-path src-tauri/Cargo.toml  # Rust 快速验证
 cargo test --manifest-path src-tauri/Cargo.toml   # Rust 测试
+cargo build --manifest-path src-tauri/Cargo.toml --no-default-features --features cli --bin skills-manager  # CLI-only 构建
+./src-tauri/target/debug/skills-manager --help    # CLI 二进制 smoke
 ```
 
 ## 注意事项
 
 - 用户界面文本使用 i18n，新增/修改文案需同步 `src/i18n/en.json`、`src/i18n/zh.json`
 - Tauri 命令添加流程: Rust 实现 → `lib.rs` 的 `generate_handler!` 注册 → TS 封装/类型 → 前端调用
+- CLI 命令添加流程: `src-tauri/src/cli/command_groups.rs` 参数 → `src-tauri/src/cli/mod.rs` 分发 → `src-tauri/src/cli/commands/` 适配器 → 对应模块文档与 CLI-only 测试
 - 业务逻辑放 `src-tauri/src/core/`，Tauri 命令层 `src-tauri/src/commands/` 保持轻薄
 - 提交前至少运行 `npm run verify`；如果后续接入 lint/test/build，继续把它们并入 `verify`
 - Skill 仓库路径可在设置中配置，默认指向用户的 my-skills 仓库

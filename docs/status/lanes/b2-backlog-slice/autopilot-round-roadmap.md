@@ -2,7 +2,7 @@
 
 ## Queue
 
-### [NEXT] B2 - Next queued bug or backlog slice
+### [DONE] B2 - Next queued bug or backlog slice
 
 - **Lane**: Bugfix / backlog
 - **Goal**: Land the CLI Foundation Phase 1b/Phase 2 slice: mutation commands, scene/project/git command groups, docs coverage, and full verification.

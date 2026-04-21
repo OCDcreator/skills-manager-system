@@ -1,8 +1,22 @@
 pub mod args;
+mod command_groups;
 
 pub mod commands {
+    mod agent_sync;
     pub mod agents;
+    #[cfg(test)]
+    mod agents_tests;
+    pub mod git;
+    #[cfg(test)]
+    mod git_tests;
+    pub mod projects;
+    #[cfg(test)]
+    mod projects_tests;
+    pub mod scenes;
+    #[cfg(test)]
+    mod scenes_tests;
     pub mod settings;
+    mod skill_mutations;
     pub mod skills;
     #[cfg(test)]
     mod skills_tests;
@@ -43,5 +57,8 @@ pub fn run(args: CliArgs) -> CliRunResult {
         RootCommand::Settings { command } => commands::settings::run(&context, command),
         RootCommand::Skills { command } => commands::skills::run(&context, command),
         RootCommand::Agents { command } => commands::agents::run(&context, command),
+        RootCommand::Scenes { command } => commands::scenes::run(&context, command),
+        RootCommand::Projects { command } => commands::projects::run(&context, command),
+        RootCommand::Git { command } => commands::git::run(&context, command),
     }
 }

@@ -27,7 +27,7 @@ Downstream: commands::git, core::git::operations_test
 
 ## Core Logic
 
-All operations invoke the system `git` binary via `std::process::Command` with `GIT_TERMINAL_PROMPT=0` and `LC_ALL=C`. The status parser handles porcelain v2 format lines (`1 `, `2 `, `u `, `? `) and branch metadata (`# branch.head`, `# branch.ab`). Tests now live in `operations_test.rs` so this module remains focused on runtime behavior.
+All operations invoke the system `git` binary via `std::process::Command` with `GIT_TERMINAL_PROMPT=0` and `LC_ALL=C`. The status parser handles porcelain v2 format lines (`1 `, `2 `, `u `, `? `) and branch metadata (`# branch.head`, `# branch.ab`). Operation helpers now retain stdout, stderr, and exit status alongside the existing display message so CLI adapters can expose structured error details. Tests live in `operations_test.rs` so this module remains focused on runtime behavior.
 
 ## Data Flow
 

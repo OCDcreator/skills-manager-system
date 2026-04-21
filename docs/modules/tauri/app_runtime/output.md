@@ -21,11 +21,11 @@ Downstream: serde_json, time, src-tauri/src/app_runtime/context.rs, src-tauri/sr
 | `CliStatus` | Success / partial / error classifier serialized to JSON. |
 | `CliMeta` | Shared metadata block with config dir, repo path, timestamp, and version. |
 | `CliWarning` | Structured warning object for partial success cases. |
-| `CliRunResult` | Final response + exit status returned by the CLI dispatch layer. |
+| `CliRunResult` | Final response + exit status returned by the CLI dispatch layer, including explicit partial builders. |
 
 ## Core Logic
 
-Success and partial responses share one schema, while errors move details into the `error` object and keep `warnings` present for automation consumers. Default rendering is compact JSON; `--pretty` renders from the same response object rather than from a second bespoke formatter.
+Success and partial responses share one schema, while errors move details into the `error` object and keep `warnings` present for automation consumers. Explicit partial responses carry exit code `8` for conflict-bearing sync operations. Default rendering is compact JSON; `--pretty` renders from the same response object rather than from a second bespoke formatter.
 
 ## Interactions
 

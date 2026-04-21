@@ -5,7 +5,7 @@
 
 ## Overview
 
-Owns the Phase 1a read-only skill commands: scan, state, joined list, and document lookup.
+Owns skill scan, state, joined list, document lookup, and mutation dispatch.
 
 ## Import Relationships
 
@@ -22,8 +22,8 @@ Downstream: src-tauri/src/app_runtime/*, src-tauri/src/core/skills/*
 
 ## Core Logic
 
-Every command first resolves the effective repo path from the shared runtime context. `skills list` joins the scan snapshot with disabled IDs from `SkillStateStore` to emit `enabled` booleans. `skills doc` accepts either a stable skill id or a repo-relative path by resolving ids through a fresh scan. Scan warnings are promoted into structured CLI warnings so missing `custom/` or `external/` folders become partial-success output instead of free-form stderr.
+Every command first resolves the effective repo path from the shared runtime context. `skills list` joins the scan snapshot with disabled IDs from `SkillStateStore` to emit `enabled` booleans. `skills doc` accepts either a stable skill id or a repo-relative path by resolving ids through a fresh scan. Enable/disable dispatches to `skill_mutations.rs`, which verifies the skill id before acquiring the config lock and writing state. Scan warnings are promoted into structured CLI warnings so missing `custom/` or `external/` folders become partial-success output instead of free-form stderr.
 
 ## Interactions
 
-Must stay aligned with `scan_repo_skills`, `read_skill_document`, `SkillStateStore`, and the CLI JSON schema in `src-tauri/src/app_runtime/output.rs`.
+Must stay aligned with `scan_repo_skills`, `read_skill_document`, `SkillStateStore`, `skill_mutations.rs`, and the CLI JSON schema in `src-tauri/src/app_runtime/output.rs`.

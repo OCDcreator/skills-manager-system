@@ -132,6 +132,23 @@ impl CliRunResult {
         }
     }
 
+    pub fn partial(
+        command: &str,
+        data: Value,
+        warnings: Vec<CliWarning>,
+        context: &AppRuntimeContext,
+        repo_path: Option<&Path>,
+    ) -> Self {
+        Self::ok(
+            command,
+            CliStatus::Partial,
+            CliExitStatus::PartialSuccess,
+            data,
+            warnings,
+            CliMeta::from_context(context, repo_path),
+        )
+    }
+
     pub fn error(
         command: &str,
         error: CliCommandError,

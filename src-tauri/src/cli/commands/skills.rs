@@ -28,6 +28,12 @@ pub fn run(context: &AppRuntimeContext, command: &SkillsCommand) -> CliRunResult
         SkillsCommand::State => state(context),
         SkillsCommand::List => list(context),
         SkillsCommand::Doc { target } => doc(context, target),
+        SkillsCommand::Enable { skill_id } => {
+            super::skill_mutations::set_enabled(context, skill_id, true)
+        }
+        SkillsCommand::Disable { skill_id } => {
+            super::skill_mutations::set_enabled(context, skill_id, false)
+        }
     }
 }
 

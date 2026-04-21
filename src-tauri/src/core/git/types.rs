@@ -49,4 +49,7 @@ pub struct GitLogResponse {
 pub struct GitOperationResult {
     pub success: bool,
     pub message: String,
+    pub stdout: Option<String>,
+    pub stderr: Option<String>,
+    pub exit_code: Option<i32>,
 }
