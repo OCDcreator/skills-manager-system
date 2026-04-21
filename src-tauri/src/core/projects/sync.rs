@@ -7,18 +7,13 @@ use std::path::Path;
 use crate::core::agents::catalog::find_agent;
 use crate::core::agents::discovery::AgentSystemDirs;
 use crate::core::agents::sync::AgentApplyResult;
-use crate::core::skills::scan::{scan_repo_skills, SkillSummary};
-
-use super::store::{ProjectAssignment, ProjectConfigStore};
-
-mod manifest_impl {
-    include!("../agents/manifest.rs");
-}
-
-use manifest_impl::{
+use crate::core::agents::target_sync::{
     apply_desired_entries, build_desired_skill_entries, cleanup_managed_entries, DesiredSkillEntry,
     SyncMode,
 };
+use crate::core::skills::scan::{scan_repo_skills, SkillSummary};
+
+use super::store::{ProjectAssignment, ProjectConfigStore};
 
 const PROJECT_LEDGER_FILE_NAME: &str = "project-sync-ledger.json";
 

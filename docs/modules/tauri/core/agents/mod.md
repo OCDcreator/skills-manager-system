@@ -11,7 +11,7 @@ Declares the Rust backend subdomain for phase-three agent sync.
 
 ```text
 Upstream: src-tauri/src/commands/agents.rs, src-tauri/src/core/agents/sync_tests.rs
-Downstream: src-tauri/src/core/agents/catalog.rs, src-tauri/src/core/agents/config.rs, src-tauri/src/core/agents/discovery.rs, src-tauri/src/core/agents/manifest.rs, src-tauri/src/core/agents/sync.rs
+Downstream: src-tauri/src/core/agents/catalog.rs, src-tauri/src/core/agents/config.rs, src-tauri/src/core/agents/discovery.rs, src-tauri/src/core/agents/manifest.rs, src-tauri/src/core/agents/sync.rs, src-tauri/src/core/agents/target_sync.rs
 ```
 
 ## Public Surface
@@ -21,12 +21,13 @@ Downstream: src-tauri/src/core/agents/catalog.rs, src-tauri/src/core/agents/conf
 | `catalog` | Built-in supported-agent definitions. |
 | `config` | Persistent enabled/override config. |
 | `discovery` | Runtime target-path inventory assembly. |
-| `manifest` | Skill deployment engine with copy/symlink modes. |
+| `manifest` | App-local global sync ledger helpers. |
 | `sync` | Manual apply orchestration and public sync DTOs. |
+| `target_sync` | Shared target-directory reconciliation and copy/symlink deployment helpers. |
 
 ## Core Logic
 
-This module is aggregation only. It exposes the agent domain to commands and keeps helper internals such as manifest handling inside the domain boundary.
+This module is aggregation only. It exposes the agent domain to commands and keeps helper internals such as ledger handling and target reconciliation inside the domain boundary.
 
 ## Data Flow
 

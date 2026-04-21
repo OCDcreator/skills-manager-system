@@ -11,7 +11,7 @@ Holds focused Rust tests for the phase-three agent-sync workflow.
 
 ```text
 Upstream: src-tauri/src/core/agents/mod.rs
-Downstream: src-tauri/src/core/agents/sync.rs, src-tauri/src/core/agents/config.rs, src-tauri/src/core/agents/discovery.rs, src-tauri/src/core/skills/state.rs
+Downstream: src-tauri/src/core/agents/sync.rs, src-tauri/src/core/agents/config.rs, src-tauri/src/core/agents/discovery.rs, src-tauri/src/core/agents/target_sync.rs, src-tauri/src/core/skills/state.rs
 ```
 
 ## Public Surface
@@ -20,7 +20,7 @@ This is a test-only module and exports no runtime API.
 
 ## Core Logic
 
-Builds disposable repositories and target directories to verify copy/symlink apply behavior, disabled-skill exclusion, stale managed-entry cleanup, unmanaged-content preservation, and override-path precedence. All tests use `SyncMode::Copy` for reproducibility.
+Builds disposable repositories and target directories to verify copy/symlink apply behavior, disabled-skill exclusion, stale managed-entry cleanup, unmanaged-content preservation, and override-path precedence. Tests import `SyncMode` from `target_sync.rs` and use `SyncMode::Copy` for reproducibility unless explicitly checking symlink preference propagation.
 
 ## Data Flow
 
@@ -28,7 +28,7 @@ Test fixtures create repo/config/target state, invoke `apply_agent_sync`, and as
 
 ## Interactions
 
-Must stay aligned with the stable target-name mapping and manifest safety rules implemented by the agents domain.
+Must stay aligned with the stable target-name mapping and manifest safety rules implemented by `target_sync.rs`.
 
 ## Configuration
 

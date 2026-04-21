@@ -1,6 +1,24 @@
 import { execFileSync } from 'node:child_process';
-import fs from 'node:fs';
 import path from 'node:path';
+import fs from 'node:fs';
+
+import {
+  autoDetectRange,
+  readEffectiveNameStatus,
+  readGitDiffNameStatus,
+  recordPaths,
+  sourcePathsFromRecord,
+} from './module-doc-guard-diff.mjs';
+import {
+  isInsideRoot,
+  matchesAny,
+  normalizeRepoPath,
+  toPosix,
+  walkFiles,
+} from './module-doc-guard-shared.mjs';
+
+export { normalizeRepoPath, toPosix } from './module-doc-guard-shared.mjs';
+export { autoDetectRange, readEffectiveNameStatus, readGitDiffNameStatus } from './module-doc-guard-diff.mjs';
 
 export function parseArgs(argv = process.argv.slice(2)) {
   const args = {};
@@ -34,14 +52,6 @@ export function repoRoot(cwd = process.cwd()) {
     cwd,
     encoding: 'utf8',
   }).trim();
-}
-
-export function toPosix(value) {
-  return value.replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/+/g, '/');
-}
-
-export function normalizeRepoPath(value) {
-  return toPosix(value).replace(/^\/+/, '').replace(/\/$/, '');
 }
 
 export function loadConfig(root, configPath = 'module-docs.config.json') {
@@ -193,59 +203,6 @@ export function mapSourceToDoc(group, sourcePath) {
   return normalizeRepoPath(`${group.docsRoot}/${docRelative}`);
 }
 
-export function readGitDiffNameStatus(root, range) {
-  const output = execGitText(root, ['diff', '--name-status', '--find-renames', range]);
-
-  if (!output) {
-    return [];
-  }
-
-  return output.split(/\r?\n/).map(parseDiffLine);
-}
-
-export function readEffectiveNameStatus(root, range) {
-  return mergeDiffRecords(
-    readGitDiffNameStatus(root, range),
-    readWorkingTreeNameStatus(root),
-  );
-}
-
-export function autoDetectRange(root) {
-  if (process.env.MODULE_DOC_DIFF_RANGE) {
-    return process.env.MODULE_DOC_DIFF_RANGE;
-  }
-
-  if (process.env.GITHUB_BASE_REF) {
-    return `origin/${process.env.GITHUB_BASE_REF}...HEAD`;
-  }
-
-  const candidates = ['origin/main...HEAD', 'origin/master...HEAD', 'HEAD~1..HEAD'];
-
-  for (const candidate of candidates) {
-    try {
-      execFileSync('git', ['merge-base', '--is-ancestor', candidate.split(/[.]{3}|[.]{2}/)[0], 'HEAD'], {
-        cwd: root,
-        stdio: 'ignore',
-      });
-      return candidate;
-    } catch {
-      try {
-        execFileSync('git', ['diff', '--quiet', candidate], {
-          cwd: root,
-          stdio: 'ignore',
-        });
-        return candidate;
-      } catch (error) {
-        if (error.status === 1) {
-          return candidate;
-        }
-      }
-    }
-  }
-
-  throw new Error('Unable to detect diff range. Pass --range <base>...HEAD.');
-}
-
 export function requiredDocsFromDiff(config, diffRecords) {
   const changedPaths = new Map();
   const requiredDocs = new Map();
@@ -319,84 +276,6 @@ export function printList(title, items, formatter = (item) => `- ${item}`) {
   }
 }
 
-function parseDiffLine(line) {
-  const parts = line.split('\t');
-  const status = parts[0];
-
-  if (status.startsWith('R') || status.startsWith('C')) {
-    return {
-      status,
-      oldPath: normalizeRepoPath(parts[1]),
-      path: normalizeRepoPath(parts[2]),
-    };
-  }
-
-  return {
-    status,
-    path: normalizeRepoPath(parts[1]),
-  };
-}
-
-function readWorkingTreeNameStatus(root) {
-  const trackedOutput = execGitText(root, ['diff', '--name-status', '--find-renames', 'HEAD']);
-  const untrackedOutput = execGitText(root, ['ls-files', '--others', '--exclude-standard']);
-  const trackedRecords = trackedOutput ? trackedOutput.split(/\r?\n/).map(parseDiffLine) : [];
-  const untrackedRecords = untrackedOutput
-    ? untrackedOutput.split(/\r?\n/).filter(Boolean).map((item) => ({
-        status: 'A',
-        path: normalizeRepoPath(item),
-      }))
-    : [];
-
-  return mergeDiffRecords(trackedRecords, untrackedRecords);
-}
-
-function mergeDiffRecords(...recordLists) {
-  const merged = [];
-  const seen = new Set();
-
-  for (const records of recordLists) {
-    for (const record of records) {
-      const key = [record.status, record.oldPath ?? '', record.path ?? ''].join('\t');
-      if (seen.has(key)) {
-        continue;
-      }
-
-      seen.add(key);
-      merged.push(record);
-    }
-  }
-
-  return merged;
-}
-
-function execGitText(root, args) {
-  try {
-    return execFileSync('git', args, {
-      cwd: root,
-      encoding: 'utf8',
-    }).trim();
-  } catch (error) {
-    if (error.status === 1 && typeof error.stdout === 'string') {
-      return error.stdout.trim();
-    }
-
-    if (error.status === 128) {
-      return '';
-    }
-
-    throw error;
-  }
-}
-
-function recordPaths(record) {
-  return [record.oldPath, record.path].filter(Boolean).map(normalizeRepoPath);
-}
-
-function sourcePathsFromRecord(record) {
-  return recordPaths(record);
-}
-
 function docIgnoredByGroup(group, docPath) {
   if (!isInsideRoot(docPath, group.docsRoot)) {
     return false;
@@ -404,73 +283,4 @@ function docIgnoredByGroup(group, docPath) {
 
   const relative = normalizeRepoPath(path.posix.relative(group.docsRoot, docPath));
   return matchesAny(relative, group.docIgnore);
-}
-
-function walkFiles(root) {
-  const result = [];
-  const stack = [root];
-
-  while (stack.length > 0) {
-    const current = stack.pop();
-    const entries = fs.readdirSync(current, { withFileTypes: true });
-
-    for (const entry of entries) {
-      const fullPath = path.join(current, entry.name);
-
-      if (entry.isDirectory()) {
-        stack.push(fullPath);
-      } else if (entry.isFile()) {
-        result.push(fullPath);
-      }
-    }
-  }
-
-  return result;
-}
-
-function isInsideRoot(filePath, root) {
-  return filePath === root || filePath.startsWith(`${root}/`);
-}
-
-function matchesAny(value, patterns) {
-  return patterns.some((pattern) => globToRegExp(pattern).test(value));
-}
-
-function globToRegExp(glob) {
-  let source = '^';
-
-  for (let index = 0; index < glob.length; index += 1) {
-    const char = glob[index];
-    const next = glob[index + 1];
-
-    if (char === '*') {
-      if (next === '*') {
-        const following = glob[index + 2];
-        if (following === '/') {
-          source += '(?:.*/)?';
-          index += 2;
-        } else {
-          source += '.*';
-          index += 1;
-        }
-      } else {
-        source += '[^/]*';
-      }
-      continue;
-    }
-
-    if (char === '?') {
-      source += '[^/]';
-      continue;
-    }
-
-    source += escapeRegex(char);
-  }
-
-  source += '$';
-  return new RegExp(source);
-}
-
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

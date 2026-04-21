@@ -10,8 +10,8 @@ Provides git CLI operations for the Skills Manager repository: status, diff, log
 ## Import Relationships
 
 ```text
-Upstream: serde, anyhow, std::process
-Downstream: commands::git
+Upstream: anyhow, std::process, core::git::types
+Downstream: commands::git, core::git::operations_test
 ```
 
 ## Public Surface
@@ -23,11 +23,11 @@ Downstream: commands::git
 | `git_log` | Recent commit log entries |
 | `git_pull` / `git_push` / `git_commit` / `git_fetch` | Remote and local operations |
 | `run_sync_script` | Run update.sh / update.bat |
-| `GitStatusResponse`, `GitDiffResponse`, `GitLogResponse`, `GitOperationResult` | Serde response types |
+| response DTOs | Imported from `core::git::types` |
 
 ## Core Logic
 
-All operations invoke the system `git` binary via `std::process::Command` with `GIT_TERMINAL_PROMPT=0` and `LC_ALL=C`. The status parser handles porcelain v2 format lines (`1 `, `2 `, `u `, `? `) and branch metadata (`# branch.head`, `# branch.ab`).
+All operations invoke the system `git` binary via `std::process::Command` with `GIT_TERMINAL_PROMPT=0` and `LC_ALL=C`. The status parser handles porcelain v2 format lines (`1 `, `2 `, `u `, `? `) and branch metadata (`# branch.head`, `# branch.ab`). Tests now live in `operations_test.rs` so this module remains focused on runtime behavior.
 
 ## Data Flow
 

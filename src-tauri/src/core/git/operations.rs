@@ -1,60 +1,11 @@
 use anyhow::{anyhow, Context, Result};
-use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::process::Command;
 
-// ---------- response types ----------
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct GitStatusEntry {
-    pub path: String,
-    pub x: String,
-    pub y: String,
-    pub is_untracked: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct GitStatusResponse {
-    pub branch: Option<String>,
-    pub remote_url: Option<String>,
-    pub ahead_behind: Option<(usize, usize)>,
-    pub staged: Vec<GitStatusEntry>,
-    pub unstaged: Vec<GitStatusEntry>,
-    pub untracked: Vec<GitStatusEntry>,
-    pub is_clean: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct GitDiffResponse {
-    pub diff: String,
-    pub stat: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct GitLogEntry {
-    pub hash: String,
-    pub short_hash: String,
-    pub author: String,
-    pub date: String,
-    pub message: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct GitLogResponse {
-    pub entries: Vec<GitLogEntry>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct GitOperationResult {
-    pub success: bool,
-    pub message: String,
-}
+use super::types::{
+    GitDiffResponse, GitLogEntry, GitLogResponse, GitOperationResult, GitStatusEntry,
+    GitStatusResponse,
+};
 
 // ---------- helpers ----------
 
@@ -258,15 +209,6 @@ pub fn git_remote_url(repo_path: &Path) -> Result<Option<String>> {
     }
 }
 
-pub fn git_branch(repo_path: &Path) -> Result<Option<String>> {
-    let output = run_git(git_cmd(repo_path).args(["rev-parse", "--abbrev-ref", "HEAD"]));
-    match output {
-        Ok(branch) if branch == "HEAD" => Ok(None),
-        Ok(branch) => Ok(Some(branch)),
-        Err(_) => Ok(None),
-    }
-}
-
 pub fn run_sync_script(repo_path: &Path) -> GitOperationResult {
     let script_name = if cfg!(windows) {
         "update.bat"
@@ -345,89 +287,5 @@ fn parse_indexed_entry(line: &str) -> GitStatusEntry {
         x,
         y,
         is_untracked: false,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs;
-    use tempfile::tempdir;
-
-    fn init_repo(dir: &std::path::Path) {
-        run_git(git_cmd(dir).arg("init")).unwrap();
-        run_git(git_cmd(dir).args(["config", "user.email", "test@test.com"])).unwrap();
-        run_git(git_cmd(dir).args(["config", "user.name", "Test"])).unwrap();
-    }
-
-    #[test]
-    fn git_status_clean_on_fresh_repo() {
-        let dir = tempdir().unwrap();
-        init_repo(dir.path());
-
-        let status = git_status(dir.path()).unwrap();
-        assert!(status.is_clean);
-        assert!(status.staged.is_empty());
-    }
-
-    #[test]
-    fn git_status_detects_untracked() {
-        let dir = tempdir().unwrap();
-        init_repo(dir.path());
-        fs::write(dir.path().join("hello.txt"), "world").unwrap();
-
-        let status = git_status(dir.path()).unwrap();
-        assert!(!status.is_clean);
-        assert_eq!(status.untracked.len(), 1);
-        assert_eq!(status.untracked[0].path, "hello.txt");
-    }
-
-    #[test]
-    fn git_commit_creates_commit() {
-        let dir = tempdir().unwrap();
-        init_repo(dir.path());
-        fs::write(dir.path().join("hello.txt"), "world").unwrap();
-
-        let result = git_commit(dir.path(), "initial commit");
-        assert!(result.success);
-
-        let log = git_log(dir.path(), 5).unwrap();
-        assert_eq!(log.entries.len(), 1);
-        assert_eq!(log.entries[0].message, "initial commit");
-    }
-
-    #[test]
-    fn git_log_returns_entries_after_commits() {
-        let dir = tempdir().unwrap();
-        init_repo(dir.path());
-
-        fs::write(dir.path().join("a.txt"), "a").unwrap();
-        git_commit(dir.path(), "first");
-        fs::write(dir.path().join("b.txt"), "b").unwrap();
-        git_commit(dir.path(), "second");
-
-        let log = git_log(dir.path(), 10).unwrap();
-        assert_eq!(log.entries.len(), 2);
-        assert_eq!(log.entries[0].message, "second");
-        assert_eq!(log.entries[1].message, "first");
-    }
-
-    #[test]
-    fn git_diff_staged_returns_empty_when_nothing_staged() {
-        let dir = tempdir().unwrap();
-        init_repo(dir.path());
-        fs::write(dir.path().join("new.txt"), "content").unwrap();
-
-        let diff = git_diff(dir.path(), true).unwrap();
-        assert!(diff.diff.is_empty());
-    }
-
-    #[test]
-    fn git_remote_url_returns_none_without_remote() {
-        let dir = tempdir().unwrap();
-        init_repo(dir.path());
-
-        let url = git_remote_url(dir.path()).unwrap();
-        assert_eq!(url, None);
     }
 }

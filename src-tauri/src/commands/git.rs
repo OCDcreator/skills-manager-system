@@ -5,8 +5,10 @@ use tauri::Manager;
 use crate::core::git::operations::{
     git_commit as git_commit_core, git_diff as git_diff_core, git_fetch as git_fetch_core,
     git_log as git_log_core, git_pull as git_pull_core, git_push as git_push_core,
-    git_status as git_status_core, run_sync_script as run_sync_script_core, GitDiffResponse,
-    GitLogResponse, GitOperationResult, GitStatusResponse,
+    git_status as git_status_core, run_sync_script as run_sync_script_core,
+};
+use crate::core::git::types::{
+    GitDiffResponse, GitLogResponse, GitOperationResult, GitStatusResponse,
 };
 use crate::core::settings::SettingsStore;
 

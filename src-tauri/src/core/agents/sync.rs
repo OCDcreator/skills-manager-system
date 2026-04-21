@@ -7,9 +7,10 @@ use crate::core::skills::scan::{scan_repo_skills, SkillSummary};
 use crate::core::skills::state::SkillStateStore;
 
 use super::discovery::{load_agent_inventory, AgentInventoryItem, AgentPathMode, AgentSystemDirs};
-use super::manifest::{
-    apply_desired_entries, build_desired_skill_entries, cleanup_managed_entries, load_ledger,
-    save_ledger, AgentSyncLedgerEntry, DesiredSkillEntry, SyncMode,
+use super::manifest::{load_ledger, save_ledger, AgentSyncLedgerEntry};
+use super::target_sync::{
+    apply_desired_entries, build_desired_skill_entries, cleanup_managed_entries, DesiredSkillEntry,
+    SyncMode,
 };
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

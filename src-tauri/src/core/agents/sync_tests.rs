@@ -5,7 +5,7 @@ use tempfile::tempdir;
 
 use crate::core::agents::config::AgentConfigStore;
 use crate::core::agents::discovery::AgentSystemDirs;
-use crate::core::agents::manifest::SyncMode;
+use crate::core::agents::target_sync::SyncMode;
 use crate::core::agents::sync::apply_agent_sync;
 use crate::core::skills::state::SkillStateStore;
 

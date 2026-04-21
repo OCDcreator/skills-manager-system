@@ -89,3 +89,33 @@ test('allows explicit domain modules and ignores i18n payload files', () => {
     0,
   );
 });
+
+test('allows thin rust boundary files for mod.rs and tauri main entry', () => {
+  const root = createWorkspace({
+    'src-tauri/src/core/skills/mod.rs': 'pub mod scan;\n',
+    'src-tauri/src/main.rs': [
+      '#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]',
+      '',
+      'fn main() {',
+      '    app_lib::run();',
+      '}',
+    ].join('\n'),
+    'src-tauri/src/core/skills/scan.rs': [
+      'pub fn scan_skills() -> usize {',
+      '  1',
+      '}',
+    ].join('\n'),
+  });
+
+  const result = runArchitectureCheck(root);
+  const thinWarnings = result.warnings.filter((issue) => issue.code === 'thin-module');
+
+  assert.equal(
+    thinWarnings.filter((issue) => issue.file === 'src-tauri/src/core/skills/mod.rs').length,
+    0,
+  );
+  assert.equal(
+    thinWarnings.filter((issue) => issue.file === 'src-tauri/src/main.rs').length,
+    0,
+  );
+});

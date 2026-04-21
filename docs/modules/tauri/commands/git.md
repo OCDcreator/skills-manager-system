@@ -5,12 +5,12 @@
 
 ## Overview
 
-Thin Tauri command layer exposing git operations to the frontend. Each command loads the repo path from settings and delegates to `core::git::operations`.
+Thin Tauri command layer exposing git operations to the frontend. Each command loads the repo path from settings, delegates behavior to `core::git::operations`, and returns DTOs from `core::git::types`.
 
 ## Import Relationships
 
 ```text
-Upstream: core::git::operations, core::settings
+Upstream: core::git::operations, core::git::types, core::settings
 Downstream: Frontend via Tauri invoke
 ```
 

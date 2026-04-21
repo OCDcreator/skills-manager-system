@@ -23,3 +23,7 @@ Persists scene configuration (scene list + active scene) to `scene-config.json` 
 
 - `manager.rs` — calls store for applying scenes
 - `commands::scenes` — thin wrappers around store methods
+
+## Change Notes
+
+Keeps persistence path handling scoped to `PathBuf`; no runtime path references are required in this module.

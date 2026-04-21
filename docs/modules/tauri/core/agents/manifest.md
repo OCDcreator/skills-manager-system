@@ -1,11 +1,11 @@
-# Agent Sync Manifest Helpers
+# Agent Sync Ledger Helpers
 
 > **Source**: `src-tauri/src/core/agents/manifest.rs`
 > **Status**: [REVIEW]
 
 ## Overview
 
-Owns the low-level manifest, ledger, and copy/symlink target-reconciliation helpers used by agent sync.
+Owns the app-local ledger that records the last target directory used by global agent sync.
 
 ## Import Relationships
 
@@ -18,32 +18,26 @@ Downstream: serde_json, std::fs
 
 | Export | Purpose |
 |---|---|
-| `SyncMode` | Enum for copy vs symlink deployment mode. |
 | `AgentSyncLedger` | App-local record of the last applied target directory per agent. |
 | `AgentSyncLedgerEntry` | One ledger row for a supported agent. |
-| `DesiredSkillEntry` | Internal desired-output description built from scan results. |
-| `TargetApplyStats` | Internal counts for one target apply pass. |
-| `build_desired_skill_entries` | Maps enabled skills to stable managed target names. |
-| `apply_desired_entries` | Reconciles one target directory using the managed manifest. |
-| `cleanup_managed_entries` | Removes only app-managed entries from a target directory. |
 | `load_ledger` / `save_ledger` | Reads and writes `agent-sync-ledger.json`. |
 
 ## Core Logic
 
-Tracks a target-local manifest and an app-local ledger, supports both copy and symlink modes via `SyncMode`, deploys skill directories recursively, skips `.git`, removes stale managed entries, and protects unmanaged content from deletion or overwrite. Symlink mode creates individual file symlinks inside the target directory; on Windows this requires developer mode.
+Tracks only global agent sync history. Target-local manifest reconciliation, copy/symlink deployment, and managed-entry cleanup now live in `target_sync.rs` so project-local sync can share those helpers without including unrelated ledger code.
 
 ## Data Flow
 
-`sync.rs` builds desired entries from enabled skills, then delegates target reconciliation and ledger persistence into this module.
+`sync.rs` loads this ledger before applying targets and saves it after each global sync pass.
 
 ## Interactions
 
-Must stay aligned with stable skill IDs from `src-tauri/src/core/skills/scan.rs` and with the target-path decisions assembled in `discovery.rs`.
+Must stay aligned with target-path decisions assembled in `discovery.rs`.
 
 ## Configuration
 
-Writes `.skills-manager-system-manifest.json` inside managed target directories and `agent-sync-ledger.json` under the app config directory.
+Writes `agent-sync-ledger.json` under the app config directory.
 
 ## Change Notes
 
-Keep these helpers supporting both copy and symlink modes; the mode is chosen by the caller.
+Keep this module ledger-focused; target reconciliation belongs in `target_sync.rs`.

@@ -2,6 +2,8 @@
 
 Rust backend modules under `src-tauri/src/` map here one-to-one.
 
+Domain `mod.rs` files document module boundaries, while leaf files document runtime behavior, DTOs, persistence, and test-only modules that are part of the tracked source set.
+
 ## Mapping
 
 - `src-tauri/src/lib.rs` -> `docs/modules/tauri/lib.md`

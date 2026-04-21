@@ -19,7 +19,7 @@ Applies a scene by updating repo-scoped skill state, global agent enabled flags,
 1. Load the target scene.
 2. Diff and persist disabled skill IDs through `SkillStateStore`.
 3. Diff and persist enabled agent flags through `AgentConfigStore`.
-4. Load the preferred `AgentSyncMode` from settings and rerun `apply_agent_sync`.
+4. Load the preferred `AgentSyncMode` from settings, map it to `target_sync::SyncMode`, and rerun `apply_agent_sync`.
 5. Mark the scene as active only after sync succeeds.
 
 ## Tests

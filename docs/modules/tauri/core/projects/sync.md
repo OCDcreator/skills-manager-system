@@ -16,10 +16,10 @@ Deploys skills into project-local agent directories (e.g., `.claude/skills`, `.o
 
 ## Core Logic
 
-For each project in the config, copies enabled skills from the my-skills repo into the project's local agent skill directories. Uses the same manifest-based tracking as global agent sync.
+For each project in the config, copies enabled skills from the my-skills repo into the project's local agent skill directories. Uses the shared target reconciliation helpers from `agents::target_sync` with a project-specific ledger.
 
 ## Interactions
 
 - `store.rs` — reads project configuration
-- `agents::manifest` — reuses `DesiredSkillEntry` and `apply_desired_entries`
+- `agents::target_sync` — reuses `DesiredSkillEntry`, `apply_desired_entries`, and cleanup helpers
 - `commands::projects` — thin wrapper for Tauri command

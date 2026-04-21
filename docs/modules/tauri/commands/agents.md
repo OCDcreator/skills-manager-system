@@ -7,6 +7,13 @@
 
 Provides thin Tauri commands for agent inventory, target configuration, and manual global apply.
 
+## Import Relationships
+
+```text
+Upstream: src-tauri/src/lib.rs
+Downstream: core::agents::{config, discovery, sync, target_sync}, core::settings
+```
+
 ## Public Surface
 
 | Export | Purpose |
@@ -17,4 +24,4 @@ Provides thin Tauri commands for agent inventory, target configuration, and manu
 
 ## Core Logic
 
-`apply_agent_sync` now resolves sync mode from either the command argument or `settings.json`, so manual apply and scene-apply flows share the same `copy`/`symlink` preference model.
+`apply_agent_sync` resolves sync mode from either the command argument or `settings.json`, then delegates orchestration to `core::agents::sync`. The command layer only translates persisted `AgentSyncMode` into `target_sync::SyncMode`.

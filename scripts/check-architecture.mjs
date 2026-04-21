@@ -129,6 +129,10 @@ function getBaseNameWithoutExtension(relativePath) {
   return path.basename(relativePath, path.extname(relativePath)).toLowerCase();
 }
 
+function isStableBoundaryFile(relativePath) {
+  return path.posix.basename(relativePath) === 'mod.rs' || relativePath === 'src-tauri/src/main.rs';
+}
+
 function isBucketFileName(relativePath) {
   if (!isSourceRoot(relativePath)) {
     return false;
@@ -257,7 +261,7 @@ function analyzeFiles(rootDir) {
           'Pure import/export shells are not allowed; merge this file back into its owning module.',
         ),
       );
-    } else if (logicalLines.length > 0 && logicalLines.length < 8 && isSourceRoot(relativePath)) {
+    } else if (logicalLines.length > 0 && logicalLines.length < 8 && isSourceRoot(relativePath) && !isStableBoundaryFile(relativePath)) {
       warnings.push(
         createIssue(
           'warning',

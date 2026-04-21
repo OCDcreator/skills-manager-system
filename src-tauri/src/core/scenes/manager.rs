@@ -5,8 +5,8 @@ use std::path::Path;
 use super::config::{SceneConfigStore, SceneEntry};
 use crate::core::agents::config::AgentConfigStore;
 use crate::core::agents::discovery::{load_agent_inventory, AgentSystemDirs};
-use crate::core::agents::manifest::SyncMode;
 use crate::core::agents::sync::apply_agent_sync;
+use crate::core::agents::target_sync::SyncMode;
 use crate::core::settings::{AgentSyncMode, SettingsStore};
 use crate::core::skills::state::SkillStateStore;
 
