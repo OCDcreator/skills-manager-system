@@ -521,6 +521,28 @@ Recommended initial distribution:
 
 If the project later decides to package the CLI together with the desktop app, that should be treated as a distribution task rather than a prerequisite for the runtime architecture.
 
+### Install Experience And PATH Registration
+
+The distribution story must also cover how users actually invoke the CLI after obtaining the binary.
+
+Recommended requirement:
+
+- packaged installs should make the `skills-manager` command available from a normal shell without requiring the user to manually locate the binary each time
+
+Recommended paths by channel:
+
+- CI artifacts may initially require manual placement by advanced users
+- source builds may initially be invoked through Cargo or a local target path
+- installer-based distribution should register the CLI on `PATH` or place a stable wrapper in an already-registered command location
+
+For Windows and macOS, the project should treat "command is directly invokable from shell" as the success criterion, not merely "binary exists somewhere on disk".
+
+If automatic PATH registration is deferred in Phase 1, the project should still document:
+
+- where the produced binary lives
+- how to add that location to `PATH`
+- how to verify the command with `skills-manager --help`
+
 ## Implementation Order
 
 Recommended sequence:
