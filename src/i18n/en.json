@@ -156,6 +156,8 @@
   "skills.detail.sourceLabel": "Source",
   "skills.detail.statusLabel": "Status",
   "skills.detail.pathLabel": "Path",
+  "skills.detail.frontmatterWrapOn": "Frontmatter wraps",
+  "skills.detail.frontmatterWrapOff": "Frontmatter nowrap",
   "skills.detail.loadingDocument": "Loading document…",
   "skills.placeholder.title": "Skills browser is loading",
   "skills.placeholder.body": "The searchable browser arrives after the shared app state is wired."

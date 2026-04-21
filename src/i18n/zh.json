@@ -156,6 +156,8 @@
   "skills.detail.sourceLabel": "来源",
   "skills.detail.statusLabel": "状态",
   "skills.detail.pathLabel": "路径",
+  "skills.detail.frontmatterWrapOn": "Frontmatter 换行",
+  "skills.detail.frontmatterWrapOff": "Frontmatter 不换行",
   "skills.detail.loadingDocument": "正在加载文档……",
   "skills.placeholder.title": "技能浏览正在接线",
   "skills.placeholder.body": "共享应用状态完成后，这里会展示可搜索的技能浏览器。"

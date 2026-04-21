@@ -46,33 +46,8 @@ pub fn read_skill_document(repo_root: &Path, relative_path: &str) -> Result<Skil
         description: metadata.description.unwrap_or_default(),
         source_type: source_type.to_string(),
         relative_path: relative_path.to_string(),
-        content: strip_frontmatter(&content)
-            .trim_start_matches(['\r', '\n'])
-            .to_string(),
+        content,
     })
-}
-
-fn strip_frontmatter(content: &str) -> &str {
-    let mut cursor = 0usize;
-    let mut lines = content.split_inclusive('\n');
-
-    let Some(first_line) = lines.next() else {
-        return content;
-    };
-
-    cursor += first_line.len();
-    if first_line.trim_end_matches(['\r', '\n']) != "---" {
-        return content;
-    }
-
-    for line in lines {
-        cursor += line.len();
-        if line.trim_end_matches(['\r', '\n']) == "---" {
-            return &content[cursor..];
-        }
-    }
-
-    content
 }
 
 fn validate_relative_path(relative_path: &str) -> Result<()> {
@@ -108,7 +83,10 @@ mod tests {
         let document = read_skill_document(repo.path(), "custom/searxng").unwrap();
 
         assert_eq!(document.id, "custom:searxng");
-        assert_eq!(document.content, "# Content");
+        assert_eq!(
+            document.content,
+            "---\nname: searxng\ndescription: search helper\n---\n# Content"
+        );
     }
 
     #[test]
