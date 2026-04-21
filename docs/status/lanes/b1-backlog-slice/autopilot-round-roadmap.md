@@ -24,7 +24,7 @@
   - `settings get-repo-path`, `skills list`, and `agents list` work headlessly with JSON output
   - Focused CLI/runtime tests pass, plus `cargo check --manifest-path src-tauri/Cargo.toml --no-default-features --features cli`
 
-### [NEXT] B1.2 - Prepare mutation-ready runtime contracts
+### [DONE] B1.2 - Prepare mutation-ready runtime contracts
 
 - **Goal**: If Phase 1a finishes early within the lane budget, harden error mapping and lock behavior without yet expanding to all mutation command groups.
 - **Acceptance**:

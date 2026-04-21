@@ -5,13 +5,13 @@
 
 ## Overview
 
-Resolves the shared application config directory, applies `--repo` / `--config-dir` overrides, normalizes emitted paths, and provides the config lock entrypoint for future mutation commands.
+Resolves the shared application config directory, applies `--repo` / `--config-dir` overrides, normalizes emitted paths, and delegates config lock acquisition for future mutation commands.
 
 ## Import Relationships
 
 ```text
 Upstream: src-tauri/src/cli/mod.rs, src-tauri/src/cli/commands/*
-Downstream: src-tauri/src/core/settings.rs, dirs, std::fs
+Downstream: src-tauri/src/app_runtime/config_lock.rs, src-tauri/src/core/settings.rs, dirs
 ```
 
 ## Public Surface
@@ -23,10 +23,11 @@ Downstream: src-tauri/src/core/settings.rs, dirs, std::fs
 | `active_app_identifier` | Picks the production vs dev Tauri identifier. |
 | `tauri_app_config_dir` | Recreates the Tauri-style app config path from the identifier. |
 | `normalize_output_path` | Forces forward slashes for JSON-facing paths. |
+| `acquire_config_lock` / `with_config_lock` | Wraps mutation-ready writes in the shared advisory lock. |
 
 ## Core Logic
 
-The context resolves the config root from `dirs::config_dir()` unless `--config-dir` is supplied, joins that root with the active app identifier, and reads persisted settings from the same files used by the desktop app. Repo-path lookup always prefers the CLI override over saved settings. The lock helper uses a config-root lock file so future mutation commands can coordinate writes without pulling Tauri runtime types into the CLI.
+The context resolves the config root from `dirs::config_dir()` unless `--config-dir` is supplied, joins that root with the active app identifier, and reads persisted settings from the same files used by the desktop app. Repo-path lookup always prefers the CLI override over saved settings. Lock methods delegate to `config_lock.rs` so future mutation commands can coordinate writes without pulling Tauri runtime types into the CLI.
 
 ## Data Flow
 

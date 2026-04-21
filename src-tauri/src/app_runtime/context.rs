@@ -1,13 +1,11 @@
 use anyhow::{anyhow, Context, Result};
-use std::fs::{self, File, OpenOptions};
-use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use super::config_lock::{acquire_config_lock, ConfigLockError, ConfigLockGuard};
 use crate::core::settings::{AgentSyncMode, AppSettings, SettingsStore};
 
 pub const PRODUCTION_APP_IDENTIFIER: &str = "com.ocdcreator.skills-manager-system";
 pub const DEVELOPMENT_APP_IDENTIFIER: &str = "com.ocdcreator.skills-manager-system.dev";
-const CONFIG_LOCK_FILE_NAME: &str = ".skills-manager-system.lock";
 
 #[derive(Debug, Clone, Default)]
 pub struct AppRuntimeOptions {
@@ -82,31 +80,8 @@ impl AppRuntimeContext {
         }
     }
 
-    pub fn acquire_config_lock(&self) -> Result<ConfigLockGuard> {
-        fs::create_dir_all(&self.config_dir)
-            .with_context(|| format!("Failed to create {:?}", self.config_dir))?;
-
-        let lock_path = self.config_dir.join(CONFIG_LOCK_FILE_NAME);
-        let mut file = match OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&lock_path)
-        {
-            Ok(file) => file,
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
-                return Err(anyhow!("Configuration lock is already held"));
-            }
-            Err(error) => {
-                return Err(error).with_context(|| format!("Failed to acquire {:?}", lock_path));
-            }
-        };
-
-        writeln!(file, "pid={}", std::process::id()).ok();
-
-        Ok(ConfigLockGuard {
-            file: Some(file),
-            lock_path,
-        })
+    pub fn acquire_config_lock(&self) -> std::result::Result<ConfigLockGuard, ConfigLockError> {
+        acquire_config_lock(&self.config_dir)
     }
 
     pub fn with_config_lock<T>(&self, operation: impl FnOnce() -> Result<T>) -> Result<T> {
@@ -131,23 +106,11 @@ pub fn normalize_output_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
-#[derive(Debug)]
-pub struct ConfigLockGuard {
-    file: Option<File>,
-    lock_path: PathBuf,
-}
-
-impl Drop for ConfigLockGuard {
-    fn drop(&mut self) {
-        self.file.take();
-        let _ = fs::remove_file(&self.lock_path);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::settings::{AgentSyncMode, SettingsStore};
+    use crate::app_runtime::ConfigLockErrorKind;
+    use crate::core::settings::SettingsStore;
     use tempfile::tempdir;
 
     #[test]
@@ -217,7 +180,25 @@ mod tests {
     }
 
     #[test]
-    fn advisory_lock_blocks_second_mutation_writer() {
+    fn with_config_lock_releases_after_failed_operation() {
+        let config_dir = tempdir().unwrap();
+        let context = AppRuntimeContext::from_options_with_parts(
+            AppRuntimeOptions {
+                config_dir_override: Some(config_dir.path().to_path_buf()),
+                ..AppRuntimeOptions::default()
+            },
+            PathBuf::from("/unused"),
+            DEVELOPMENT_APP_IDENTIFIER,
+        );
+
+        let failure: Result<()> = context.with_config_lock(|| Err(anyhow!("boom")));
+        assert!(failure.unwrap_err().to_string().contains("boom"));
+
+        let _guard = context.acquire_config_lock().unwrap();
+    }
+
+    #[test]
+    fn context_lock_reports_typed_conflict() {
         let config_dir = tempdir().unwrap();
         let context = AppRuntimeContext::from_options_with_parts(
             AppRuntimeOptions {
@@ -230,19 +211,7 @@ mod tests {
 
         let _guard = context.acquire_config_lock().unwrap();
         let error = context.acquire_config_lock().unwrap_err();
-        assert!(error.to_string().contains("already held"));
 
-        let unlocked = AppRuntimeContext::from_options_with_parts(
-            AppRuntimeOptions {
-                config_dir_override: Some(config_dir.path().to_path_buf()),
-                ..AppRuntimeOptions::default()
-            },
-            PathBuf::from("/unused"),
-            DEVELOPMENT_APP_IDENTIFIER,
-        );
-        assert_eq!(
-            unlocked.resolve_sync_mode(Some("symlink")).unwrap(),
-            AgentSyncMode::Symlink
-        );
+        assert_eq!(error.kind(), ConfigLockErrorKind::AlreadyHeld);
     }
 }

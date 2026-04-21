@@ -5,19 +5,20 @@
 
 ## Overview
 
-Defines the shared runtime boundary for headless CLI work: config-dir resolution, repo overrides, output shaping, and re-exported helper types.
+Defines the shared runtime boundary for headless CLI work: config-dir resolution, repo overrides, config locking, output shaping, and re-exported helper types.
 
 ## Import Relationships
 
 ```text
 Upstream: src-tauri/src/lib.rs, src-tauri/src/cli/*
-Downstream: src-tauri/src/app_runtime/context.rs, src-tauri/src/app_runtime/output.rs
+Downstream: src-tauri/src/app_runtime/config_lock.rs, src-tauri/src/app_runtime/context.rs, src-tauri/src/app_runtime/output.rs
 ```
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
+| `config_lock` | Cross-platform advisory config lock used by mutation-ready runtime paths. |
 | `context` | Runtime context, path normalization, and config-lock helpers. |
 | `output` | Stable CLI response schema, warnings, rendering, and result builders. |
 | `output_errors` | Exit-code and structured error helpers for CLI adapters. |

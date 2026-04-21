@@ -5,13 +5,13 @@
 
 ## Overview
 
-Contains the stable CLI exit-code enum and structured error payload helpers used by the output layer.
+Contains the stable CLI exit-code enum and structured error payload helpers used by the output layer and mutation-ready runtime contracts.
 
 ## Import Relationships
 
 ```text
 Upstream: src-tauri/src/app_runtime/output.rs, src-tauri/src/cli/commands/*
-Downstream: serde_json
+Downstream: src-tauri/src/app_runtime/config_lock.rs, src-tauri/src/app_runtime/context.rs, serde_json
 ```
 
 ## Public Surface
@@ -24,7 +24,7 @@ Downstream: serde_json
 
 ## Core Logic
 
-The exit-code mapping follows the approved CLI design: `0` for success, `8` for partial success, and stable non-zero values for argument, configuration, target, filesystem, external command, and conflict failures.
+The exit-code mapping follows the approved CLI design: `0` for success, `8` for partial success, and stable non-zero values for argument, configuration, target, filesystem, external command, and conflict failures. Helpers now predefine mutation-facing mappings such as `invalid_sync_mode`, `config_write_failed`, and config-lock conflicts.
 
 ## Interactions
 
