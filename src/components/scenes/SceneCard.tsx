@@ -123,6 +123,7 @@ export function SceneCard({
                 <button
                   className="rounded bg-sky-600 px-3 py-1 text-xs text-white"
                   onClick={onSaveEdit}
+                  title={t("tooltip.scenes.save")}
                   type="button"
                 >
                   {t("scenes.card.save")}
@@ -130,6 +131,7 @@ export function SceneCard({
                 <button
                   className="rounded bg-slate-700 px-3 py-1 text-xs text-slate-300"
                   onClick={onCancelEdit}
+                  title={t("tooltip.scenes.cancel")}
                   type="button"
                 >
                   {t("scenes.card.cancel")}
@@ -150,7 +152,7 @@ export function SceneCard({
             <button
               className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
               onClick={onStartEdit}
-              title={t("scenes.card.edit")}
+              title={t("tooltip.scenes.edit")}
               type="button"
             >
               <Pencil className="h-4 w-4" />
@@ -158,7 +160,7 @@ export function SceneCard({
             <button
               className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
               onClick={onToggleConfigure}
-              title={t("scenes.card.configure")}
+              title={t("tooltip.scenes.configure")}
               type="button"
             >
               <Settings2 className="h-4 w-4" />
@@ -166,7 +168,7 @@ export function SceneCard({
             <button
               className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
               onClick={onDuplicate}
-              title={t("scenes.card.duplicate")}
+              title={t("tooltip.scenes.duplicate")}
               type="button"
             >
               <Copy className="h-4 w-4" />
@@ -174,7 +176,7 @@ export function SceneCard({
             <button
               className="rounded p-1.5 text-slate-400 hover:bg-rose-900/40 hover:text-rose-300"
               onClick={onDelete}
-              title={t("scenes.card.delete")}
+              title={t("tooltip.scenes.delete")}
               type="button"
             >
               <Trash2 className="h-4 w-4" />
@@ -236,11 +238,12 @@ export function SceneCard({
                       aria-label={skill.name}
                       className="text-slate-400 hover:text-sky-400"
                       onClick={() => onToggleSkill(skill.id)}
+                      title={`${t("tooltip.scenes.toggleSkill")}: ${skill.name}`}
                       type="button"
                     >
                       <CheckSquare className="h-4 w-4" />
                     </button>
-                    <span title={t("scenes.card.dragHint")}>
+                    <span title={t("tooltip.scenes.gripDrag")}>
                       <GripVertical className="h-3.5 w-3.5 cursor-grab text-slate-500 active:cursor-grabbing" />
                     </span>
                     <span className="flex-1">{skill.name}</span>
@@ -256,6 +259,7 @@ export function SceneCard({
                     aria-label={skill.name}
                     className="text-slate-400 hover:text-sky-400"
                     onClick={() => onToggleSkill(skill.id)}
+                    title={`${t("tooltip.scenes.toggleSkill")}: ${skill.name}`}
                     type="button"
                   >
                     <Square className="h-4 w-4" />
@@ -284,6 +288,7 @@ export function SceneCard({
                       aria-label={agent.displayName}
                       className="text-slate-400 hover:text-sky-400"
                       onClick={() => onToggleAgent(agent.key)}
+                      title={`${t("tooltip.scenes.toggleAgent")}: ${agent.displayName}`}
                       type="button"
                     >
                       {enabled ? (
@@ -306,6 +311,7 @@ export function SceneCard({
           className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-50"
           disabled={isApplying}
           onClick={onApply}
+          title={t("tooltip.scenes.apply")}
           type="button"
         >
           <Power className="h-4 w-4" />

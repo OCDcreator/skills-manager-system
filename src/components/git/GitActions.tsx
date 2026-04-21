@@ -67,6 +67,7 @@ export function GitActions({ isRunning, onOperationComplete, onLogEntry }: GitAc
           className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-50"
           disabled={busy}
           onClick={handlePull}
+          title={t("tooltip.git.pull")}
         >
           <ArrowDownToLine className="h-4 w-4" />
           {pulling ? t("git.operation.running") : t("git.actions.pull")}
@@ -75,6 +76,7 @@ export function GitActions({ isRunning, onOperationComplete, onLogEntry }: GitAc
           className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-50"
           disabled={busy}
           onClick={handlePush}
+          title={t("tooltip.git.push")}
         >
           <ArrowUpFromLine className="h-4 w-4" />
           {pushing ? t("git.operation.running") : t("git.actions.push")}
@@ -83,6 +85,7 @@ export function GitActions({ isRunning, onOperationComplete, onLogEntry }: GitAc
           className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-50"
           disabled={busy}
           onClick={handleSync}
+          title={t("tooltip.git.sync")}
         >
           <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
           {syncing ? t("git.operation.running") : t("git.actions.sync")}
@@ -104,6 +107,7 @@ export function GitActions({ isRunning, onOperationComplete, onLogEntry }: GitAc
           className="flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-500 disabled:opacity-50"
           disabled={busy || !commitMessage.trim()}
           onClick={() => void handleCommit()}
+          title={t("tooltip.git.commit")}
         >
           <GitCommitHorizontal className="h-4 w-4" />
           <Upload className="h-3 w-3" />

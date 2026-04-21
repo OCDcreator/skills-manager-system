@@ -47,6 +47,7 @@ export function SkillFilters(props: SkillFiltersProps) {
           className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-100 disabled:opacity-60"
           disabled={isRefreshing}
           onClick={() => void onRefresh()}
+          title={t("tooltip.skills.refresh")}
           type="button"
         >
           {t("skills.refresh")}
@@ -67,6 +68,7 @@ export function SkillFilters(props: SkillFiltersProps) {
                   : "bg-slate-800 text-slate-200"
               }`}
               onClick={() => onSourceFilterChange(summary.key)}
+              title={t("tooltip.skills.filter")}
               type="button"
             >
               {t(`skills.source.${summary.key}`)} ({summary.count})
@@ -89,6 +91,7 @@ export function SkillFilters(props: SkillFiltersProps) {
                   : "bg-slate-800 text-slate-200"
               }`}
               onClick={() => onStatusFilterChange(summary.key)}
+              title={t("tooltip.skills.statusFilter")}
               type="button"
             >
               {t(`skills.status.${summary.key}`)} ({summary.count})

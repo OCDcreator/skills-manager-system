@@ -160,5 +160,63 @@
   "skills.detail.frontmatterWrapOff": "Frontmatter nowrap",
   "skills.detail.loadingDocument": "Loading document…",
   "skills.placeholder.title": "Skills browser is loading",
-  "skills.placeholder.body": "The searchable browser arrives after the shared app state is wired."
+  "skills.placeholder.body": "The searchable browser arrives after the shared app state is wired.",
+
+  "tooltip.nav.skills": "Browse, search, enable, and disable skills from your local repository",
+  "tooltip.nav.agents": "Manage agent targets and sync enabled skills to their global directories",
+  "tooltip.nav.git": "View git status, diff, file changes, and perform pull/push/commit operations",
+  "tooltip.nav.scenes": "Create and switch between skill & agent configurations; apply scenes to activate them",
+  "tooltip.nav.projects": "Assign skills to specific project directories for per-project agent configuration",
+  "tooltip.nav.settings": "Configure the local my-skills repository path used for scanning",
+
+  "tooltip.git.pull": "Pull the latest changes from the remote repository",
+  "tooltip.git.push": "Push local commits to the remote repository",
+  "tooltip.git.sync": "Synchronize external skill sources into the local repository",
+  "tooltip.git.commit": "Stage all changes and commit with the entered message",
+  "tooltip.git.fetch": "Fetch remote references without merging",
+  "tooltip.git.refresh": "Refresh the current git status and file list",
+
+  "tooltip.git.diff.staged": "Show changes that are staged for the next commit",
+  "tooltip.git.diff.unstaged": "Show changes that are modified but not yet staged",
+  "tooltip.git.diff.copy": "Copy the diff content to clipboard",
+
+  "tooltip.git.file.staged": "Staged file — click to view its diff",
+  "tooltip.git.file.unstaged": "Unstaged file — click to view its diff",
+  "tooltip.git.file.untracked": "Untracked file — click to view its diff",
+
+  "tooltip.skills.refresh": "Re-scan the repository and refresh the skill list",
+  "tooltip.skills.filter": "Filter skills by this source category",
+  "tooltip.skills.statusFilter": "Filter skills by this status",
+  "tooltip.skills.select": "Click to view skill details and SKILL.md content",
+  "tooltip.skills.toggle.enable": "Enable this skill so it can be synced to agents",
+  "tooltip.skills.toggle.disable": "Disable this skill; it will be removed from agent directories on next sync",
+  "tooltip.skills.frontmatterWrap": "Toggle whether the YAML frontmatter block wraps to fit the width",
+
+  "tooltip.agents.enableTarget": "Enable this agent as a sync target for skill distribution",
+  "tooltip.agents.disableTarget": "Disable this agent; skills will no longer be synced to its directory",
+  "tooltip.agents.saveOverride": "Save the custom path as this agent's skills directory override",
+  "tooltip.agents.resetOverride": "Clear the path override and revert to the default directory",
+  "tooltip.agents.syncModeSelect": "Choose how skills are written: copy creates duplicates, symlink creates links",
+  "tooltip.agents.applySync": "Apply the current sync: write enabled skills to all enabled agent directories",
+
+  "tooltip.scenes.edit": "Edit the scene name and description",
+  "tooltip.scenes.configure": "Open the skills & agents configuration panel for this scene",
+  "tooltip.scenes.duplicate": "Create a copy of this scene with a new ID",
+  "tooltip.scenes.delete": "Permanently delete this scene and its configuration",
+  "tooltip.scenes.save": "Save your edits to this scene",
+  "tooltip.scenes.cancel": "Discard your edits and exit edit mode",
+  "tooltip.scenes.toggleSkill": "Toggle whether this skill is included in the scene",
+  "tooltip.scenes.toggleAgent": "Toggle whether this agent is targeted by the scene",
+  "tooltip.scenes.gripDrag": "Drag to reorder this skill's priority in the scene",
+  "tooltip.scenes.apply": "Apply this scene: update skill states and re-sync agent directories",
+  "tooltip.scenes.create": "Create a new scene with the specified ID and name",
+  "tooltip.scenes.dismiss": "Dismiss this notification",
+
+  "tooltip.projects.add": "Add a new project assignment with the specified path and skills",
+  "tooltip.projects.delete": "Remove this project assignment permanently",
+  "tooltip.projects.apply": "Write the assigned skills into each agent's project-level directory",
+  "tooltip.projects.dismiss": "Dismiss this notification",
+
+  "tooltip.settings.browse": "Open a folder picker to select the repository directory",
+  "tooltip.settings.save": "Save the repository path and refresh scan results"
 }

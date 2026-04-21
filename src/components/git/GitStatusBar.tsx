@@ -63,6 +63,7 @@ export function GitStatusBar({ status, isLoading, onRefresh, onFetch, isFetching
           className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-700 disabled:opacity-50"
           disabled={isFetching}
           onClick={onFetch}
+          title={t("tooltip.git.fetch")}
         >
           {isFetching ? t("git.operation.running") : t("git.actions.fetch")}
         </button>
@@ -70,6 +71,7 @@ export function GitStatusBar({ status, isLoading, onRefresh, onFetch, isFetching
           className="rounded-lg bg-slate-800 p-1.5 text-slate-300 hover:bg-slate-700 disabled:opacity-50"
           disabled={isLoading}
           onClick={onRefresh}
+          title={t("tooltip.git.refresh")}
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
         </button>

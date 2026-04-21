@@ -52,6 +52,7 @@ export function RepoPathForm() {
         <button
           className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-100"
           onClick={handleBrowse}
+          title={t("tooltip.settings.browse")}
           type="button"
         >
           {t("settings.browse")}
@@ -60,6 +61,7 @@ export function RepoPathForm() {
       <button
         className="rounded-xl bg-sky-400 px-4 py-3 text-sm font-medium text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isSavingPath}
+        title={t("tooltip.settings.save")}
         type="submit"
       >
         {t("settings.save")}

@@ -31,6 +31,7 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
                     : "bg-slate-800 text-slate-200"
                 }`}
                 onClick={() => setActiveView(view)}
+                title={t(`tooltip.nav.${view}`)}
               >
                 {t(`nav.${view}`)}
               </button>

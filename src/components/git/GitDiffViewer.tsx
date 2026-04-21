@@ -44,6 +44,7 @@ export function GitDiffViewer({ diff, isLoading, diffMode, onModeChange }: GitDi
             diffMode === "staged" ? "bg-sky-400 text-slate-950" : "text-slate-400 hover:text-slate-200"
           }`}
           onClick={() => onModeChange("staged")}
+          title={t("tooltip.git.diff.staged")}
         >
           {t("git.diff.staged")}
         </button>
@@ -52,12 +53,14 @@ export function GitDiffViewer({ diff, isLoading, diffMode, onModeChange }: GitDi
             diffMode === "unstaged" ? "bg-sky-400 text-slate-950" : "text-slate-400 hover:text-slate-200"
           }`}
           onClick={() => onModeChange("unstaged")}
+          title={t("tooltip.git.diff.unstaged")}
         >
           {t("git.diff.unstaged")}
         </button>
         <button
           className="ml-auto rounded px-2 py-1 text-xs text-slate-500 hover:text-slate-300"
           onClick={handleCopy}
+          title={t("tooltip.git.diff.copy")}
         >
           {copied ? "✓" : "Copy"}
         </button>

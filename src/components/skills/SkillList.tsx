@@ -53,6 +53,7 @@ export function SkillList(props: SkillListProps) {
                 <button
                   className="min-w-0 flex-1 text-left"
                   onClick={() => onSelect(skill)}
+                  title={t("tooltip.skills.select")}
                   type="button"
                 >
                   <div className="flex flex-wrap items-center gap-2">
@@ -86,6 +87,7 @@ export function SkillList(props: SkillListProps) {
                   className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 disabled:opacity-60"
                   disabled={isUpdating}
                   onClick={() => void onToggleEnabled(skill.id, isDisabled)}
+                  title={isDisabled ? t("tooltip.skills.toggle.enable") : t("tooltip.skills.toggle.disable")}
                   type="button"
                 >
                   {isDisabled ? t("skills.toggle.enable") : t("skills.toggle.disable")}

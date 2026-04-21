@@ -74,6 +74,7 @@ export function AgentSyncSummary(props: AgentSyncSummaryProps) {
               onChange={(event) =>
                 void onSyncModeChange(event.target.value as AgentSyncMode)
               }
+              title={t("tooltip.agents.syncModeSelect")}
               value={syncMode}
             >
               <option value="copy">{t("agents.syncMode.copy")}</option>
@@ -84,6 +85,7 @@ export function AgentSyncSummary(props: AgentSyncSummaryProps) {
             className="w-full rounded-xl bg-emerald-400 px-4 py-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={!canApply || isApplying || isSavingMode}
             onClick={() => void onApply()}
+            title={t("tooltip.agents.applySync")}
             type="button"
           >
             {isApplying ? t("agents.apply.running") : t("agents.apply.button")}

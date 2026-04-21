@@ -128,6 +128,7 @@ export function ProjectsView() {
           <button
             className="ml-2 text-sky-500 hover:text-sky-300"
             onClick={() => setLastResult(null)}
+            title={t("tooltip.projects.dismiss")}
             type="button"
           >
             ×
@@ -166,6 +167,7 @@ export function ProjectsView() {
             className="flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-500 disabled:opacity-50"
             disabled={!newPath.trim()}
             onClick={() => void handleAdd()}
+            title={t("tooltip.projects.add")}
             type="button"
           >
             <Plus className="h-4 w-4" />

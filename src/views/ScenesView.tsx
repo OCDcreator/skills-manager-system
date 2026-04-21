@@ -195,6 +195,7 @@ export function ScenesView() {
           <button
             className="ml-2 text-sky-500 hover:text-sky-300"
             onClick={() => setLastResult(null)}
+            title={t("tooltip.scenes.dismiss")}
             type="button"
           >
             ×
@@ -232,6 +233,7 @@ export function ScenesView() {
           className="flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-500 disabled:opacity-50"
           disabled={creating || !newId.trim() || !newName.trim()}
           onClick={() => void handleCreate()}
+          title={t("tooltip.scenes.create")}
           type="button"
         >
           <Plus className="h-4 w-4" />

@@ -23,6 +23,7 @@ export function GitFileList({ staged, unstaged, untracked, selectedPath, onSelec
         title={t("git.files.staged")}
         emptyText={t("git.files.empty")}
         statusColor="text-emerald-400"
+        tooltipPrefix={t("tooltip.git.file.staged")}
       />
       <Section
         entries={unstaged}
@@ -31,6 +32,7 @@ export function GitFileList({ staged, unstaged, untracked, selectedPath, onSelec
         title={t("git.files.unstaged")}
         emptyText={t("git.files.empty")}
         statusColor="text-amber-400"
+        tooltipPrefix={t("tooltip.git.file.unstaged")}
       />
       <Section
         entries={untracked}
@@ -39,6 +41,7 @@ export function GitFileList({ staged, unstaged, untracked, selectedPath, onSelec
         title={t("git.files.untracked")}
         emptyText={t("git.files.empty")}
         statusColor="text-slate-400"
+        tooltipPrefix={t("tooltip.git.file.untracked")}
       />
     </div>
   );
@@ -51,6 +54,7 @@ function Section({
   title,
   emptyText,
   statusColor,
+  tooltipPrefix,
 }: {
   entries: GitStatusEntry[];
   selectedPath: string | null;
@@ -58,6 +62,7 @@ function Section({
   title: string;
   emptyText: string;
   statusColor: string;
+  tooltipPrefix: string;
 }) {
   return (
     <div>
@@ -74,6 +79,7 @@ function Section({
                   selectedPath === entry.path && "bg-slate-800",
                 )}
                 onClick={() => onSelect(entry)}
+                title={`${tooltipPrefix}: ${entry.path}`}
               >
                 <FileText className="h-4 w-4 shrink-0 text-slate-500" />
                 <span className={`font-mono text-xs ${statusColor}`}>

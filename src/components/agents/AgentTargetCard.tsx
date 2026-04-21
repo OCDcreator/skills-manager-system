@@ -50,6 +50,7 @@ export function AgentTargetCard(props: AgentTargetCardProps) {
           }`}
           disabled={isUpdating}
           onClick={() => void onToggleEnabled(agent.key, !agent.enabled)}
+          title={agent.enabled ? t("tooltip.agents.disableTarget") : t("tooltip.agents.enableTarget")}
           type="button"
         >
           {agent.enabled ? t("agents.card.disableTarget") : t("agents.card.enableTarget")}
@@ -96,6 +97,7 @@ export function AgentTargetCard(props: AgentTargetCardProps) {
             className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-60"
             disabled={saveDisabled}
             onClick={() => void onSavePathOverride(agent.key, trimmedOverride)}
+            title={t("tooltip.agents.saveOverride")}
             type="button"
           >
             {t("agents.card.saveOverride")}
@@ -104,6 +106,7 @@ export function AgentTargetCard(props: AgentTargetCardProps) {
             className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-200 disabled:opacity-60"
             disabled={resetDisabled}
             onClick={() => void onClearPathOverride(agent.key)}
+            title={t("tooltip.agents.resetOverride")}
             type="button"
           >
             {t("agents.card.resetOverride")}

@@ -88,6 +88,7 @@ export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPane
                 : "border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500"
             }`}
             onClick={() => setWrapFrontmatter((current) => !current)}
+            title={t("tooltip.skills.frontmatterWrap")}
             type="button"
           >
             {wrapFrontmatter
