@@ -28,10 +28,24 @@ export interface SkillStateSnapshot {
   disabledSkillIds: string[];
 }
 
+export type AgentKey =
+  | "codex"
+  | "claude_code"
+  | "opencode"
+  | "cursor"
+  | "amp"
+  | "kilo_code"
+  | "roo_code"
+  | "goose"
+  | "gemini_cli"
+  | "github_copilot"
+  | "windsurf";
+
 export type AgentPathMode = "override" | "detected" | "missing";
+export type AgentSyncMode = "copy" | "symlink";
 
 export interface AgentInventoryItem {
-  key: "codex" | "claude_code" | "opencode";
+  key: AgentKey;
   displayName: string;
   enabled: boolean;
   defaultSkillsDir: string;
@@ -68,6 +82,12 @@ export const getRepoPath = () => invoke<string | null>("get_repo_path");
 export const setRepoPath = (path: string) =>
   invoke<string | null>("set_repo_path", { path });
 
+export const getAgentSyncMode = () =>
+  invoke<AgentSyncMode>("get_agent_sync_mode");
+
+export const setAgentSyncMode = (syncMode: AgentSyncMode) =>
+  invoke<AgentSyncMode>("set_agent_sync_mode", { syncMode });
+
 export const scanSkills = () => invoke<ScanSkillsResponse>("scan_skills");
 
 export const getSkillDocument = (relativePath: string) =>
@@ -91,5 +111,8 @@ export const setAgentPathOverride = (key: string, path: string) =>
 export const clearAgentPathOverride = (key: string) =>
   invoke<AgentInventorySnapshot>("clear_agent_path_override", { key });
 
-export const applyAgentSync = () =>
-  invoke<ApplyAgentSyncResponse>("apply_agent_sync");
+export const applyAgentSync = (syncMode?: AgentSyncMode) =>
+  invoke<ApplyAgentSyncResponse>(
+    "apply_agent_sync",
+    syncMode ? { syncMode } : {},
+  );

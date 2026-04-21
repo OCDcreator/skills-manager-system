@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import * as scenesApi from "../lib/scenes";
-import type { SceneConfigSnapshot, SceneEntry } from "../lib/scenes";
+import { Plus } from "lucide-react";
 import { SceneCard } from "../components/scenes/SceneCard";
 import { useAppContext } from "../context/AppContext";
-import { Plus } from "lucide-react";
+import { reorderSceneSkillOrder } from "../lib/scene-skill-order";
+import * as scenesApi from "../lib/scenes";
+import type { SceneConfigSnapshot, SceneEntry } from "../lib/scenes";
 
 export function ScenesView() {
   const { t } = useTranslation();
-  const { repoPath, scanResult, agentInventory } = useAppContext();
+  const { repoPath, scanResult, agentInventory, refreshAgents, refreshSkills } = useAppContext();
   const [config, setConfig] = useState<SceneConfigSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -40,11 +41,7 @@ export function ScenesView() {
     if (!newId.trim() || !newName.trim()) return;
     setCreating(true);
     try {
-      const snapshot = await scenesApi.createScene(
-        newId.trim(),
-        newName.trim(),
-        "",
-      );
+      const snapshot = await scenesApi.createScene(newId.trim(), newName.trim(), "");
       setConfig(snapshot);
       setNewId("");
       setNewName("");
@@ -75,7 +72,7 @@ export function ScenesView() {
           disabledSkills: result.disabledSkillCount,
         }),
       );
-      await refresh();
+      await Promise.all([refresh(), refreshSkills(), refreshAgents()]);
     } catch (error) {
       setLastResult(error instanceof Error ? error.message : String(error));
     } finally {
@@ -140,31 +137,22 @@ export function ScenesView() {
     }
   };
 
-  const handleMoveSkill = async (
+  const handleReorderSkill = async (
     sceneId: string,
-    skillId: string,
-    direction: "up" | "down",
+    draggedSkillId: string,
+    targetSkillId: string,
   ) => {
     const scene = config?.scenes[sceneId];
     if (!scene) return;
-    const disabled = new Set(scene.disabledSkillIds);
-    const enabledSkills = (scanResult?.skills ?? []).filter(
-      (s) => !disabled.has(s.id),
+    const nextOrder = reorderSceneSkillOrder(
+      scene,
+      scanResult.skills,
+      draggedSkillId,
+      targetSkillId,
     );
-    const orderIndex = new Map(scene.skillOrder.map((id, i) => [id, i]));
-    const ordered = [...enabledSkills].sort((a, b) => {
-      const ai = orderIndex.get(a.id) ?? Infinity;
-      const bi = orderIndex.get(b.id) ?? Infinity;
-      return ai - bi;
-    });
-    const idx = ordered.findIndex((s) => s.id === skillId);
-    if (idx < 0) return;
-    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= ordered.length) return;
-    [ordered[idx], ordered[swapIdx]] = [ordered[swapIdx], ordered[idx]];
-    const newOrder = ordered.map((s) => s.id);
+    if (!nextOrder) return;
     try {
-      const snapshot = await scenesApi.setSceneSkillOrder(sceneId, newOrder);
+      const snapshot = await scenesApi.setSceneSkillOrder(sceneId, nextOrder);
       setConfig(snapshot);
     } catch (error) {
       setLastResult(error instanceof Error ? error.message : String(error));
@@ -207,6 +195,7 @@ export function ScenesView() {
           <button
             className="ml-2 text-sky-500 hover:text-sky-300"
             onClick={() => setLastResult(null)}
+            type="button"
           >
             ×
           </button>
@@ -220,9 +209,9 @@ export function ScenesView() {
           </label>
           <input
             className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
+            onChange={(event) => setNewId(event.target.value)}
             placeholder={t("scenes.create.idPlaceholder")}
             value={newId}
-            onChange={(e) => setNewId(e.target.value)}
           />
         </div>
         <div className="flex-1">
@@ -231,18 +220,19 @@ export function ScenesView() {
           </label>
           <input
             className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
+            onChange={(event) => setNewName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") void handleCreate();
+            }}
             placeholder={t("scenes.create.namePlaceholder")}
             value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void handleCreate();
-            }}
           />
         </div>
         <button
           className="flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-500 disabled:opacity-50"
           disabled={creating || !newId.trim() || !newName.trim()}
           onClick={() => void handleCreate()}
+          type="button"
         >
           <Plus className="h-4 w-4" />
           {t("scenes.create.button")}
@@ -257,32 +247,32 @@ export function ScenesView() {
         <div className="space-y-4">
           {sceneList.map((scene) => (
             <SceneCard
-              key={scene.id}
               agents={agents}
+              editDesc={editDesc}
+              editName={editName}
               isActive={config?.activeSceneId === scene.id}
               isApplying={applying === scene.id}
               isConfiguring={configuringId === scene.id}
               isEditing={editingId === scene.id}
-              scene={scene}
-              skills={skills}
-              editDesc={editDesc}
-              editName={editName}
+              key={scene.id}
               onApply={() => void handleApply(scene.id)}
               onCancelEdit={() => setEditingId(null)}
               onDelete={() => void handleDelete(scene.id)}
               onDuplicate={() => void handleDuplicate(scene)}
-              onSaveEdit={() => void handleSaveEdit(scene.id)}
-              onStartEdit={() => startEdit(scene)}
               onEditDescChange={setEditDesc}
               onEditNameChange={setEditName}
+              onReorderSkill={(draggedSkillId, targetSkillId) =>
+                void handleReorderSkill(scene.id, draggedSkillId, targetSkillId)
+              }
+              onSaveEdit={() => void handleSaveEdit(scene.id)}
+              onStartEdit={() => startEdit(scene)}
               onToggleAgent={(agentKey) => void handleToggleAgent(scene.id, agentKey)}
               onToggleConfigure={() =>
-                setConfiguringId((current) =>
-                  current === scene.id ? null : scene.id,
-                )
+                setConfiguringId((current) => (current === scene.id ? null : scene.id))
               }
               onToggleSkill={(skillId) => void handleToggleSkill(scene.id, skillId)}
-              onMoveSkill={(skillId, dir) => void handleMoveSkill(scene.id, skillId, dir)}
+              scene={scene}
+              skills={skills}
               t={t}
             />
           ))}

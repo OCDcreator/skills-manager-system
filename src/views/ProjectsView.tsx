@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import * as projectsApi from "../lib/projects";
-import type { ProjectConfigSnapshot, ProjectApplyResult } from "../lib/projects";
-import { useAppContext } from "../context/AppContext";
+import { Plus } from "lucide-react";
 import { ProjectCard } from "../components/projects/ProjectCard";
-import { FolderOpen, Plus } from "lucide-react";
+import { useAppContext } from "../context/AppContext";
+import * as projectsApi from "../lib/projects";
+import type { ProjectConfigSnapshot } from "../lib/projects";
 
 export function ProjectsView() {
   const { t } = useTranslation();
@@ -64,13 +64,15 @@ export function ProjectsView() {
   const handleApply = async (projectPath: string) => {
     setApplying(projectPath);
     try {
-      const results = await projectsApi.applyProjectAssignments();
-      const match = results.find((r) => r.projectPath === projectPath);
+      const response = await projectsApi.applyProjectAssignments();
+      const match = response.results.find((result) => result.projectPath === projectPath);
       if (match) {
-        const written = match.results.reduce((s, r) => s + r.writtenCount, 0);
+        const written = match.results.reduce((sum, result) => sum + result.writtenCount, 0);
         setLastResult(
-          `Applied to "${projectPath}": ${written} skill(s) across ${match.results.length} agent(s)`,
+          `Applied to "${match.displayName}": ${written} skill(s) across ${match.results.length} agent(s)`,
         );
+      } else {
+        setLastResult(`Applied project assignments for ${response.projectCount} project(s).`);
       }
       await refresh();
     } catch (error) {
@@ -82,13 +84,13 @@ export function ProjectsView() {
 
   const toggleSkill = (id: string) => {
     setSelectedSkills((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((skillId) => skillId !== id) : [...prev, id],
     );
   };
 
   const toggleAgent = (key: string) => {
     setSelectedAgents((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+      prev.includes(key) ? prev.filter((agentKey) => agentKey !== key) : [...prev, key],
     );
   };
 
@@ -107,7 +109,7 @@ export function ProjectsView() {
 
   const projectList = config ? Object.values(config.projects) : [];
   const skills = scanResult.skills;
-  const agents = agentInventory.filter((a) => a.pathMode !== "missing");
+  const agents = agentInventory;
 
   return (
     <div className="space-y-6">
@@ -126,13 +128,14 @@ export function ProjectsView() {
           <button
             className="ml-2 text-sky-500 hover:text-sky-300"
             onClick={() => setLastResult(null)}
+            type="button"
           >
             ×
           </button>
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 space-y-3">
+      <div className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 p-4">
         <div className="flex items-end gap-3">
           <div className="flex-1">
             <label className="mb-1 block text-xs text-slate-400">
@@ -140,9 +143,9 @@ export function ProjectsView() {
             </label>
             <input
               className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
+              onChange={(event) => setNewPath(event.target.value)}
               placeholder="/path/to/project"
               value={newPath}
-              onChange={(e) => setNewPath(e.target.value)}
             />
           </div>
           <div className="flex-1">
@@ -151,18 +154,19 @@ export function ProjectsView() {
             </label>
             <input
               className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
+              onChange={(event) => setNewName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") void handleAdd();
+              }}
               placeholder="My Project"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void handleAdd();
-              }}
             />
           </div>
           <button
             className="flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-500 disabled:opacity-50"
             disabled={!newPath.trim()}
             onClick={() => void handleAdd()}
+            type="button"
           >
             <Plus className="h-4 w-4" />
             {t("projects.add.button")}
@@ -174,42 +178,42 @@ export function ProjectsView() {
             <label className="mb-1 block text-xs text-slate-400">
               {t("projects.add.selectSkills")}
             </label>
-            <div className="max-h-32 overflow-y-auto rounded-lg border border-slate-700 bg-slate-800 p-2 text-xs space-y-1">
+            <div className="max-h-32 space-y-1 overflow-y-auto rounded-lg border border-slate-700 bg-slate-800 p-2 text-xs">
               {skills.map((skill) => (
-                <label key={skill.id} className="flex items-center gap-2 text-slate-300">
+                <label className="flex items-center gap-2 text-slate-300" key={skill.id}>
                   <input
-                    type="checkbox"
                     checked={selectedSkills.includes(skill.id)}
-                    onChange={() => toggleSkill(skill.id)}
                     className="rounded border-slate-600"
+                    onChange={() => toggleSkill(skill.id)}
+                    type="checkbox"
                   />
                   {skill.name}
                 </label>
               ))}
-              {skills.length === 0 && (
+              {skills.length === 0 ? (
                 <span className="text-slate-500">{t("projects.add.noSkills")}</span>
-              )}
+              ) : null}
             </div>
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-400">
               {t("projects.add.selectAgents")}
             </label>
-            <div className="max-h-32 overflow-y-auto rounded-lg border border-slate-700 bg-slate-800 p-2 text-xs space-y-1">
+            <div className="max-h-32 space-y-1 overflow-y-auto rounded-lg border border-slate-700 bg-slate-800 p-2 text-xs">
               {agents.map((agent) => (
-                <label key={agent.key} className="flex items-center gap-2 text-slate-300">
+                <label className="flex items-center gap-2 text-slate-300" key={agent.key}>
                   <input
-                    type="checkbox"
                     checked={selectedAgents.includes(agent.key)}
-                    onChange={() => toggleAgent(agent.key)}
                     className="rounded border-slate-600"
+                    onChange={() => toggleAgent(agent.key)}
+                    type="checkbox"
                   />
                   {agent.displayName}
                 </label>
               ))}
-              {agents.length === 0 && (
+              {agents.length === 0 ? (
                 <span className="text-slate-500">{t("projects.add.noAgents")}</span>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -223,11 +227,11 @@ export function ProjectsView() {
         <div className="space-y-4">
           {projectList.map((project) => (
             <ProjectCard
-              key={project.projectPath}
-              project={project}
               isApplying={applying === project.projectPath}
-              onDelete={() => void handleDelete(project.projectPath)}
+              key={project.projectPath}
               onApply={() => void handleApply(project.projectPath)}
+              onDelete={() => void handleDelete(project.projectPath)}
+              project={project}
               t={t}
             />
           ))}

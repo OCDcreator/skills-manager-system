@@ -1,25 +1,16 @@
 # Projects View
 
 > **Source**: `src/views/ProjectsView.tsx`
-> **Status**: [DRAFT]
+> **Status**: [REVIEW]
 
 ## Overview
 
-Page for managing project-level skill assignments. Allows users to register project directories, select skills and agents, and deploy skills to project-local agent directories.
+Page for managing project-level skill assignments, including project-local deployment into supported agent config directories.
 
-## State
+## Core Logic
 
-- `config` — current `ProjectConfigSnapshot` from Rust backend
-- `isLoading` — loading state for initial fetch
-- Form state for adding new projects
+Loads `ProjectConfigSnapshot`, lets the user add project assignments, allows all supported agents to be selected regardless of global detection state, and reads `ApplyProjectAssignmentsResponse` so per-project apply feedback matches the backend payload shape.
 
 ## Data Flow
 
-1. On mount, calls `getProjectConfig()` to load current config
-2. User fills add-project form (path, name, skills, agents)
-3. `addProject()` → backend → refreshed config
-4. Per-project apply button → `applyProjectAssignments()`
-
-## i18n Keys
-
-All `projects.*` keys in `src/i18n/en.json` and `src/i18n/zh.json`.
+`useAppContext()` provides scanned skills plus the full supported-agent inventory; `src/lib/projects.ts` handles CRUD/apply calls; `ProjectCard` renders each saved assignment.

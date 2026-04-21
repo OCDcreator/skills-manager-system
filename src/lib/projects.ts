@@ -20,7 +20,14 @@ export interface ProjectAgentResult {
 
 export interface ProjectApplyResult {
   projectPath: string;
+  displayName: string;
+  enabledSkillCount: number;
   results: ProjectAgentResult[];
+}
+
+export interface ApplyProjectAssignmentsResponse {
+  projectCount: number;
+  results: ProjectApplyResult[];
 }
 
 export const getProjectConfig = () =>
@@ -56,4 +63,4 @@ export const removeProject = (projectPath: string) =>
   invoke<ProjectConfigSnapshot>("remove_project", { projectPath });
 
 export const applyProjectAssignments = () =>
-  invoke<ProjectApplyResult[]>("apply_project_assignments");
+  invoke<ApplyProjectAssignmentsResponse>("apply_project_assignments");

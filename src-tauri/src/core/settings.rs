@@ -3,10 +3,19 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum AgentSyncMode {
+    #[default]
+    Copy,
+    Symlink,
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase")]
 pub struct AppSettings {
     pub repo_path: Option<String>,
+    pub agent_sync_mode: AgentSyncMode,
 }
 
 pub struct SettingsStore {
@@ -32,16 +41,24 @@ impl SettingsStore {
     }
 
     pub fn save_repo_path(&self, repo_path: Option<&Path>) -> Result<AppSettings> {
+        let mut settings = self.load()?;
+        settings.repo_path = repo_path.map(|value| value.to_string_lossy().to_string());
+        self.save(&settings)
+    }
+
+    pub fn save_agent_sync_mode(&self, agent_sync_mode: AgentSyncMode) -> Result<AppSettings> {
+        let mut settings = self.load()?;
+        settings.agent_sync_mode = agent_sync_mode;
+        self.save(&settings)
+    }
+
+    fn save(&self, settings: &AppSettings) -> Result<AppSettings> {
         fs::create_dir_all(&self.base_dir)
             .with_context(|| format!("Failed to create {:?}", self.base_dir))?;
 
-        let settings = AppSettings {
-            repo_path: repo_path.map(|value| value.to_string_lossy().to_string()),
-        };
-
-        let json = serde_json::to_string_pretty(&settings)?;
+        let json = serde_json::to_string_pretty(settings)?;
         fs::write(self.settings_path(), json).context("Failed to write settings.json")?;
-        Ok(settings)
+        Ok(settings.clone())
     }
 
     fn settings_path(&self) -> PathBuf {
@@ -56,11 +73,27 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn load_returns_none_when_file_does_not_exist() {
+    fn load_returns_defaults_when_file_does_not_exist() {
         let dir = tempdir().unwrap();
         let store = SettingsStore::new(dir.path().to_path_buf());
 
-        assert_eq!(store.load().unwrap().repo_path, None);
+        let settings = store.load().unwrap();
+        assert_eq!(settings.repo_path, None);
+        assert_eq!(settings.agent_sync_mode, AgentSyncMode::Copy);
+    }
+
+    #[test]
+    fn load_backfills_missing_sync_mode() {
+        let dir = tempdir().unwrap();
+        fs::write(
+            dir.path().join("settings.json"),
+            r#"{"repoPath":"/tmp/my-skills"}"#,
+        )
+        .unwrap();
+
+        let settings = SettingsStore::new(dir.path().to_path_buf()).load().unwrap();
+        assert_eq!(settings.repo_path.as_deref(), Some("/tmp/my-skills"));
+        assert_eq!(settings.agent_sync_mode, AgentSyncMode::Copy);
     }
 
     #[test]
@@ -77,6 +110,19 @@ mod tests {
         assert_eq!(
             store.load().unwrap().repo_path.as_deref(),
             Some("C:/Users/test/Desktop/Write/custom-project/my-skills")
+        );
+    }
+
+    #[test]
+    fn save_agent_sync_mode_round_trips() {
+        let dir = tempdir().unwrap();
+        let store = SettingsStore::new(dir.path().to_path_buf());
+
+        store.save_agent_sync_mode(AgentSyncMode::Symlink).unwrap();
+
+        assert_eq!(
+            store.load().unwrap().agent_sync_mode,
+            AgentSyncMode::Symlink
         );
     }
 }

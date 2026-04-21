@@ -1,16 +1,17 @@
+import { useMemo, useState } from "react";
 import {
-  ArrowDown,
-  ArrowUp,
   CheckCircle,
   CheckSquare,
   Circle,
   Copy,
+  GripVertical,
   Pencil,
   Power,
   Settings2,
   Square,
   Trash2,
 } from "lucide-react";
+import { getOrderedEnabledSceneSkills } from "../../lib/scene-skill-order";
 import type { SceneEntry } from "../../lib/scenes";
 
 export interface SceneCardProps {
@@ -30,12 +31,12 @@ export interface SceneCardProps {
   onDelete: () => void;
   onApply: () => void;
   onDuplicate: () => void;
-  onEditNameChange: (v: string) => void;
-  onEditDescChange: (v: string) => void;
+  onEditNameChange: (value: string) => void;
+  onEditDescChange: (value: string) => void;
   onToggleConfigure: () => void;
   onToggleSkill: (skillId: string) => void;
   onToggleAgent: (agentKey: string) => void;
-  onMoveSkill: (skillId: string, direction: "up" | "down") => void;
+  onReorderSkill: (draggedSkillId: string, targetSkillId: string) => void;
 }
 
 export function SceneCard({
@@ -60,31 +61,42 @@ export function SceneCard({
   onToggleConfigure,
   onToggleSkill,
   onToggleAgent,
-  onMoveSkill,
+  onReorderSkill,
 }: SceneCardProps) {
+  const [draggedSkillId, setDraggedSkillId] = useState<string | null>(null);
+  const [dropTargetSkillId, setDropTargetSkillId] = useState<string | null>(null);
+  const disabledSkillIdSet = useMemo(
+    () => new Set(scene.disabledSkillIds),
+    [scene.disabledSkillIds],
+  );
   const allSkillsEnabled = scene.disabledSkillIds.length === 0;
   const enabledSkillCount = skills.length - scene.disabledSkillIds.length;
-
-  const enabledSkills = skills.filter(
-    (s) => !scene.disabledSkillIds.includes(s.id),
+  const orderedEnabled = useMemo(
+    () => getOrderedEnabledSceneSkills(scene, skills),
+    [scene, skills],
   );
-  const disabledSkills = skills.filter((s) =>
-    scene.disabledSkillIds.includes(s.id),
+  const disabledSkills = useMemo(
+    () => skills.filter((skill) => disabledSkillIdSet.has(skill.id)),
+    [disabledSkillIdSet, skills],
   );
 
-  const orderIndex = new Map(scene.skillOrder.map((id, i) => [id, i]));
-  const orderedEnabled = [...enabledSkills].sort((a, b) => {
-    const ai = orderIndex.get(a.id) ?? Infinity;
-    const bi = orderIndex.get(b.id) ?? Infinity;
-    return ai - bi;
-  });
+  const resetDragState = () => {
+    setDraggedSkillId(null);
+    setDropTargetSkillId(null);
+  };
+
+  const handleDrop = (targetSkillId: string) => {
+    if (!draggedSkillId) return;
+    if (draggedSkillId !== targetSkillId) {
+      onReorderSkill(draggedSkillId, targetSkillId);
+    }
+    resetDragState();
+  };
 
   return (
     <div
       className={`rounded-2xl border p-5 ${
-        isActive
-          ? "border-sky-700 bg-sky-950/20"
-          : "border-slate-800 bg-slate-900"
+        isActive ? "border-sky-700 bg-sky-950/20" : "border-slate-800 bg-slate-900"
       }`}
     >
       <div className="flex items-start justify-between gap-4">
@@ -99,24 +111,26 @@ export function SceneCard({
               <div className="flex items-center gap-2">
                 <input
                   className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-200"
+                  onChange={(event) => onEditNameChange(event.target.value)}
                   value={editName}
-                  onChange={(e) => onEditNameChange(e.target.value)}
                 />
                 <input
                   className="flex-1 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-200"
+                  onChange={(event) => onEditDescChange(event.target.value)}
                   placeholder={t("scenes.card.description")}
                   value={editDesc}
-                  onChange={(e) => onEditDescChange(e.target.value)}
                 />
                 <button
                   className="rounded bg-sky-600 px-3 py-1 text-xs text-white"
                   onClick={onSaveEdit}
+                  type="button"
                 >
                   {t("scenes.card.save")}
                 </button>
                 <button
                   className="rounded bg-slate-700 px-3 py-1 text-xs text-slate-300"
                   onClick={onCancelEdit}
+                  type="button"
                 >
                   {t("scenes.card.cancel")}
                 </button>
@@ -131,38 +145,42 @@ export function SceneCard({
             )}
           </div>
         </div>
-        {!isEditing && (
+        {!isEditing ? (
           <div className="flex items-center gap-1">
             <button
               className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              title={t("scenes.card.edit")}
               onClick={onStartEdit}
+              title={t("scenes.card.edit")}
+              type="button"
             >
               <Pencil className="h-4 w-4" />
             </button>
             <button
               className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              title={t("scenes.card.configure")}
               onClick={onToggleConfigure}
+              title={t("scenes.card.configure")}
+              type="button"
             >
               <Settings2 className="h-4 w-4" />
             </button>
             <button
               className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              title={t("scenes.card.duplicate")}
               onClick={onDuplicate}
+              title={t("scenes.card.duplicate")}
+              type="button"
             >
               <Copy className="h-4 w-4" />
             </button>
             <button
               className="rounded p-1.5 text-slate-400 hover:bg-rose-900/40 hover:text-rose-300"
-              title={t("scenes.card.delete")}
               onClick={onDelete}
+              title={t("scenes.card.delete")}
+              type="button"
             >
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
@@ -176,57 +194,68 @@ export function SceneCard({
 
       {isConfiguring ? (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <div className="mb-3 text-xs font-medium text-slate-200">
-              {t("scenes.card.skillsPanel", {
-                enabled: enabledSkillCount,
-                total: skills.length,
-              })}
+          <div className="rounded-lg bg-slate-800/50 p-3">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="text-xs font-medium text-slate-200">
+                {t("scenes.card.skillsPanel", {
+                  enabled: enabledSkillCount,
+                  total: skills.length,
+                })}
+              </div>
+              <span className="text-[11px] text-slate-500">
+                {t("scenes.card.dragHint")}
+              </span>
             </div>
             <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
-              {orderedEnabled.map((skill, idx) => (
-                <div
-                  key={skill.id}
-                  className="flex items-center gap-2 text-xs text-slate-300"
-                >
-                  <button
-                    className="text-slate-400 hover:text-sky-400"
-                    onClick={() => onToggleSkill(skill.id)}
-                    aria-label={skill.name}
-                    type="button"
+              {orderedEnabled.map((skill) => {
+                const isDropTarget =
+                  dropTargetSkillId === skill.id && draggedSkillId !== skill.id;
+                return (
+                  <div
+                    className={`flex items-center gap-2 rounded-md px-1 py-1 text-xs text-slate-300 ${
+                      isDropTarget ? "bg-sky-950/40 ring-1 ring-sky-700" : ""
+                    } ${draggedSkillId === skill.id ? "opacity-60" : ""}`}
+                    draggable
+                    key={skill.id}
+                    onDragEnd={resetDragState}
+                    onDragEnter={() => setDropTargetSkillId(skill.id)}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      setDropTargetSkillId(skill.id);
+                    }}
+                    onDragStart={() => {
+                      setDraggedSkillId(skill.id);
+                      setDropTargetSkillId(skill.id);
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      handleDrop(skill.id);
+                    }}
                   >
-                    <CheckSquare className="h-4 w-4" />
-                  </button>
-                  <span className="flex-1">{skill.name}</span>
-                  <button
-                    className="rounded p-0.5 text-slate-500 hover:text-sky-400 disabled:opacity-20"
-                    disabled={idx === 0}
-                    onClick={() => onMoveSkill(skill.id, "up")}
-                    title={t("scenes.card.moveUp")}
-                    type="button"
-                  >
-                    <ArrowUp className="h-3 w-3" />
-                  </button>
-                  <button
-                    className="rounded p-0.5 text-slate-500 hover:text-sky-400 disabled:opacity-20"
-                    disabled={idx === orderedEnabled.length - 1}
-                    onClick={() => onMoveSkill(skill.id, "down")}
-                    title={t("scenes.card.moveDown")}
-                    type="button"
-                  >
-                    <ArrowDown className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
+                    <button
+                      aria-label={skill.name}
+                      className="text-slate-400 hover:text-sky-400"
+                      onClick={() => onToggleSkill(skill.id)}
+                      type="button"
+                    >
+                      <CheckSquare className="h-4 w-4" />
+                    </button>
+                    <span title={t("scenes.card.dragHint")}>
+                      <GripVertical className="h-3.5 w-3.5 cursor-grab text-slate-500 active:cursor-grabbing" />
+                    </span>
+                    <span className="flex-1">{skill.name}</span>
+                  </div>
+                );
+              })}
               {disabledSkills.map((skill) => (
                 <div
-                  key={skill.id}
                   className="flex items-center gap-2 text-xs text-slate-500"
+                  key={skill.id}
                 >
                   <button
+                    aria-label={skill.name}
                     className="text-slate-400 hover:text-sky-400"
                     onClick={() => onToggleSkill(skill.id)}
-                    aria-label={skill.name}
                     type="button"
                   >
                     <Square className="h-4 w-4" />
@@ -237,7 +266,7 @@ export function SceneCard({
             </div>
           </div>
 
-          <div className="bg-slate-800/50 rounded-lg p-3">
+          <div className="rounded-lg bg-slate-800/50 p-3">
             <div className="mb-3 text-xs font-medium text-slate-200">
               {t("scenes.card.agentsPanel", {
                 count: scene.enabledAgentKeys.length,
@@ -248,13 +277,13 @@ export function SceneCard({
                 const enabled = scene.enabledAgentKeys.includes(agent.key);
                 return (
                   <label
-                    key={agent.key}
                     className="flex cursor-pointer items-center gap-2 text-xs text-slate-300"
+                    key={agent.key}
                   >
                     <button
+                      aria-label={agent.displayName}
                       className="text-slate-400 hover:text-sky-400"
                       onClick={() => onToggleAgent(agent.key)}
-                      aria-label={agent.displayName}
                       type="button"
                     >
                       {enabled ? (
@@ -277,6 +306,7 @@ export function SceneCard({
           className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-50"
           disabled={isApplying}
           onClick={onApply}
+          type="button"
         >
           <Power className="h-4 w-4" />
           {isApplying ? t("scenes.card.applying") : t("scenes.card.apply")}

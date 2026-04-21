@@ -10,7 +10,7 @@ use crate::core::agents::manifest::SyncMode;
 use crate::core::agents::sync::{
     apply_agent_sync as apply_agent_sync_core, ApplyAgentSyncResponse,
 };
-use crate::core::settings::SettingsStore;
+use crate::core::settings::{AgentSyncMode, SettingsStore};
 
 fn app_config_dir(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     app.path()
@@ -33,6 +33,23 @@ fn load_inventory(app: &tauri::AppHandle) -> Result<AgentInventorySnapshot, Stri
     let config_dir = app_config_dir(app)?;
     let system_dirs = AgentSystemDirs::current().map_err(|error| error.to_string())?;
     load_agent_inventory(&config_dir, &system_dirs).map_err(|error| error.to_string())
+}
+
+fn resolve_sync_mode(config_dir: &Path, sync_mode: Option<&str>) -> Result<SyncMode, String> {
+    match sync_mode {
+        Some("copy") => Ok(SyncMode::Copy),
+        Some("symlink") => Ok(SyncMode::Symlink),
+        Some(other) => Err(format!("Unsupported sync mode: {other}")),
+        None => {
+            let settings = SettingsStore::new(config_dir.to_path_buf())
+                .load()
+                .map_err(|error| error.to_string())?;
+            Ok(match settings.agent_sync_mode {
+                AgentSyncMode::Copy => SyncMode::Copy,
+                AgentSyncMode::Symlink => SyncMode::Symlink,
+            })
+        }
+    }
 }
 
 #[tauri::command]
@@ -86,10 +103,7 @@ pub fn apply_agent_sync(
     let repo_path = load_repo_path(&app)?;
     let config_dir = app_config_dir(&app)?;
     let system_dirs = AgentSystemDirs::current().map_err(|error| error.to_string())?;
-    let mode = match sync_mode.as_deref() {
-        Some("symlink") => SyncMode::Symlink,
-        _ => SyncMode::Copy,
-    };
+    let mode = resolve_sync_mode(&config_dir, sync_mode.as_deref())?;
 
     apply_agent_sync_core(&config_dir, Path::new(&repo_path), &system_dirs, mode)
         .map_err(|error| error.to_string())

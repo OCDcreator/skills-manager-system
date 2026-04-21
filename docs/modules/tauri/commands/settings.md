@@ -5,38 +5,15 @@
 
 ## Overview
 
-Exposes Tauri commands for loading and saving the configured skill repository path.
-
-## Import Relationships
-
-```text
-Upstream: src-tauri/src/lib.rs, src/lib/tauri.ts
-Downstream: src-tauri/src/core/settings.rs, tauri::Manager
-```
+Exposes Tauri commands for loading and saving both the configured repository path and the preferred global agent sync mode.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `get_repo_path` | Returns the persisted repository path, if configured. |
-| `set_repo_path` | Trims and persists a new repository path or clears it when empty. |
+| `get_repo_path` / `set_repo_path` | Load or update the saved my-skills repository path. |
+| `get_agent_sync_mode` / `set_agent_sync_mode` | Load or update the saved `copy`/`symlink` preference. |
 
 ## Core Logic
 
-Both commands resolve the app config directory through Tauri, create a `SettingsStore`, delegate persistence to core settings logic, and map errors to strings for the frontend.
-
-## Data Flow
-
-Frontend invokes command -> command resolves config directory -> `SettingsStore` loads/saves `settings.json` -> command returns `Option<String>`.
-
-## Interactions
-
-Must stay aligned with `src/lib/tauri.ts` wrapper names and the `SettingsStore` JSON format.
-
-## Configuration
-
-Uses Tauri's app config directory as the storage base.
-
-## Change Notes
-
-Keep path normalization rules minimal here; deeper validation should live in `core/settings.rs` or a dedicated core module. The git commands module reuses the same repo-path loading pattern.
+Each command resolves the app config directory, delegates to `SettingsStore`, and returns only the requested field so the frontend can treat settings reads/writes as thin command calls.

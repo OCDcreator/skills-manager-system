@@ -1,28 +1,27 @@
 # Scene Manager
 
 > **Source**: `src-tauri/src/core/scenes/manager.rs`
-> **Status**: [DRAFT]
+> **Status**: [REVIEW]
 
 ## Overview
 
-Applies a scene by updating both skill enable/disable state and agent enabled state to match the scene configuration.
+Applies a scene by updating repo-scoped skill state, global agent enabled flags, and the managed contents inside agent skill directories.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `apply_scene` | Apply a scene, updating skills + agents + active scene ID |
-| `ApplySceneResult` | Result summary |
+| `apply_scene` | Applies one scene and then reruns global agent sync using the saved sync mode. |
+| `ApplySceneResult` | Small summary returned to the frontend. |
 
 ## Core Logic
 
-1. Load scene from config
-2. Diff and update skill disabled IDs via `SkillStateStore`
-3. Diff and update agent enabled flags via `AgentConfigStore`
-4. Set the scene as active
+1. Load the target scene.
+2. Diff and persist disabled skill IDs through `SkillStateStore`.
+3. Diff and persist enabled agent flags through `AgentConfigStore`.
+4. Load the preferred `AgentSyncMode` from settings and rerun `apply_agent_sync`.
+5. Mark the scene as active only after sync succeeds.
 
-## Interactions
+## Tests
 
-- `core/scenes/config` — scene definitions
-- `core/skills/state` — skill enable/disable persistence
-- `core/agents/config` + `core/agents/discovery` — agent state
+Includes copy-mode and symlink-mode regression tests proving that scene apply now updates managed agent targets instead of only mutating config state.

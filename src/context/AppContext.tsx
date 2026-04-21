@@ -10,6 +10,7 @@ import type { PropsWithChildren } from "react";
 import * as api from "../lib/tauri";
 import type {
   AgentInventoryItem,
+  AgentSyncMode,
   ApplyAgentSyncResponse,
   ScanSkillsResponse,
   SkillDocument,
@@ -43,11 +44,10 @@ interface AppContextValue {
   setAgentEnabled: (key: string, enabled: boolean) => Promise<void>;
   setAgentPathOverride: (key: string, path: string) => Promise<void>;
   clearAgentPathOverride: (key: string) => Promise<void>;
-  applyAgentSync: () => Promise<void>;
+  applyAgentSync: (syncMode?: AgentSyncMode) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
-
 function errorMessageFrom(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
@@ -198,10 +198,10 @@ export function AppProvider({ children }: PropsWithChildren) {
     await updateAgentInventory(key, () => api.clearAgentPathOverride(key));
   }, [updateAgentInventory]);
 
-  const applyAgentSync = useCallback(async () => {
+  const applyAgentSync = useCallback(async (syncMode?: AgentSyncMode) => {
     setIsApplyingAgentSync(true);
     try {
-      const result = await api.applyAgentSync();
+      const result = await api.applyAgentSync(syncMode);
       setLastAgentApplyResult(result);
       setErrorMessage(null);
     } catch (error) {
@@ -212,7 +212,6 @@ export function AppProvider({ children }: PropsWithChildren) {
       setIsApplyingAgentSync(false);
     }
   }, []);
-
   const selectSkill = useCallback(async (skill: SkillSummary | null) => {
     setSelectedSkill(skill);
     if (!skill) {

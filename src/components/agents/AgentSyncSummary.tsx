@@ -1,12 +1,16 @@
 import { useTranslation } from "react-i18next";
+import type { AgentSyncMode } from "../../lib/tauri";
 
 interface AgentSyncSummaryProps {
   repoPath: string | null;
   enabledSkillCount: number;
   enabledAgentCount: number;
   isApplying: boolean;
+  isSavingMode: boolean;
   canApply: boolean;
+  syncMode: AgentSyncMode;
   onApply: () => Promise<void>;
+  onSyncModeChange: (syncMode: AgentSyncMode) => Promise<void>;
 }
 
 export function AgentSyncSummary(props: AgentSyncSummaryProps) {
@@ -15,8 +19,11 @@ export function AgentSyncSummary(props: AgentSyncSummaryProps) {
     enabledAgentCount,
     enabledSkillCount,
     isApplying,
+    isSavingMode,
     onApply,
+    onSyncModeChange,
     repoPath,
+    syncMode,
   } = props;
   const { t } = useTranslation();
   const disabledReason = !repoPath
@@ -56,17 +63,36 @@ export function AgentSyncSummary(props: AgentSyncSummaryProps) {
           </div>
         </div>
 
-        <div className="min-w-56 space-y-2 rounded-xl border border-slate-800 bg-slate-950 p-3">
+        <div className="min-w-56 space-y-3 rounded-xl border border-slate-800 bg-slate-950 p-3">
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {t("agents.syncMode.label")}
+            </label>
+            <select
+              className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400"
+              disabled={isApplying || isSavingMode}
+              onChange={(event) =>
+                void onSyncModeChange(event.target.value as AgentSyncMode)
+              }
+              value={syncMode}
+            >
+              <option value="copy">{t("agents.syncMode.copy")}</option>
+              <option value="symlink">{t("agents.syncMode.symlink")}</option>
+            </select>
+          </div>
           <button
             className="w-full rounded-xl bg-emerald-400 px-4 py-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={!canApply || isApplying}
+            disabled={!canApply || isApplying || isSavingMode}
             onClick={() => void onApply()}
             type="button"
           >
             {isApplying ? t("agents.apply.running") : t("agents.apply.button")}
           </button>
           <p className="text-xs leading-5 text-slate-500">
-            {disabledReason || t("agents.apply.copyOnlyNote")}
+            {disabledReason ||
+              t("agents.apply.modeHint", {
+                mode: t(`agents.syncMode.${syncMode}`),
+              })}
           </p>
         </div>
       </div>

@@ -1,32 +1,28 @@
 # Scenes View
 
 > **Source**: `src/views/ScenesView.tsx`
-> **Status**: [DRAFT]
+> **Status**: [REVIEW]
 
 ## Overview
 
-Page-level view for scene management. Supports creating, editing, deleting, duplicating, configuring, and applying scenes.
-
-## Import Relationships
-
-```text
-Upstream: context/AppContext, lib/scenes
-Downstream: App.tsx (routing)
-```
+Page-level scene management view for creating, editing, configuring, applying, and drag-reordering scene skill priorities.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `ScenesView` | Scene management page component |
+| `ScenesView` | Scene management page component. |
 
 ## Core Logic
 
-Manages local state for scene config, editing mode, configure mode, creation form, and apply results. Auto-loads scene config on mount. Delegates per-scene rendering to `components/scenes/SceneCard` and wires toggle handlers for disabled skill IDs, enabled agent keys, and skill priority ordering via `handleMoveSkill`.
+Owns scene CRUD form state, loads `SceneConfigSnapshot`, updates disabled skills and enabled agents through `src/lib/scenes.ts`, computes drag-drop reorder payloads via `src/lib/scene-skill-order.ts`, and refreshes both scene config and global app context after a scene apply.
+
+## Data Flow
+
+- `useAppContext()` provides repo path, scanned skills, agent inventory, and refresh callbacks.
+- `SceneCard` renders each scene and emits edit/configure/reorder actions.
+- `src/lib/scenes.ts` carries every Tauri command invocation.
 
 ## Interactions
 
-- `context/AppContext` — reads repoPath, scanResult, agentInventory
-- `components/scenes/SceneCard` — scene card UI and configure panels
-- `lib/scenes` — all API calls
-- `i18n` keys: `scenes.*`
+Applying a scene now refreshes both skill state and agent inventory so the rest of the app reflects the new active scene immediately.

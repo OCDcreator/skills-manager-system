@@ -35,6 +35,8 @@ pub fn run() {
             commands::scenes::apply_scene,
             commands::settings::get_repo_path,
             commands::settings::set_repo_path,
+            commands::settings::get_agent_sync_mode,
+            commands::settings::set_agent_sync_mode,
             commands::skills::scan_skills,
             commands::skills::get_skill_document,
             commands::skills::get_skill_state,

@@ -5,37 +5,29 @@
 
 ## Overview
 
-Assembles the phase-three agent-sync page from summary, target-card, and apply-result components.
+Assembles the global agent-sync page and owns the page-local sync-mode preference UI.
 
 ## Import Relationships
 
 ```text
 Upstream: src/App.tsx
-Downstream: src/context/AppContext.tsx, src/components/agents/*
+Downstream: src/context/AppContext.tsx, src/lib/tauri.ts, src/components/agents/*
 ```
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `AgentsView` | Page-level orchestration for global agent sync. |
+| `AgentsView` | Page-level orchestration for global agent sync and mode selection. |
 
 ## Core Logic
 
-The view reads agent inventory, repo path, enabled-skill state, and apply actions from `AppContext`, derives enabled skill/target counts, and passes those normalized values into dedicated agent UI components.
+The view reads inventory and apply state from `AppContext`, loads the persisted sync mode from Tauri settings, lets the user switch between `copy` and `symlink`, and passes the selected mode into `applyAgentSync`.
 
 ## Data Flow
 
-Context state flows into the view, which computes small page-level summaries and passes callbacks into the agent components.
+Context state provides repo/skill/agent counts; `src/lib/tauri.ts` provides the sync-mode setting read/write path; child components only receive normalized props and callbacks.
 
 ## Interactions
 
-Must stay aligned with `AppView` routing in `src/App.tsx`, agent DTOs in `src/lib/tauri.ts`, and the action surface exposed by `src/context/AppContext.tsx`.
-
-## Configuration
-
-None.
-
-## Change Notes
-
-Keep business rules and filesystem behavior out of this file; it should remain page composition only.
+Must stay aligned with `src/components/agents/AgentSyncSummary.tsx`, `src/components/agents/AgentTargetCard.tsx`, and the settings/agent command wrappers in `src/lib/tauri.ts`.
