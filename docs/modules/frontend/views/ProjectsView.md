@@ -9,7 +9,7 @@ Page for managing project-level skill assignments, including project-local deplo
 
 ## Core Logic
 
-Loads `ProjectConfigSnapshot`, lets the user add project assignments, allows all supported agents to be selected regardless of global detection state, and reads `ApplyProjectAssignmentsResponse` so per-project apply feedback matches the backend payload shape.
+Loads `ProjectConfigSnapshot` via a deferred initial refresh, lets the user add project assignments, allows all supported agents to be selected regardless of global detection state, and reads `ApplyProjectAssignmentsResponse` so per-project apply feedback matches the backend payload shape.
 
 ## Data Flow
 

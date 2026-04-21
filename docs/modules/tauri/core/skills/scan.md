@@ -25,7 +25,7 @@ Downstream: src-tauri/src/core/skills/metadata.rs, walkdir
 
 ## Core Logic
 
-The scanner requires the configured repo root to exist. It reads only first-level directories under `custom/`, recursively walks `external/`, ignores known noise directories, parses metadata, normalizes repo-relative paths with forward slashes, and sorts summaries by id.
+The scanner requires the configured repo root to exist. It reads only first-level directories under `custom/`, recursively walks `external/`, ignores known noise directories, parses metadata, normalizes repo-relative paths with forward slashes, normalizes emitted absolute path strings to forward slashes as well, and sorts summaries by id.
 
 ## Data Flow
 
@@ -33,7 +33,7 @@ Filesystem directories become `SkillSummary` values. Missing `custom/` or `exter
 
 ## Interactions
 
-Source type values must stay aligned with frontend filters, i18n source labels, and document-reader validation.
+Source type values and path fields must stay aligned with frontend filters, document-reader validation, and the CLI JSON path-normalization rules.
 
 ## Configuration
 

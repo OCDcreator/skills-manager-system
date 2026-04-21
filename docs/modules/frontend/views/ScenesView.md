@@ -15,7 +15,7 @@ Page-level scene management view for creating, editing, configuring, applying, a
 
 ## Core Logic
 
-Owns scene CRUD form state, loads `SceneConfigSnapshot`, updates disabled skills and enabled agents through `src/lib/scenes.ts`, computes drag-drop reorder payloads via `src/lib/scene-skill-order.ts`, and refreshes both scene config and global app context after a scene apply.
+Owns scene CRUD form state, loads `SceneConfigSnapshot` through a deferred initial refresh, updates disabled skills and enabled agents through `src/lib/scenes.ts`, computes drag-drop reorder payloads via `src/lib/scene-skill-order.ts`, and refreshes both scene config and global app context after a scene apply.
 
 ## Data Flow
 

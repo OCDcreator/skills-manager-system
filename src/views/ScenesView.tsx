@@ -34,7 +34,9 @@ export function ScenesView() {
   }, []);
 
   useEffect(() => {
-    void refresh();
+    queueMicrotask(() => {
+      void refresh();
+    });
   }, [refresh]);
 
   const handleCreate = async () => {

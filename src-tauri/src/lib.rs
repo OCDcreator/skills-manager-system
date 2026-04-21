@@ -1,6 +1,11 @@
+pub mod app_runtime;
+#[cfg(feature = "cli")]
+pub mod cli;
+#[cfg(feature = "desktop")]
 mod commands;
-mod core;
+pub mod core;
 
+#[cfg(feature = "desktop")]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()

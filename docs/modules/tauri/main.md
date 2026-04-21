@@ -18,11 +18,11 @@ Downstream: src-tauri/src/lib.rs
 
 | Export | Purpose |
 |---|---|
-| `main` | Calls `app_lib::run()` to start the application. |
+| `main` | Starts the desktop Tauri app when the `desktop` feature is enabled. |
 
 ## Core Logic
 
-The module disables the console subsystem for non-debug Windows builds and delegates startup to the library crate.
+The desktop binary is now an explicit Cargo target gated by `required-features = ["desktop"]`. This entrypoint still stays tiny: hide the Windows console for non-debug desktop builds and delegate startup to `app_lib::run()`.
 
 ## Data Flow
 
@@ -30,11 +30,11 @@ No app data is transformed here.
 
 ## Interactions
 
-Depends on the library crate exposing `run`.
+Depends on the library crate exposing `run` behind the `desktop` feature and on `src-tauri/Cargo.toml` keeping the desktop binary target explicit.
 
 ## Configuration
 
-Uses `#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]`.
+Uses `#![cfg_attr(all(feature = "desktop", not(debug_assertions)), windows_subsystem = "windows")]`.
 
 ## Change Notes
 

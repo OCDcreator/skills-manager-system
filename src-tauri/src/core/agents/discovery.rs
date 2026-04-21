@@ -86,7 +86,7 @@ fn build_agent_inventory_item(
     let default_skills_dir =
         select_existing_or_default(candidate_paths(definition.skills_dir_rule, system_dirs));
     let detected_skills_dir = detect_skills_dir(definition, system_dirs).map(path_to_string);
-    let path_override = config.path_override;
+    let path_override = config.path_override.map(normalize_path_string);
 
     let (path_mode, effective_skills_dir) = match path_override.clone() {
         Some(path) => (AgentPathMode::Override, Some(path)),
@@ -142,7 +142,11 @@ fn select_existing_or_default(candidates: Vec<PathBuf>) -> PathBuf {
 }
 
 fn path_to_string(path: PathBuf) -> String {
-    path.to_string_lossy().to_string()
+    normalize_path_string(path.to_string_lossy())
+}
+
+fn normalize_path_string(path: impl AsRef<str>) -> String {
+    path.as_ref().replace('\\', "/")
 }
 
 #[cfg(test)]

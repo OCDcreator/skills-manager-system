@@ -67,12 +67,21 @@ export function GitView() {
     setIsFetching(true);
     try {
       await gitApi.gitFetch();
-    } catch {
+    } catch (error) {
+      setOpLog((prev) => [
+        {
+          timestamp: new Date(),
+          label: t("git.actions.fetch"),
+          success: false,
+          message: error instanceof Error ? error.message : String(error),
+        },
+        ...prev,
+      ].slice(0, 50));
     } finally {
       setIsFetching(false);
       await refreshStatus();
     }
-  }, [refreshStatus]);
+  }, [refreshStatus, t]);
 
   const handleSelectFile = useCallback(
     (entry: gitApi.GitStatusEntry) => {
@@ -103,8 +112,10 @@ export function GitView() {
 
   useEffect(() => {
     if (!repoPath) return;
-    void refreshStatus();
-    void refreshLog();
+    queueMicrotask(() => {
+      void refreshStatus();
+      void refreshLog();
+    });
   }, [repoPath, refreshStatus, refreshLog]);
 
   if (!repoPath) {
@@ -145,7 +156,11 @@ export function GitView() {
         />
       </div>
 
-      <GitActions isRunning={false} onOperationComplete={handleOperationComplete} onLogEntry={handleLogEntry} />
+      <GitActions
+        isRunning={false}
+        onOperationComplete={handleOperationComplete}
+        onLogEntry={handleLogEntry}
+      />
 
       <GitOperationLog entries={opLog} />
 

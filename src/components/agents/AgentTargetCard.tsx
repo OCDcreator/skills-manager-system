@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AgentInventoryItem } from "../../lib/tauri";
 
@@ -14,15 +14,22 @@ export function AgentTargetCard(props: AgentTargetCardProps) {
   const { agent, isUpdating, onClearPathOverride, onSavePathOverride, onToggleEnabled } =
     props;
   const { t } = useTranslation();
-  const [overrideValue, setOverrideValue] = useState(agent.pathOverride ?? "");
+  const [overrideDraft, setOverrideDraft] = useState<string | null>(null);
+  const overrideValue = overrideDraft ?? agent.pathOverride ?? "";
   const trimmedOverride = overrideValue.trim();
   const saveDisabled =
     isUpdating || !trimmedOverride || trimmedOverride === (agent.pathOverride ?? "");
   const resetDisabled = isUpdating || !agent.pathOverride;
 
-  useEffect(() => {
-    setOverrideValue(agent.pathOverride ?? "");
-  }, [agent.pathOverride]);
+  const handleSaveOverride = async () => {
+    await onSavePathOverride(agent.key, trimmedOverride);
+    setOverrideDraft(null);
+  };
+
+  const handleResetOverride = async () => {
+    await onClearPathOverride(agent.key);
+    setOverrideDraft(null);
+  };
 
   return (
     <article className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-5">
@@ -88,7 +95,7 @@ export function AgentTargetCard(props: AgentTargetCardProps) {
         </label>
         <input
           className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400"
-          onChange={(event) => setOverrideValue(event.target.value)}
+          onChange={(event) => setOverrideDraft(event.target.value)}
           placeholder={agent.defaultSkillsDir}
           value={overrideValue}
         />
@@ -96,7 +103,7 @@ export function AgentTargetCard(props: AgentTargetCardProps) {
           <button
             className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-60"
             disabled={saveDisabled}
-            onClick={() => void onSavePathOverride(agent.key, trimmedOverride)}
+            onClick={() => void handleSaveOverride()}
             title={t("tooltip.agents.saveOverride")}
             type="button"
           >
@@ -105,7 +112,7 @@ export function AgentTargetCard(props: AgentTargetCardProps) {
           <button
             className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-200 disabled:opacity-60"
             disabled={resetDisabled}
-            onClick={() => void onClearPathOverride(agent.key)}
+            onClick={() => void handleResetOverride()}
             title={t("tooltip.agents.resetOverride")}
             type="button"
           >

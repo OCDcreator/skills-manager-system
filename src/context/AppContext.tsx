@@ -243,11 +243,11 @@ export function AppProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    void refreshAgents();
+    queueMicrotask(() => void refreshAgents());
   }, [refreshAgents]);
 
   useEffect(() => {
-    void refreshSkills();
+    queueMicrotask(() => void refreshSkills());
   }, [refreshSkills, repoPath]);
 
   const value = useMemo<AppContextValue>(

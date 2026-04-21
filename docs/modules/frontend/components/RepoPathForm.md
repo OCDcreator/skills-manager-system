@@ -22,7 +22,7 @@ Downstream: @tauri-apps/plugin-dialog, src/context/AppContext.tsx, src/i18n/inde
 
 ## Core Logic
 
-The component mirrors `repoPath` into local `draftPath`, opens a directory picker on browse, and calls `saveRepoPath` on submit. It shows a translated success or error status after submission.
+The component keeps local draft state only after the user edits or browses. Until then it renders the persisted `repoPath` directly, which avoids effect-driven state syncing while still resetting the form after a successful save.
 
 ## Data Flow
 

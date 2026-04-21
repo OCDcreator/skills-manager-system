@@ -27,7 +27,7 @@ Downstream: src-tauri/src/core/agents/catalog.rs, src-tauri/src/core/agents/conf
 
 ## Core Logic
 
-Resolves path candidates from catalog rules, handles `.config/...` dual-candidate lookup, determines detected/default/effective paths, and marks each agent as `override`, `detected`, or `missing`. Supports all 11 agents in the expanded catalog.
+Resolves path candidates from catalog rules, handles `.config/...` dual-candidate lookup, determines detected/default/effective paths, normalizes every emitted path string to forward slashes, and marks each agent as `override`, `detected`, or `missing`. Supports all 11 agents in the expanded catalog.
 
 ## Data Flow
 
@@ -35,7 +35,7 @@ Commands call `load_agent_inventory`; sync orchestration also uses the same inve
 
 ## Interactions
 
-Must stay aligned with the built-in rules in `catalog.rs`, the persisted overrides in `config.rs`, and the frontend DTOs in `src/lib/tauri.ts`.
+Must stay aligned with the built-in rules in `catalog.rs`, the persisted overrides in `config.rs`, the frontend DTOs in `src/lib/tauri.ts`, and the CLI JSON schema expectations for path fields.
 
 ## Configuration
 

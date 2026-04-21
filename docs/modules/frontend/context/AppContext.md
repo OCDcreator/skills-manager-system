@@ -17,7 +17,7 @@ Owns the frontend global state for active view, configured repository path, skil
 
 ## Core Logic
 
-The provider loads repo path and agent inventory on mount, refreshes skills when the repo changes, persists skill toggles and agent target updates, and exposes `applyAgentSync(syncMode?)` so callers can trigger manual sync with an explicit `copy`/`symlink` mode while keeping the command wiring centralized.
+The provider loads repo path on mount, defers agent/skill refresh calls through microtasks so React effect lint rules stay satisfied, persists skill toggles and agent target updates, and exposes `applyAgentSync(syncMode?)` so callers can trigger manual sync with an explicit `copy`/`symlink` mode while keeping the command wiring centralized.
 
 ## Interactions
 

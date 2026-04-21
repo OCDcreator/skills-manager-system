@@ -30,7 +30,9 @@ export function ProjectsView() {
   }, []);
 
   useEffect(() => {
-    void refresh();
+    queueMicrotask(() => {
+      void refresh();
+    });
   }, [refresh]);
 
   const handleAdd = async () => {

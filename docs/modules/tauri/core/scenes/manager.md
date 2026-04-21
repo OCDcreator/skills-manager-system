@@ -24,4 +24,4 @@ Applies a scene by updating repo-scoped skill state, global agent enabled flags,
 
 ## Tests
 
-Includes copy-mode and symlink-mode regression tests proving that scene apply now updates managed agent targets instead of only mutating config state.
+Includes copy-mode and symlink-mode regression tests proving that scene apply now updates managed agent targets instead of only mutating config state. The symlink regression also guards the saved `AgentSyncMode` to public `SyncMode` mapping used by feature-split desktop and CLI builds.

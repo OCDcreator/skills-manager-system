@@ -8,6 +8,9 @@ Domain `mod.rs` files document module boundaries, while leaf files document runt
 
 - `src-tauri/src/lib.rs` -> `docs/modules/tauri/lib.md`
 - `src-tauri/src/main.rs` -> `docs/modules/tauri/main.md`
+- `src-tauri/src/app_runtime/foo.rs` -> `docs/modules/tauri/app_runtime/foo.md`
+- `src-tauri/src/cli/foo.rs` -> `docs/modules/tauri/cli/foo.md`
+- `src-tauri/src/cli/commands/foo.rs` -> `docs/modules/tauri/cli/commands/foo.md`
 - `src-tauri/src/commands/foo.rs` -> `docs/modules/tauri/commands/foo.md`
 - `src-tauri/src/core/domain/foo.rs` -> `docs/modules/tauri/core/domain/foo.md`
 

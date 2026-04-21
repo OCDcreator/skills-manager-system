@@ -22,7 +22,7 @@ Downstream: App.tsx (routing)
 
 ## Core Logic
 
-Manages local state for git status, log, diff, and loading flags. Auto-fetches status and log on mount when repoPath is set. Shows unconfigured state when no repo path.
+Manages local state for git status, log, diff, and loading flags. Initial status/log refresh is deferred through a microtask once `repoPath` is available, fetch failures are recorded into the operation log, and the view still shows an unconfigured state when no repo path exists.
 
 ## Data Flow
 

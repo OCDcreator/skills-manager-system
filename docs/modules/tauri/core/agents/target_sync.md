@@ -18,7 +18,7 @@ Downstream: serde_json, std::fs, src-tauri/src/core/skills/scan.rs
 
 | Export | Purpose |
 |---|---|
-| `SyncMode` | Copy vs symlink deployment mode. |
+| `SyncMode` | Copy vs symlink deployment mode shared by desktop and CLI-facing sync adapters. |
 | `DesiredSkillEntry` | Desired managed target entry derived from a scanned skill. |
 | `TargetApplyStats` | Counts writes, removals, and unmanaged conflicts for one target. |
 | `build_desired_skill_entries` | Converts selected skills into stable managed target names. |
@@ -32,3 +32,7 @@ This module loads a target-local manifest, removes stale managed entries, protec
 ## Interactions
 
 Global agent sync calls it with discovered global agent directories. Project sync calls it with project-relative agent directories. Ledger ownership stays outside this module so each caller can track its own lifecycle.
+
+## Change Notes
+
+`SyncMode` is now public because the shared feature-split library exposes sync orchestration to both desktop and CLI builds. Keep new sync variants serialized in `snake_case` to match settings and CLI payload expectations.

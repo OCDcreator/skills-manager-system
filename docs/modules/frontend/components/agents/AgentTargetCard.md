@@ -22,7 +22,7 @@ Downstream: src/lib/tauri.ts, src/i18n/index.ts
 
 ## Core Logic
 
-Maintains a local override input string, syncs that input when the persisted override changes, renders status badges from the backend inventory snapshot, and forwards toggle/save/reset actions to the callbacks supplied by the page.
+Maintains a nullable local override draft so the saved backend value remains the source of truth until the user edits. Successful save/reset actions clear the local draft and let the refreshed inventory snapshot repopulate the visible value without an effect-driven mirror.
 
 ## Data Flow
 

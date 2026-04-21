@@ -11,7 +11,7 @@ const MANIFEST_FILE_NAME: &str = ".skills-manager-system-manifest.json";
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
-pub(crate) enum SyncMode {
+pub enum SyncMode {
     #[default]
     Copy,
     Symlink,

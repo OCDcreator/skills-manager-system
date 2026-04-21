@@ -36,4 +36,4 @@ Uses `tempfile` for disposable filesystem state.
 
 ## Change Notes
 
-Keep new phase-three regression tests here instead of growing `sync.rs` past the repo's file-size limits.
+Keep new phase-three regression tests here instead of growing `sync.rs` past the repo's file-size limits. When the CLI feature split changes sync visibility, update this doc alongside any source-only test fixture adjustments so module-doc diff remains green.

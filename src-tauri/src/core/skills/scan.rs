@@ -109,8 +109,8 @@ fn build_skill_summary(
         description: metadata.description.unwrap_or_default(),
         source_type: source_type.to_string(),
         relative_path,
-        directory_path: skill_dir.to_string_lossy().to_string(),
-        skill_document_path: skill_md_path.to_string_lossy().to_string(),
+        directory_path: path_to_string(skill_dir),
+        skill_document_path: path_to_string(&skill_md_path),
     })
 }
 
@@ -121,6 +121,10 @@ fn normalize_relative_path(repo_root: &Path, skill_dir: &Path) -> Result<String>
         .map(|component| component.as_os_str().to_string_lossy().to_string())
         .collect::<Vec<_>>()
         .join("/"))
+}
+
+fn path_to_string(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
 }
 
 #[cfg(test)]

@@ -2,7 +2,7 @@
 
 ## Queue
 
-### [NEXT] B1 - Highest-priority queued bug or backlog slice
+### [DONE] B1 - Highest-priority queued bug or backlog slice
 
 - **Lane**: Bugfix / backlog
 - **Goal**: Land the CLI Foundation Phase 1a slice: Cargo feature split, shared runtime/output layer, `clap` CLI skeleton, and read-only commands with validated JSON output.
@@ -24,7 +24,7 @@
   - `settings get-repo-path`, `skills list`, and `agents list` work headlessly with JSON output
   - Focused CLI/runtime tests pass, plus `cargo check --manifest-path src-tauri/Cargo.toml --no-default-features --features cli`
 
-### [QUEUED] B1.2 - Prepare mutation-ready runtime contracts
+### [NEXT] B1.2 - Prepare mutation-ready runtime contracts
 
 - **Goal**: If Phase 1a finishes early within the lane budget, harden error mapping and lock behavior without yet expanding to all mutation command groups.
 - **Acceptance**:

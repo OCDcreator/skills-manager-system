@@ -5,12 +5,19 @@
 
 ## Overview
 
-Builds and runs the Tauri application, registers plugins, and exposes the Rust command handlers used by the frontend.
+Defines the shared Rust crate surface for both desktop and CLI builds, while keeping the Tauri startup path gated behind the `desktop` Cargo feature.
+
+## Import Relationships
+
+```text
+Upstream: src-tauri/src/main.rs, src-tauri/src/cli/main.rs
+Downstream: src-tauri/src/app_runtime/*, src-tauri/src/cli/*, src-tauri/src/core/*, src-tauri/src/commands/*
+```
 
 ## Core Logic
 
-The handler registration now includes both repo-path settings commands and the new `get_agent_sync_mode` / `set_agent_sync_mode` commands in addition to the existing skills, agents, git, scenes, and projects command surfaces.
+`app_runtime` is always exposed so both build targets can share config/output helpers. The CLI module is only compiled when the `cli` feature is enabled. The Tauri command layer and `run()` function are compiled only with the `desktop` feature, preserving a CLI-only build that no longer pulls Tauri runtime wiring into headless checks.
 
 ## Interactions
 
-Must stay aligned with every `#[tauri::command]` wrapper under `src-tauri/src/commands/`, especially when new settings fields are added and exposed to `src/lib/tauri.ts`.
+Must stay aligned with every `#[tauri::command]` wrapper under `src-tauri/src/commands/`, the feature declarations in `src-tauri/Cargo.toml`, and the CLI modules under `src-tauri/src/cli/`.
