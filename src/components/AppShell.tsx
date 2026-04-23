@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppContext, type AppView } from "../context/AppContext";
+import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 
 const NAV_ITEMS: AppView[] = ["skills", "agents", "git", "scenes", "projects", "settings"];
 
@@ -10,7 +11,15 @@ interface AppShellProps extends PropsWithChildren {
 
 export function AppShell({ children, contentWidthClassName }: AppShellProps) {
   const { t } = useTranslation();
-  const { activeView, errorMessage, setActiveView } = useAppContext();
+  const {
+    activeView,
+    cancelNavigation,
+    confirmNavigationDiscard,
+    confirmNavigationSave,
+    errorMessage,
+    pendingNavigation,
+    setActiveView,
+  } = useAppContext();
   const widthClassName = contentWidthClassName ?? "max-w-7xl";
 
   return (
@@ -46,6 +55,15 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
       </header>
 
       <main className={`mx-auto ${widthClassName} px-6 py-8`}>{children}</main>
+
+      {pendingNavigation ? (
+        <UnsavedChangesDialog
+          onCancel={cancelNavigation}
+          onDiscard={confirmNavigationDiscard}
+          onSave={confirmNavigationSave}
+          pendingNavigation={pendingNavigation}
+        />
+      ) : null}
     </div>
   );
 }

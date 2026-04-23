@@ -5,14 +5,7 @@
 
 ## Overview
 
-Provides the shared page chrome for the desktop app, including the header, navigation buttons, global error banner, and main content container.
-
-## Import Relationships
-
-```text
-Upstream: src/App.tsx
-Downstream: src/context/AppContext.tsx, src/i18n/index.ts
-```
+Provides the shared page chrome for the desktop app, including the header, guarded navigation buttons, global error banner, main content container, and unsaved-changes modal host.
 
 ## Public Surface
 
@@ -22,20 +15,8 @@ Downstream: src/context/AppContext.tsx, src/i18n/index.ts
 
 ## Core Logic
 
-The shell reads `activeView`, `errorMessage`, and `setActiveView` from context. It renders the translated app title/subtitle, five view buttons (skills, agents, git, scenes, settings), and an error strip when a context-level error exists. A caller may override the shared content-width class so a specific page can use a wider responsive frame.
-
-## Data Flow
-
-User clicks on navigation buttons call `setActiveView`, which changes the context state consumed by `src/App.tsx`.
+The shell reads `activeView`, `errorMessage`, guarded `setActiveView`, and pending-navigation actions from context. It renders the translated app title/subtitle, six view buttons, an error strip, and the unsaved-changes dialog whenever the Agents page blocks a route change.
 
 ## Interactions
 
-Depends on i18n keys under `app.*` and `nav.*`. Navigation choices must stay aligned with the `AppView` union.
-
-## Configuration
-
-Styling is Tailwind class based and scoped to this component. If no width override is supplied, the shell uses `max-w-7xl`.
-
-## Change Notes
-
-Do not add view-specific business logic here; this component should remain shared layout and navigation only. Width overrides should stay at the container-policy level rather than introducing per-view UI logic into the shell.
+User clicks on navigation buttons call guarded `setActiveView`, which may immediately change the current route or open the unsaved-changes dialog first. Navigation choices must stay aligned with the `AppView` union.

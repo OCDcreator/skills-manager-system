@@ -48,6 +48,9 @@ export interface AgentInventoryItem {
   key: AgentKey;
   displayName: string;
   enabled: boolean;
+  selectedSkillIds: string[];
+  selectedSceneIds: string[];
+  excludedSkillIds: string[];
   defaultSkillsDir: string;
   detectedSkillsDir: string | null;
   effectiveSkillsDir: string | null;
@@ -57,6 +60,15 @@ export interface AgentInventoryItem {
 
 export interface AgentInventorySnapshot {
   agents: AgentInventoryItem[];
+}
+
+export interface AgentConfigurationInput {
+  key: string;
+  enabled: boolean;
+  pathOverride: string | null;
+  selectedSkillIds: string[];
+  selectedSceneIds: string[];
+  excludedSkillIds: string[];
 }
 
 export type AgentApplyStatus = "success" | "partial" | "skipped" | "failed";
@@ -111,8 +123,18 @@ export const setAgentPathOverride = (key: string, path: string) =>
 export const clearAgentPathOverride = (key: string) =>
   invoke<AgentInventorySnapshot>("clear_agent_path_override", { key });
 
-export const applyAgentSync = (syncMode?: AgentSyncMode) =>
-  invoke<ApplyAgentSyncResponse>(
-    "apply_agent_sync",
-    syncMode ? { syncMode } : {},
-  );
+export const setAgentConfiguration = (config: AgentConfigurationInput) =>
+  invoke<AgentInventorySnapshot>("set_agent_configuration", {
+    key: config.key,
+    enabled: config.enabled,
+    pathOverride: config.pathOverride,
+    selectedSkillIds: config.selectedSkillIds,
+    selectedSceneIds: config.selectedSceneIds,
+    excludedSkillIds: config.excludedSkillIds,
+  });
+
+export const applyAgentSync = (syncMode?: AgentSyncMode, agentKey?: string) =>
+  invoke<ApplyAgentSyncResponse>("apply_agent_sync", {
+    syncMode: syncMode ?? null,
+    agentKey: agentKey ?? null,
+  });

@@ -15,6 +15,7 @@ pub fn run() {
             commands::agents::set_agent_enabled,
             commands::agents::set_agent_path_override,
             commands::agents::clear_agent_path_override,
+            commands::agents::set_agent_configuration,
             commands::agents::apply_agent_sync,
             commands::git::git_status,
             commands::git::git_diff,

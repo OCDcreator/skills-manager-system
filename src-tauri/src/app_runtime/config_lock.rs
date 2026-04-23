@@ -109,7 +109,7 @@ pub fn acquire_config_lock(config_dir: &Path) -> Result<ConfigLockGuard, ConfigL
 
     match file.try_lock_exclusive() {
         Ok(()) => {}
-        Err(source) if source.kind() == std::io::ErrorKind::WouldBlock => {
+        Err(source) if is_lock_contention(&source) => {
             return Err(ConfigLockError::already_held(lock_path));
         }
         Err(source) => {
@@ -123,6 +123,22 @@ pub fn acquire_config_lock(config_dir: &Path) -> Result<ConfigLockGuard, ConfigL
         .map_err(|source| ConfigLockError::io(lock_path, source))?;
 
     Ok(ConfigLockGuard { file: Some(file) })
+}
+
+fn is_lock_contention(error: &std::io::Error) -> bool {
+    if error.kind() == std::io::ErrorKind::WouldBlock {
+        return true;
+    }
+
+    #[cfg(windows)]
+    {
+        return matches!(error.raw_os_error(), Some(32 | 33));
+    }
+
+    #[cfg(not(windows))]
+    {
+        false
+    }
 }
 
 #[cfg(test)]

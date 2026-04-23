@@ -13,13 +13,15 @@ Defines TypeScript shapes and thin wrappers for the Tauri commands used by the f
 |---|---|
 | `AgentKey` | Union of all supported global/project agent keys. |
 | `AgentSyncMode` | Frontend union for `copy` vs `symlink`. |
+| `AgentConfigurationInput` | Save payload for one persisted agent configuration. |
 | `getAgentSyncMode` / `setAgentSyncMode` | Persist the preferred global sync mode. |
-| `applyAgentSync` | Runs manual agent sync, optionally with an explicit mode override. |
+| `setAgentConfiguration` | Persists a full agent draft payload and returns refreshed inventory. |
+| `applyAgentSync` | Runs manual agent sync, optionally scoped to one agent and/or an explicit mode override. |
 | other exports | Existing repo/skill/agent DTOs and invoke wrappers. |
 
 ## Core Logic
 
-Each function delegates directly to `invoke` with the command name and payload, keeping frontend command wiring thin while exposing enough type information for page-level orchestration.
+Each function delegates directly to `invoke` with the command name and payload, keeping frontend command wiring thin while exposing enough type information for draft editing, scoped sync, and page-level orchestration.
 
 ## Interactions
 

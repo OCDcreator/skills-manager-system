@@ -5,23 +5,19 @@
 
 ## Overview
 
-Applies a scene by updating repo-scoped skill state, global agent enabled flags, and the managed contents inside agent skill directories.
+Applies a scene by updating target-agent enablement, assigning that scene to the selected agents, and then rerunning agent sync.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `apply_scene` | Applies one scene and then reruns global agent sync using the saved sync mode. |
+| `apply_scene` | Applies one scene and then reruns agent sync using the saved sync mode. |
 | `ApplySceneResult` | Small summary returned to the frontend. |
 
 ## Core Logic
 
-1. Load the target scene.
-2. Diff and persist disabled skill IDs through `SkillStateStore`.
-3. Diff and persist enabled agent flags through `AgentConfigStore`.
-4. Load the preferred `AgentSyncMode` from settings, map it to `target_sync::SyncMode`, and rerun `apply_agent_sync`.
-5. Mark the scene as active only after sync succeeds.
+Loads the target scene, persists enabled agent flags through `AgentConfigStore`, replaces enabled agents' selected-scene list with the applied scene ID while preserving direct skill and exclusion lists, maps the saved `AgentSyncMode` to `target_sync::SyncMode`, reruns `apply_agent_sync`, and marks the scene active only after sync succeeds.
 
 ## Tests
 
-Includes copy-mode and symlink-mode regression tests proving that scene apply now updates managed agent targets instead of only mutating config state. The symlink regression also guards the saved `AgentSyncMode` to public `SyncMode` mapping used by feature-split desktop and CLI builds.
+Includes copy-mode and symlink-mode regression tests proving that scene apply still updates managed agent targets after the per-agent sync redesign.

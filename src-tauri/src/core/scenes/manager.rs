@@ -8,7 +8,6 @@ use crate::core::agents::discovery::{load_agent_inventory, AgentSystemDirs};
 use crate::core::agents::sync::apply_agent_sync;
 use crate::core::agents::target_sync::SyncMode;
 use crate::core::settings::{AgentSyncMode, SettingsStore};
-use crate::core::skills::state::SkillStateStore;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -32,7 +31,6 @@ pub fn apply_scene(
         .ok_or_else(|| anyhow::anyhow!("Scene '{}' not found", scene_id))?
         .clone();
 
-    apply_skill_state_for_scene(config_dir, repo_path, &scene)?;
     apply_agent_state_for_scene(config_dir, system_dirs, &scene)?;
     apply_agent_sync(config_dir, repo_path, system_dirs, load_sync_mode(config_dir)?)?;
     SceneConfigStore::new(config_dir.to_path_buf()).set_active_scene(Some(scene_id))?;
@@ -53,34 +51,6 @@ fn load_sync_mode(config_dir: &Path) -> Result<SyncMode> {
     })
 }
 
-fn apply_skill_state_for_scene(
-    config_dir: &Path,
-    repo_path: &Path,
-    scene: &SceneEntry,
-) -> Result<()> {
-    let store = SkillStateStore::new(config_dir.to_path_buf());
-    let current = store.load_for_repo(repo_path)?;
-
-    if current.disabled_skill_ids == scene.disabled_skill_ids {
-        return Ok(());
-    }
-
-    for skill_id in &scene.disabled_skill_ids {
-        let _ = store.set_skill_enabled(repo_path, skill_id, false);
-    }
-
-    let all_disabled: std::collections::BTreeSet<String> =
-        current.disabled_skill_ids.iter().cloned().collect();
-    let scene_disabled: std::collections::BTreeSet<String> =
-        scene.disabled_skill_ids.iter().cloned().collect();
-
-    for skill_id in all_disabled.difference(&scene_disabled) {
-        let _ = store.set_skill_enabled(repo_path, skill_id, true);
-    }
-
-    Ok(())
-}
-
 fn apply_agent_state_for_scene(
     config_dir: &Path,
     system_dirs: &AgentSystemDirs,
@@ -96,6 +66,14 @@ fn apply_agent_state_for_scene(
         let should_enable = scene_enabled.contains(agent.key.as_str());
         if agent.enabled != should_enable {
             let _ = agent_store.set_agent_enabled(&agent.key, should_enable);
+        }
+        if should_enable {
+            let _ = agent_store.set_agent_selection(
+                &agent.key,
+                agent.selected_skill_ids.clone(),
+                vec![scene.id.clone()],
+                agent.excluded_skill_ids.clone(),
+            );
         }
     }
 

@@ -5,14 +5,7 @@
 
 ## Overview
 
-Implements the high-level manual apply workflow for global agent sync.
-
-## Import Relationships
-
-```text
-Upstream: src-tauri/src/commands/agents.rs, src-tauri/src/core/agents/sync_tests.rs
-Downstream: src-tauri/src/core/agents/discovery.rs, src-tauri/src/core/agents/manifest.rs, src-tauri/src/core/agents/target_sync.rs, src-tauri/src/core/skills/scan.rs, src-tauri/src/core/skills/state.rs
-```
+Implements the high-level manual apply workflow for per-agent sync.
 
 ## Public Surface
 
@@ -20,25 +13,14 @@ Downstream: src-tauri/src/core/agents/discovery.rs, src-tauri/src/core/agents/ma
 |---|---|
 | `AgentApplyStatus` | Per-agent result status enum returned to the frontend. |
 | `AgentApplyResult` | Per-agent manual apply summary. |
-| `ApplyAgentSyncResponse` | Aggregate apply response including enabled-skill count. |
+| `ApplyAgentSyncResponse` | Aggregate apply response including globally available skill count. |
 | `apply_agent_sync` | Runs one manual apply pass across the supported agents with configurable copy/symlink mode. |
+| `apply_agent_sync_for_agent` | Runs one manual apply pass scoped to a single agent. |
 
 ## Core Logic
 
-Loads the current inventory snapshot, computes enabled skills from scan results minus disabled IDs, reconciles old/current target directories per agent, removes managed entries for disabled targets, and returns a per-agent result summary without deleting unmanaged content. Accepts a `SyncMode` to choose between copy and symlink deployment.
-
-## Data Flow
-
-Commands pass the config dir, repo path, and runtime system dirs into this module. The module returns frontend-ready apply summaries.
+Loads inventory, builds a skill-selection context from scan results plus global disabled IDs and saved scenes, resolves each agent's desired skills as `direct ∪ scenes - exclusions`, reconciles old/current target directories, removes managed entries for disabled targets, and returns per-agent result summaries without deleting unmanaged content.
 
 ## Interactions
 
-Depends on discovery for target paths, skills scan/state for enabled-skill truth, `manifest.rs` for global ledger persistence, and `target_sync.rs` for safe target reconciliation.
-
-## Configuration
-
-None directly beyond the config-dir files owned by sibling modules.
-
-## Change Notes
-
-Keep this file focused on orchestration; ledger mechanics belong in `manifest.rs`, and target deployment mechanics belong in `target_sync.rs`.
+Depends on discovery for target paths, scene config for reusable skill groups, skills scan/state for global hard-disable truth, `manifest.rs` for ledger persistence, and `target_sync.rs` for safe target reconciliation.

@@ -25,7 +25,7 @@ Downstream: fs2, std::fs
 
 ## Core Logic
 
-The lock file lives at `.skills-manager-system.lock` under the active config directory. Acquisition creates the config root if needed, opens or creates the lock file, attempts an exclusive advisory lock, and writes the current process id after the lock is held. The file remains on disk after release so stale lock files do not block future writers.
+The lock file lives at `.skills-manager-system.lock` under the active config directory. Acquisition creates the config root if needed, opens or creates the lock file, attempts an exclusive advisory lock, maps platform-specific lock-contention errors to `AlreadyHeld`, and writes the current process id after the lock is held. The file remains on disk after release so stale lock files do not block future writers.
 
 ## Interactions
 

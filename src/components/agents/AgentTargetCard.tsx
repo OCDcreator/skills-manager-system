@@ -1,70 +1,90 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AgentInventoryItem } from "../../lib/tauri";
+import type { AgentConfigDraft, AgentSelectionPreview } from "../../lib/agent-selection";
+import type { SceneEntry } from "../../lib/scenes";
+import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
+import { AgentSceneSelector } from "./AgentSceneSelector";
+import { AgentSelectionSummary } from "./AgentSelectionSummary";
+import { AgentSkillSelector } from "./AgentSkillSelector";
 
 interface AgentTargetCardProps {
   agent: AgentInventoryItem;
+  disabledSkillIds: string[];
+  draft: AgentConfigDraft;
+  isDirty: boolean;
   isUpdating: boolean;
-  onToggleEnabled: (key: string, enabled: boolean) => Promise<void>;
-  onSavePathOverride: (key: string, path: string) => Promise<void>;
-  onClearPathOverride: (key: string) => Promise<void>;
+  preview: AgentSelectionPreview;
+  scenes: SceneEntry[];
+  skills: SkillSummary[];
+  onDraftChange: (draft: AgentConfigDraft) => void;
+  onSave: () => Promise<void>;
 }
 
-export function AgentTargetCard(props: AgentTargetCardProps) {
-  const { agent, isUpdating, onClearPathOverride, onSavePathOverride, onToggleEnabled } =
-    props;
+export function AgentTargetCard({
+  agent,
+  disabledSkillIds,
+  draft,
+  isDirty,
+  isUpdating,
+  preview,
+  scenes,
+  skills,
+  onDraftChange,
+  onSave,
+}: AgentTargetCardProps) {
   const { t } = useTranslation();
-  const [overrideDraft, setOverrideDraft] = useState<string | null>(null);
-  const overrideValue = overrideDraft ?? agent.pathOverride ?? "";
-  const trimmedOverride = overrideValue.trim();
-  const saveDisabled =
-    isUpdating || !trimmedOverride || trimmedOverride === (agent.pathOverride ?? "");
-  const resetDisabled = isUpdating || !agent.pathOverride;
-
-  const handleSaveOverride = async () => {
-    await onSavePathOverride(agent.key, trimmedOverride);
-    setOverrideDraft(null);
-  };
-
-  const handleResetOverride = async () => {
-    await onClearPathOverride(agent.key);
-    setOverrideDraft(null);
-  };
+  const trimmedOverride = draft.pathOverride.trim();
+  const saveDisabled = isUpdating || !isDirty;
+  const resetDisabled = isUpdating || !trimmedOverride;
 
   return (
-    <article className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+    <article
+      className={`space-y-4 rounded-2xl border p-5 ${
+        isDirty ? "border-sky-700 bg-sky-950/20" : "border-slate-800 bg-slate-900"
+      }`}
+    >
       <header className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-slate-100">{agent.displayName}</h3>
-          <span
-            className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs ${
-              agent.pathMode === "missing"
-                ? "bg-amber-500/15 text-amber-200"
-                : agent.pathMode === "override"
-                  ? "bg-violet-500/15 text-violet-200"
-                  : "bg-emerald-500/15 text-emerald-200"
-            }`}
-          >
-            {t(`agents.pathMode.${agent.pathMode}`)}
-          </span>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <span
+              className={`inline-flex rounded-full px-2.5 py-1 text-xs ${
+                agent.pathMode === "missing"
+                  ? "bg-amber-500/15 text-amber-200"
+                  : agent.pathMode === "override"
+                    ? "bg-violet-500/15 text-violet-200"
+                    : "bg-emerald-500/15 text-emerald-200"
+              }`}
+            >
+              {t(`agents.pathMode.${agent.pathMode}`)}
+            </span>
+            {isDirty ? (
+              <span className="inline-flex rounded-full bg-sky-500/15 px-2.5 py-1 text-xs text-sky-200">
+                {t("agents.card.unsaved")}
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <button
           className={`rounded-lg px-3 py-2 text-xs font-semibold disabled:opacity-60 ${
-            agent.enabled
+            draft.enabled
               ? "bg-sky-400 text-slate-950"
               : "border border-slate-700 bg-slate-950 text-slate-200"
           }`}
           disabled={isUpdating}
-          onClick={() => void onToggleEnabled(agent.key, !agent.enabled)}
-          title={agent.enabled ? t("tooltip.agents.disableTarget") : t("tooltip.agents.enableTarget")}
+          onClick={() => onDraftChange({ ...draft, enabled: !draft.enabled })}
+          title={
+            draft.enabled
+              ? t("tooltip.agents.disableTarget")
+              : t("tooltip.agents.enableTarget")
+          }
           type="button"
         >
-          {agent.enabled ? t("agents.card.disableTarget") : t("agents.card.enableTarget")}
+          {draft.enabled ? t("agents.card.disableTarget") : t("agents.card.enableTarget")}
         </button>
       </header>
 
-      <dl className="space-y-3 text-sm">
+      <dl className="grid gap-3 text-sm md:grid-cols-3">
         <div>
           <dt className="text-xs uppercase tracking-wide text-slate-500">
             {t("agents.card.defaultPath")}
@@ -95,30 +115,44 @@ export function AgentTargetCard(props: AgentTargetCardProps) {
         </label>
         <input
           className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400"
-          onChange={(event) => setOverrideDraft(event.target.value)}
+          onChange={(event) => onDraftChange({ ...draft, pathOverride: event.target.value })}
           placeholder={agent.defaultSkillsDir}
-          value={overrideValue}
+          value={draft.pathOverride}
         />
-        <div className="flex flex-wrap gap-2">
-          <button
-            className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-60"
-            disabled={saveDisabled}
-            onClick={() => void handleSaveOverride()}
-            title={t("tooltip.agents.saveOverride")}
-            type="button"
-          >
-            {t("agents.card.saveOverride")}
-          </button>
-          <button
-            className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-200 disabled:opacity-60"
-            disabled={resetDisabled}
-            onClick={() => void handleResetOverride()}
-            title={t("tooltip.agents.resetOverride")}
-            type="button"
-          >
-            {t("agents.card.resetOverride")}
-          </button>
-        </div>
+        <button
+          className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-200 disabled:opacity-60"
+          disabled={resetDisabled}
+          onClick={() => onDraftChange({ ...draft, pathOverride: "" })}
+          type="button"
+        >
+          {t("agents.card.resetOverride")}
+        </button>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <AgentSkillSelector
+          disabledSkillIds={disabledSkillIds}
+          draft={draft}
+          onDraftChange={onDraftChange}
+          skills={skills}
+        />
+        <AgentSceneSelector draft={draft} onDraftChange={onDraftChange} scenes={scenes} />
+        <AgentSelectionSummary
+          draft={draft}
+          onDraftChange={onDraftChange}
+          preview={preview}
+        />
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-60"
+          disabled={saveDisabled}
+          onClick={() => void onSave()}
+          type="button"
+        >
+          {isUpdating ? t("agents.card.saving") : t("agents.card.saveAgent")}
+        </button>
       </div>
     </article>
   );

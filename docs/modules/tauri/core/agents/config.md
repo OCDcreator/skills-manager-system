@@ -5,41 +5,24 @@
 
 ## Overview
 
-Persists phase-three agent target configuration separately from `settings.json`.
-
-## Import Relationships
-
-```text
-Upstream: src-tauri/src/commands/agents.rs, src-tauri/src/core/agents/discovery.rs, src-tauri/src/core/agents/sync_tests.rs
-Downstream: serde_json, std::fs
-```
+Persists per-agent sync configuration separately from `settings.json`.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `AgentConfigEntry` | One agent's enabled flag and optional path override. |
+| `AgentConfigEntry` | One agent's enabled flag, optional path override, direct skill IDs, scene IDs, and exclusion IDs. |
 | `AgentConfigSnapshot` | Full persisted config map keyed by agent key. |
 | `AgentConfigStore` | Loads and updates `agent-config.json`. |
 
 ## Core Logic
 
-Validates supported agent keys, reads/writes `agent-config.json`, toggles enabled flags, and stores absolute override paths without mixing repo-path settings into this file.
-
-## Data Flow
-
-Commands mutate this store, then rebuild inventory snapshots from the updated config.
+Validates supported agent keys, reads/writes `agent-config.json`, toggles enabled flags, stores absolute override paths, normalizes ID arrays, and supports whole-entry saves for the agent editor.
 
 ## Interactions
 
-Must stay aligned with the built-in keys from `catalog.rs` and the discovery layer that consumes these persisted overrides.
-
-## Configuration
-
-Writes `agent-config.json` under the app config directory.
+Commands mutate this store, discovery carries the persisted fields into inventory snapshots, and sync resolves each agent's desired skill set from these fields.
 
 ## Change Notes
 
-Keep this store limited to target enablement and override paths; do not fold repo-path settings or sync ledger state into it.
-
-`path_override_round_trips` uses a tempdir-derived absolute path instead of a hardcoded Windows path to pass on both Windows and Unix.
+Keep this store limited to per-agent sync configuration; do not fold repo-path settings or sync ledger state into it.

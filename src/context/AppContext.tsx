@@ -10,42 +10,15 @@ import type { PropsWithChildren } from "react";
 import * as api from "../lib/tauri";
 import type {
   AgentInventoryItem,
-  AgentSyncMode,
   ApplyAgentSyncResponse,
   ScanSkillsResponse,
   SkillDocument,
   SkillSummary,
 } from "../lib/tauri";
+import type { AppContextValue, AppView } from "./app-context-types";
+import { useNavigationGuardState } from "./navigation-guard";
 
-export type AppView = "skills" | "agents" | "git" | "scenes" | "projects" | "settings";
-
-interface AppContextValue {
-  activeView: AppView;
-  repoPath: string | null;
-  scanResult: ScanSkillsResponse;
-  selectedSkill: SkillSummary | null;
-  selectedDocument: SkillDocument | null;
-  disabledSkillIds: string[];
-  agentInventory: AgentInventoryItem[];
-  lastAgentApplyResult: ApplyAgentSyncResponse | null;
-  isLoading: boolean;
-  isLoadingAgents: boolean;
-  isSavingPath: boolean;
-  isApplyingAgentSync: boolean;
-  updatingSkillId: string | null;
-  updatingAgentKey: string | null;
-  errorMessage: string | null;
-  setActiveView: (view: AppView) => void;
-  refreshSkills: () => Promise<void>;
-  refreshAgents: () => Promise<void>;
-  saveRepoPath: (nextPath: string) => Promise<void>;
-  selectSkill: (skill: SkillSummary | null) => Promise<void>;
-  setSkillEnabled: (skillId: string, enabled: boolean) => Promise<void>;
-  setAgentEnabled: (key: string, enabled: boolean) => Promise<void>;
-  setAgentPathOverride: (key: string, path: string) => Promise<void>;
-  clearAgentPathOverride: (key: string) => Promise<void>;
-  applyAgentSync: (syncMode?: AgentSyncMode) => Promise<void>;
-}
+export type { AppView } from "./app-context-types";
 
 const AppContext = createContext<AppContextValue | null>(null);
 function errorMessageFrom(error: unknown) {
@@ -53,7 +26,7 @@ function errorMessageFrom(error: unknown) {
 }
 
 export function AppProvider({ children }: PropsWithChildren) {
-  const [activeView, setActiveView] = useState<AppView>("skills");
+  const [activeView, setActiveViewState] = useState<AppView>("skills");
   const [repoPath, setRepoPath] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<ScanSkillsResponse>({
     skills: [],
@@ -72,6 +45,7 @@ export function AppProvider({ children }: PropsWithChildren) {
   const [updatingSkillId, setUpdatingSkillId] = useState<string | null>(null);
   const [updatingAgentKey, setUpdatingAgentKey] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const navigation = useNavigationGuardState(activeView, setActiveViewState);
 
   const refreshSkills = useCallback(async () => {
     if (!repoPath) {
@@ -141,7 +115,7 @@ export function AppProvider({ children }: PropsWithChildren) {
       setSelectedDocument(null);
       setDisabledSkillIds([]);
       setLastAgentApplyResult(null);
-      setActiveView("skills");
+      setActiveViewState("skills");
       setErrorMessage(null);
     } catch (error) {
       const message = errorMessageFrom(error);
@@ -198,10 +172,14 @@ export function AppProvider({ children }: PropsWithChildren) {
     await updateAgentInventory(key, () => api.clearAgentPathOverride(key));
   }, [updateAgentInventory]);
 
-  const applyAgentSync = useCallback(async (syncMode?: AgentSyncMode) => {
+  const saveAgentConfiguration = useCallback(async (config: api.AgentConfigurationInput) => {
+    await updateAgentInventory(config.key, () => api.setAgentConfiguration(config));
+  }, [updateAgentInventory]);
+
+  const applyAgentSync = useCallback(async (syncMode?: api.AgentSyncMode, agentKey?: string) => {
     setIsApplyingAgentSync(true);
     try {
-      const result = await api.applyAgentSync(syncMode);
+      const result = await api.applyAgentSync(syncMode, agentKey);
       setLastAgentApplyResult(result);
       setErrorMessage(null);
     } catch (error) {
@@ -267,7 +245,8 @@ export function AppProvider({ children }: PropsWithChildren) {
       updatingSkillId,
       updatingAgentKey,
       errorMessage,
-      setActiveView,
+      pendingNavigation: navigation.pendingNavigation,
+      setActiveView: navigation.setActiveView,
       refreshSkills,
       refreshAgents,
       saveRepoPath,
@@ -276,7 +255,12 @@ export function AppProvider({ children }: PropsWithChildren) {
       setAgentEnabled,
       setAgentPathOverride,
       clearAgentPathOverride,
+      saveAgentConfiguration,
       applyAgentSync,
+      registerNavigationGuard: navigation.registerNavigationGuard,
+      confirmNavigationSave: navigation.confirmNavigationSave,
+      confirmNavigationDiscard: navigation.confirmNavigationDiscard,
+      cancelNavigation: navigation.cancelNavigation,
     }),
     [
       activeView,
@@ -294,6 +278,8 @@ export function AppProvider({ children }: PropsWithChildren) {
       updatingSkillId,
       updatingAgentKey,
       errorMessage,
+      navigation.pendingNavigation,
+      navigation.setActiveView,
       refreshSkills,
       refreshAgents,
       saveRepoPath,
@@ -302,7 +288,12 @@ export function AppProvider({ children }: PropsWithChildren) {
       setAgentEnabled,
       setAgentPathOverride,
       clearAgentPathOverride,
+      saveAgentConfiguration,
       applyAgentSync,
+      navigation.registerNavigationGuard,
+      navigation.confirmNavigationSave,
+      navigation.confirmNavigationDiscard,
+      navigation.cancelNavigation,
     ],
   );
 

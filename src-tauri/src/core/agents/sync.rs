@@ -3,11 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use crate::core::skills::scan::{scan_repo_skills, SkillSummary};
-use crate::core::skills::state::SkillStateStore;
-
 use super::discovery::{load_agent_inventory, AgentInventoryItem, AgentPathMode, AgentSystemDirs};
 use super::manifest::{load_ledger, save_ledger, AgentSyncLedgerEntry};
+use super::selection::{load_skill_selection_context, resolve_agent_skills};
 use super::target_sync::{
     apply_desired_entries, build_desired_skill_entries, cleanup_managed_entries, DesiredSkillEntry,
     SyncMode,
@@ -48,18 +46,46 @@ pub fn apply_agent_sync(
     system_dirs: &AgentSystemDirs,
     mode: SyncMode,
 ) -> Result<ApplyAgentSyncResponse> {
+    apply_agent_sync_scoped(config_dir, repo_path, system_dirs, mode, None)
+}
+
+pub fn apply_agent_sync_for_agent(
+    config_dir: &Path,
+    repo_path: &Path,
+    system_dirs: &AgentSystemDirs,
+    mode: SyncMode,
+    agent_key: &str,
+) -> Result<ApplyAgentSyncResponse> {
+    let agent_keys = BTreeSet::from([agent_key.to_string()]);
+    apply_agent_sync_scoped(config_dir, repo_path, system_dirs, mode, Some(&agent_keys))
+}
+
+fn apply_agent_sync_scoped(
+    config_dir: &Path,
+    repo_path: &Path,
+    system_dirs: &AgentSystemDirs,
+    mode: SyncMode,
+    agent_keys: Option<&BTreeSet<String>>,
+) -> Result<ApplyAgentSyncResponse> {
     let inventory = load_agent_inventory(config_dir, system_dirs)?;
-    let enabled_skills = load_enabled_skills(config_dir, repo_path)?;
-    let desired_entries = build_desired_skill_entries(&enabled_skills);
+    let skill_context = load_skill_selection_context(config_dir, repo_path)?;
     let mut ledger = load_ledger(config_dir)?;
     let mut results = Vec::new();
 
     for agent in inventory.agents {
+        if let Some(agent_keys) = agent_keys {
+            if !agent_keys.contains(&agent.key) {
+                continue;
+            }
+        }
+
         let previous_target_dir = ledger
             .agents
             .get(&agent.key)
             .map(|entry| PathBuf::from(&entry.last_applied_target_dir));
         let current_target_dir = agent.effective_skills_dir.as_ref().map(PathBuf::from);
+        let selected_skills = resolve_agent_skills(&agent, &skill_context);
+        let desired_entries = build_desired_skill_entries(&selected_skills);
 
         match apply_for_agent(
             &agent,
@@ -106,24 +132,9 @@ pub fn apply_agent_sync(
     save_ledger(config_dir, &ledger)?;
 
     Ok(ApplyAgentSyncResponse {
-        enabled_skill_count: enabled_skills.len(),
+        enabled_skill_count: skill_context.available_skill_count(),
         results,
     })
-}
-
-fn load_enabled_skills(config_dir: &Path, repo_path: &Path) -> Result<Vec<SkillSummary>> {
-    let scan_result = scan_repo_skills(repo_path)?;
-    let disabled_skill_ids = SkillStateStore::new(config_dir.to_path_buf())
-        .load_for_repo(repo_path)?
-        .disabled_skill_ids
-        .into_iter()
-        .collect::<BTreeSet<_>>();
-
-    Ok(scan_result
-        .skills
-        .into_iter()
-        .filter(|skill| !disabled_skill_ids.contains(&skill.id))
-        .collect())
 }
 
 fn apply_for_agent(

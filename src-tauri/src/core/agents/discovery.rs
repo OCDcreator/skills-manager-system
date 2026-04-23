@@ -35,6 +35,9 @@ pub struct AgentInventoryItem {
     pub key: String,
     pub display_name: String,
     pub enabled: bool,
+    pub selected_skill_ids: Vec<String>,
+    pub selected_scene_ids: Vec<String>,
+    pub excluded_skill_ids: Vec<String>,
     pub default_skills_dir: String,
     pub detected_skills_dir: Option<String>,
     pub effective_skills_dir: Option<String>,
@@ -100,6 +103,9 @@ fn build_agent_inventory_item(
         key: definition.key.to_string(),
         display_name: definition.display_name.to_string(),
         enabled: config.enabled,
+        selected_skill_ids: config.selected_skill_ids,
+        selected_scene_ids: config.selected_scene_ids,
+        excluded_skill_ids: config.excluded_skill_ids,
         default_skills_dir: path_to_string(default_skills_dir),
         detected_skills_dir,
         effective_skills_dir,
@@ -218,6 +224,7 @@ mod tests {
             AgentConfigEntry {
                 enabled: true,
                 path_override: Some(override_dir.to_string_lossy().to_string()),
+                ..AgentConfigEntry::default()
             },
         );
 
@@ -237,7 +244,7 @@ mod tests {
         assert_eq!(opencode.path_mode, AgentPathMode::Override);
         assert_eq!(
             opencode.effective_skills_dir.as_deref(),
-            Some(override_dir.to_string_lossy().as_ref())
+            Some(override_dir.to_string_lossy().replace('\\', "/").as_str())
         );
     }
 }

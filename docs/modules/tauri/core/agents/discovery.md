@@ -5,14 +5,7 @@
 
 ## Overview
 
-Builds the frontend-facing agent inventory snapshot by combining catalog metadata, persisted config, and runtime path detection.
-
-## Import Relationships
-
-```text
-Upstream: src-tauri/src/commands/agents.rs, src-tauri/src/core/agents/sync.rs, src-tauri/src/core/scenes/manager.rs
-Downstream: src-tauri/src/core/agents/catalog.rs, src-tauri/src/core/agents/config.rs, dirs
-```
+Builds the frontend-facing agent inventory snapshot by combining catalog metadata, persisted per-agent config, and runtime path detection.
 
 ## Public Surface
 
@@ -20,27 +13,15 @@ Downstream: src-tauri/src/core/agents/catalog.rs, src-tauri/src/core/agents/conf
 |---|---|
 | `AgentSystemDirs` | Runtime home/config directory roots used for candidate resolution. |
 | `AgentPathMode` | Path-state enum exposed to the frontend. |
-| `AgentInventoryItem` | One agent target snapshot. |
+| `AgentInventoryItem` | One agent target snapshot including saved skill/scene/exclusion selections. |
 | `AgentInventorySnapshot` | Full inventory payload returned to the frontend. |
 | `load_agent_inventory` | Loads config and returns the current inventory snapshot. |
 | `build_agent_inventory` | Pure inventory builder for callers that already have config. |
 
 ## Core Logic
 
-Resolves path candidates from catalog rules, handles `.config/...` dual-candidate lookup, determines detected/default/effective paths, normalizes every emitted path string to forward slashes, and marks each agent as `override`, `detected`, or `missing`. Supports all 11 agents in the expanded catalog.
-
-## Data Flow
-
-Commands call `load_agent_inventory`; sync orchestration also uses the same inventory snapshot to decide which targets can currently apply.
+Resolves path candidates from catalog rules, handles `.config/...` dual-candidate lookup, determines detected/default/effective paths, normalizes emitted path strings, and carries saved direct skills, scene IDs, and exclusion IDs into the inventory payload shown by the editor.
 
 ## Interactions
 
-Must stay aligned with the built-in rules in `catalog.rs`, the persisted overrides in `config.rs`, the frontend DTOs in `src/lib/tauri.ts`, and the CLI JSON schema expectations for path fields.
-
-## Configuration
-
-Uses `dirs` to read the current machine's home/config roots when building production snapshots.
-
-## Change Notes
-
-Missing-path state is normal inventory output, not a command failure.
+Must stay aligned with the built-in rules in `catalog.rs`, persisted config in `config.rs`, frontend DTOs in `src/lib/tauri.ts`, and sync orchestration in `sync.rs`.

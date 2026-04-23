@@ -2,12 +2,14 @@ use std::path::Path;
 
 use tauri::Manager;
 
+use crate::core::agents::catalog::find_agent;
 use crate::core::agents::config::AgentConfigStore;
 use crate::core::agents::discovery::{
     load_agent_inventory, AgentInventorySnapshot, AgentSystemDirs,
 };
 use crate::core::agents::sync::{
-    apply_agent_sync as apply_agent_sync_core, ApplyAgentSyncResponse,
+    apply_agent_sync as apply_agent_sync_core, apply_agent_sync_for_agent,
+    ApplyAgentSyncResponse,
 };
 use crate::core::agents::target_sync::SyncMode;
 use crate::core::settings::{AgentSyncMode, SettingsStore};
@@ -96,15 +98,54 @@ pub fn clear_agent_path_override(
 }
 
 #[tauri::command]
+pub fn set_agent_configuration(
+    app: tauri::AppHandle,
+    key: String,
+    enabled: bool,
+    path_override: Option<String>,
+    selected_skill_ids: Vec<String>,
+    selected_scene_ids: Vec<String>,
+    excluded_skill_ids: Vec<String>,
+) -> Result<AgentInventorySnapshot, String> {
+    let config_dir = app_config_dir(&app)?;
+    AgentConfigStore::new(config_dir)
+        .set_agent_configuration(
+            &key,
+            enabled,
+            path_override.as_deref(),
+            selected_skill_ids,
+            selected_scene_ids,
+            excluded_skill_ids,
+        )
+        .map_err(|error| error.to_string())?;
+    load_inventory(&app)
+}
+
+#[tauri::command]
 pub fn apply_agent_sync(
     app: tauri::AppHandle,
     sync_mode: Option<String>,
+    agent_key: Option<String>,
 ) -> Result<ApplyAgentSyncResponse, String> {
     let repo_path = load_repo_path(&app)?;
     let config_dir = app_config_dir(&app)?;
     let system_dirs = AgentSystemDirs::current().map_err(|error| error.to_string())?;
     let mode = resolve_sync_mode(&config_dir, sync_mode.as_deref())?;
 
-    apply_agent_sync_core(&config_dir, Path::new(&repo_path), &system_dirs, mode)
-        .map_err(|error| error.to_string())
+    match agent_key {
+        Some(agent_key) => {
+            if find_agent(&agent_key).is_none() {
+                return Err(format!("Unsupported agent key: {agent_key}"));
+            }
+            apply_agent_sync_for_agent(
+                &config_dir,
+                Path::new(&repo_path),
+                &system_dirs,
+                mode,
+                &agent_key,
+            )
+        }
+        None => apply_agent_sync_core(&config_dir, Path::new(&repo_path), &system_dirs, mode),
+    }
+    .map_err(|error| error.to_string())
 }

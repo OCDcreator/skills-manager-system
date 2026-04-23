@@ -1,9 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AgentApplyResults } from "../components/agents/AgentApplyResults";
 import { AgentSyncSummary } from "../components/agents/AgentSyncSummary";
 import { AgentTargetCard } from "../components/agents/AgentTargetCard";
 import { useAppContext } from "../context/AppContext";
+import {
+  draftFromAgent,
+  draftToConfig,
+  isAgentDraftDirty,
+  resolveAgentSelectionPreview,
+  type AgentConfigDraft,
+} from "../lib/agent-selection";
+import * as scenesApi from "../lib/scenes";
+import type { SceneConfigSnapshot } from "../lib/scenes";
 import * as api from "../lib/tauri";
 import type { AgentSyncMode } from "../lib/tauri";
 
@@ -11,46 +20,59 @@ function messageFrom(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
+function buildDraftMap(agentInventory: ReturnType<typeof useAppContext>["agentInventory"]) {
+  return Object.fromEntries(agentInventory.map((agent) => [agent.key, draftFromAgent(agent)]));
+}
+
 export function AgentsView() {
   const { t } = useTranslation();
   const {
     agentInventory,
     applyAgentSync,
-    clearAgentPathOverride,
     disabledSkillIds,
     isApplyingAgentSync,
     isLoadingAgents,
     lastAgentApplyResult,
+    registerNavigationGuard,
+    refreshAgents,
     repoPath,
+    saveAgentConfiguration,
     scanResult,
-    setAgentEnabled,
-    setAgentPathOverride,
     updatingAgentKey,
   } = useAppContext();
   const [syncMode, setSyncMode] = useState<AgentSyncMode>("copy");
   const [isSavingSyncMode, setIsSavingSyncMode] = useState(false);
   const [syncModeError, setSyncModeError] = useState<string | null>(null);
-  const disabledSkillIdSet = useMemo(
-    () => new Set(disabledSkillIds),
-    [disabledSkillIds],
-  );
-  const enabledSkillCount = useMemo(
+  const [sceneConfig, setSceneConfig] = useState<SceneConfigSnapshot | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, AgentConfigDraft>>({});
+  const [savingAgentKey, setSavingAgentKey] = useState<string | null>(null);
+  const [isSavingAll, setIsSavingAll] = useState(false);
+
+  const disabledSkillIdSet = useMemo(() => new Set(disabledSkillIds), [disabledSkillIds]);
+  const availableSkillCount = useMemo(
     () => scanResult.skills.filter((skill) => !disabledSkillIdSet.has(skill.id)).length,
     [scanResult.skills, disabledSkillIdSet],
   );
-  const enabledAgentCount = useMemo(
-    () => agentInventory.filter((agent) => agent.enabled).length,
-    [agentInventory],
+  const sceneList = useMemo(
+    () => Object.values(sceneConfig?.scenes ?? {}),
+    [sceneConfig],
   );
-  const canApply = Boolean(repoPath) && enabledAgentCount > 0;
+
+  useEffect(() => {
+    setDrafts(buildDraftMap(agentInventory));
+  }, [agentInventory]);
 
   useEffect(() => {
     let isActive = true;
     void (async () => {
       try {
-        const savedMode = await api.getAgentSyncMode();
+        const [savedMode, snapshot] = await Promise.all([
+          api.getAgentSyncMode(),
+          scenesApi.getSceneConfig(),
+        ]);
         if (!isActive) return;
         setSyncMode(savedMode);
+        setSceneConfig(snapshot);
         setSyncModeError(null);
       } catch (error) {
         if (!isActive) return;
@@ -61,6 +83,26 @@ export function AgentsView() {
       isActive = false;
     };
   }, []);
+
+  const dirtyAgentKeys = useMemo(
+    () =>
+      agentInventory
+        .filter((agent) => isAgentDraftDirty(agent, drafts[agent.key]))
+        .map((agent) => agent.key),
+    [agentInventory, drafts],
+  );
+  const hasDirtyDrafts = dirtyAgentKeys.length > 0;
+  const enabledAgentCount = useMemo(
+    () =>
+      agentInventory.filter((agent) => (drafts[agent.key] ?? draftFromAgent(agent)).enabled)
+        .length,
+    [agentInventory, drafts],
+  );
+  const canApply = Boolean(repoPath) && enabledAgentCount > 0;
+
+  const discardDrafts = useCallback(() => {
+    setDrafts(buildDraftMap(agentInventory));
+  }, [agentInventory]);
 
   const handleSyncModeChange = async (nextMode: AgentSyncMode) => {
     const previousMode = syncMode;
@@ -77,19 +119,96 @@ export function AgentsView() {
     }
   };
 
+  const handleSaveAgent = useCallback(async (key: string) => {
+    const draft = drafts[key];
+    if (!draft) return;
+
+    setSavingAgentKey(key);
+    try {
+      await saveAgentConfiguration(draftToConfig(draft));
+      await applyAgentSync(syncMode, key);
+      await refreshAgents();
+      setSyncModeError(null);
+    } finally {
+      setSavingAgentKey(null);
+    }
+  }, [applyAgentSync, drafts, refreshAgents, saveAgentConfiguration, syncMode]);
+
+  const handleSaveAll = useCallback(async () => {
+    if (dirtyAgentKeys.length === 0) return;
+
+    setIsSavingAll(true);
+    try {
+      for (const key of dirtyAgentKeys) {
+        const draft = drafts[key];
+        if (draft) {
+          await saveAgentConfiguration(draftToConfig(draft));
+        }
+      }
+      await applyAgentSync(syncMode);
+      await refreshAgents();
+      setSyncModeError(null);
+    } finally {
+      setIsSavingAll(false);
+    }
+  }, [applyAgentSync, dirtyAgentKeys, drafts, refreshAgents, saveAgentConfiguration, syncMode]);
+
+  const handleApplyAll = useCallback(async () => {
+    if (hasDirtyDrafts) {
+      await handleSaveAll();
+      return;
+    }
+    await applyAgentSync(syncMode);
+  }, [applyAgentSync, handleSaveAll, hasDirtyDrafts, syncMode]);
+
+  useEffect(
+    () =>
+      registerNavigationGuard({
+        view: "agents",
+        isDirty: () => hasDirtyDrafts,
+        save: handleSaveAll,
+        discard: discardDrafts,
+      }),
+    [discardDrafts, handleSaveAll, hasDirtyDrafts, registerNavigationGuard],
+  );
+
   return (
     <div className="space-y-6">
       <AgentSyncSummary
         canApply={canApply}
         enabledAgentCount={enabledAgentCount}
-        enabledSkillCount={enabledSkillCount}
-        isApplying={isApplyingAgentSync}
+        enabledSkillCount={availableSkillCount}
+        isApplying={isApplyingAgentSync || isSavingAll}
         isSavingMode={isSavingSyncMode}
-        onApply={() => applyAgentSync(syncMode)}
+        onApply={handleApplyAll}
         onSyncModeChange={handleSyncModeChange}
         repoPath={repoPath}
         syncMode={syncMode}
       />
+
+      {hasDirtyDrafts ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-900/60 bg-sky-950/30 px-4 py-3 text-sm text-sky-200">
+          <span>{t("agents.unsavedBanner", { count: dirtyAgentKeys.length })}</span>
+          <div className="flex gap-2">
+            <button
+              className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-200"
+              disabled={isSavingAll}
+              onClick={discardDrafts}
+              type="button"
+            >
+              {t("agents.discardAll")}
+            </button>
+            <button
+              className="rounded-lg bg-sky-400 px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-60"
+              disabled={isSavingAll}
+              onClick={() => void handleSaveAll()}
+              type="button"
+            >
+              {isSavingAll ? t("agents.card.saving") : t("agents.saveAll")}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {syncModeError ? (
         <div className="rounded-2xl border border-amber-900/60 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">
@@ -108,17 +227,37 @@ export function AgentsView() {
             {t("agents.targets.loading")}
           </div>
         ) : (
-          <div className="grid gap-4 xl:grid-cols-3">
-            {agentInventory.map((agent) => (
-              <AgentTargetCard
-                agent={agent}
-                isUpdating={updatingAgentKey === agent.key}
-                key={agent.key}
-                onClearPathOverride={clearAgentPathOverride}
-                onSavePathOverride={setAgentPathOverride}
-                onToggleEnabled={setAgentEnabled}
-              />
-            ))}
+          <div className="grid gap-4">
+            {agentInventory.map((agent) => {
+              const draft = drafts[agent.key] ?? draftFromAgent(agent);
+              const preview = resolveAgentSelectionPreview(
+                draft,
+                scanResult.skills,
+                disabledSkillIds,
+                sceneConfig?.scenes ?? {},
+              );
+              return (
+                <AgentTargetCard
+                  agent={agent}
+                  disabledSkillIds={disabledSkillIds}
+                  draft={draft}
+                  isDirty={isAgentDraftDirty(agent, draft)}
+                  isUpdating={
+                    updatingAgentKey === agent.key ||
+                    savingAgentKey === agent.key ||
+                    isSavingAll
+                  }
+                  key={agent.key}
+                  onDraftChange={(nextDraft) =>
+                    setDrafts((current) => ({ ...current, [agent.key]: nextDraft }))
+                  }
+                  onSave={() => handleSaveAgent(agent.key)}
+                  preview={preview}
+                  scenes={sceneList}
+                  skills={scanResult.skills}
+                />
+              );
+            })}
           </div>
         )}
       </section>

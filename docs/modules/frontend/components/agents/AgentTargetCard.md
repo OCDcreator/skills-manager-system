@@ -5,37 +5,18 @@
 
 ## Overview
 
-Renders one supported agent target, including enable/disable state, path status, default/detected/effective path display, and override editing controls.
-
-## Import Relationships
-
-```text
-Upstream: src/views/AgentsView.tsx
-Downstream: src/lib/tauri.ts, src/i18n/index.ts
-```
+Provides the per-agent card UI for sync enablement, path override drafting, direct skill selection, scene selection, and effective preview rendering.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `AgentTargetCard` | Per-agent UI for target state and path override editing. |
+| `AgentTargetCard` | One per-agent draft card with save-and-sync action. |
 
 ## Core Logic
 
-Maintains a nullable local override draft so the saved backend value remains the source of truth until the user edits. Successful save/reset actions clear the local draft and let the refreshed inventory snapshot repopulate the visible value without an effect-driven mirror.
-
-## Data Flow
-
-`AgentInventoryItem` data flows in from `AgentsView`; user actions flow back out through the callback props.
+Renders path badges, default/detected/effective path rows, a draft sync toggle, override input, child selectors, effective preview, and the card-level save button. Persistence and sync execution stay in `AppContext` / `AgentsView`.
 
 ## Interactions
 
-Must stay aligned with the `AgentInventoryItem` shape in `src/lib/tauri.ts` and the agent mutation actions in `src/context/AppContext.tsx`.
-
-## Configuration
-
-The override input uses the resolved default path as its placeholder.
-
-## Change Notes
-
-Keep validation and persistence rules in Rust/`AppContext`; this component should stay as form UI and local input state only.
+Must stay aligned with `AgentInventoryItem` and `AgentConfigurationInput` in `src/lib/tauri.ts`, the draft helpers in `src/lib/agent-selection.ts`, and the child selector components under `src/components/agents/`.
