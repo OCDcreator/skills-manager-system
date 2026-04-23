@@ -11,7 +11,7 @@ Declares the Rust command submodules exposed to the Tauri application layer.
 
 ```text
 Upstream: src-tauri/src/lib.rs
-Downstream: src-tauri/src/commands/agent_targets.rs, src-tauri/src/commands/agents.rs, src-tauri/src/commands/git.rs, src-tauri/src/commands/projects.rs, src-tauri/src/commands/scenes.rs, src-tauri/src/commands/settings.rs, src-tauri/src/commands/skills.rs
+Downstream: src-tauri/src/commands/agent_targets.rs, src-tauri/src/commands/agents.rs, src-tauri/src/commands/assistant.rs, src-tauri/src/commands/git.rs, src-tauri/src/commands/projects.rs, src-tauri/src/commands/scenes.rs, src-tauri/src/commands/settings.rs, src-tauri/src/commands/skills.rs
 ```
 
 ## Public Surface
@@ -20,6 +20,7 @@ Downstream: src-tauri/src/commands/agent_targets.rs, src-tauri/src/commands/agen
 |---|---|
 | `agent_targets` | Explicit per-entry management commands for global agent skill directories. |
 | `agents` | Agent inventory/config/apply command module. |
+| `assistant` | Project assistant context status and ask command module. |
 | `git` | Git status/diff/log/pull/push/commit/fetch/sync command module. |
 | `projects` | Project assignment CRUD and apply command module. |
 | `scenes` | Scene CRUD and apply command module. |

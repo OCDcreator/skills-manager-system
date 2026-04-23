@@ -5,7 +5,7 @@
 
 ## Overview
 
-Provides the shared page chrome for the desktop app, including the header, guarded navigation buttons, global error banner, main content container, and unsaved-changes modal host.
+Provides the shared page chrome for the desktop app, including the header, guarded navigation buttons, global error banner, main content container, unsaved-changes modal host, and the floating project assistant launcher.
 
 ## Public Surface
 

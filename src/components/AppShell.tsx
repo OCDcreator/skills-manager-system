@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppContext, type AppView } from "../context/AppContext";
+import { ProjectAssistantLauncher } from "./assistant/ProjectAssistantLauncher";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 
 const NAV_ITEMS: AppView[] = ["skills", "agents", "git", "scenes", "projects", "settings"];
@@ -55,6 +56,8 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
       </header>
 
       <main className={`mx-auto ${widthClassName} px-6 py-8`}>{children}</main>
+
+      <ProjectAssistantLauncher />
 
       {pendingNavigation ? (
         <UnsavedChangesDialog

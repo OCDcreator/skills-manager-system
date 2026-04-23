@@ -20,6 +20,8 @@ pub fn run() {
             commands::agents::clear_agent_path_override,
             commands::agents::set_agent_configuration,
             commands::agents::apply_agent_sync,
+            commands::assistant::get_assistant_context_status,
+            commands::assistant::ask_project_assistant,
             commands::git::git_status,
             commands::git::git_diff,
             commands::git::git_log,

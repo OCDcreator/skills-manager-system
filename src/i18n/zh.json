@@ -282,5 +282,25 @@
   "tooltip.projects.dismiss": "关闭此通知",
 
   "tooltip.settings.browse": "打开文件夹选择器以选择仓库目录",
-  "tooltip.settings.save": "保存仓库路径并刷新扫描结果"
+  "tooltip.settings.save": "保存仓库路径并刷新扫描结果",
+
+  "assistant.launcherLabel": "项目助手",
+  "assistant.launcherHint": "问问这个项目",
+  "assistant.title": "项目助手",
+  "assistant.subtitle": "基于本地项目文档和元信息回答",
+  "assistant.contextTitle": "上下文",
+  "assistant.statusLoading": "正在扫描项目文档...",
+  "assistant.statusUnavailable": "当前无法读取上下文",
+  "assistant.sourcesTitle": "来源",
+  "assistant.sourcesEmpty": "暂时没有来源",
+  "assistant.documentCount": "已索引 {{count}} 个文档",
+  "assistant.chunkCount": "已索引 {{count}} 个片段",
+  "assistant.indexedAt": "已索引于 {{time}}",
+  "assistant.inputPlaceholder": "问这个项目的问题...",
+  "assistant.inputHint": "Enter 发送，Shift+Enter 换行。",
+  "assistant.answerLoading": "正在检索项目文档...",
+  "assistant.send": "发送",
+  "assistant.welcomeMessage": "问这个项目的问题。我会从 AGENTS.md、docs、package.json 和 src-tauri/Cargo.toml 中查找答案。",
+  "assistant.closePanel": "关闭助手面板",
+  "assistant.warningsTitle": "警告"
 }

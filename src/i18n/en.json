@@ -282,5 +282,25 @@
   "tooltip.projects.dismiss": "Dismiss this notification",
 
   "tooltip.settings.browse": "Open a folder picker to select the repository directory",
-  "tooltip.settings.save": "Save the repository path and refresh scan results"
+  "tooltip.settings.save": "Save the repository path and refresh scan results",
+
+  "assistant.launcherLabel": "Project assistant",
+  "assistant.launcherHint": "Ask this project",
+  "assistant.title": "Project assistant",
+  "assistant.subtitle": "Answers from local project docs and metadata",
+  "assistant.contextTitle": "Context",
+  "assistant.statusLoading": "Scanning project docs...",
+  "assistant.statusUnavailable": "Context is unavailable",
+  "assistant.sourcesTitle": "Sources",
+  "assistant.sourcesEmpty": "No sources yet",
+  "assistant.documentCount": "{{count}} docs indexed",
+  "assistant.chunkCount": "{{count}} chunks indexed",
+  "assistant.indexedAt": "Indexed {{time}}",
+  "assistant.inputPlaceholder": "Ask about this project...",
+  "assistant.inputHint": "Enter sends. Shift+Enter adds a new line.",
+  "assistant.answerLoading": "Searching project docs...",
+  "assistant.send": "Send",
+  "assistant.welcomeMessage": "Ask about this project. I will answer from AGENTS.md, docs, package.json, and src-tauri/Cargo.toml.",
+  "assistant.closePanel": "Close assistant panel",
+  "assistant.warningsTitle": "Warnings"
 }
