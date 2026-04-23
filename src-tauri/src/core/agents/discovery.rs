@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 use super::catalog::{agent_catalog, AgentCatalogEntry};
 use super::config::{AgentConfigEntry, AgentConfigSnapshot, AgentConfigStore};
+use super::target_inventory::{scan_target_skill_entries, AgentTargetSkillEntry};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AgentSystemDirs {
@@ -41,6 +42,8 @@ pub struct AgentInventoryItem {
     pub default_skills_dir: String,
     pub detected_skills_dir: Option<String>,
     pub effective_skills_dir: Option<String>,
+    pub target_skill_entries: Vec<AgentTargetSkillEntry>,
+    pub target_skill_scan_error: Option<String>,
     pub path_override: Option<String>,
     pub path_mode: AgentPathMode,
 }
@@ -99,6 +102,14 @@ fn build_agent_inventory_item(
         },
     };
 
+    let (target_skill_entries, target_skill_scan_error) = effective_skills_dir
+        .as_deref()
+        .map(|path| match scan_target_skill_entries(Path::new(path), definition.key) {
+            Ok(entries) => (entries, None),
+            Err(error) => (Vec::new(), Some(error.to_string())),
+        })
+        .unwrap_or_else(|| (Vec::new(), None));
+
     AgentInventoryItem {
         key: definition.key.to_string(),
         display_name: definition.display_name.to_string(),
@@ -109,6 +120,8 @@ fn build_agent_inventory_item(
         default_skills_dir: path_to_string(default_skills_dir),
         detected_skills_dir,
         effective_skills_dir,
+        target_skill_entries,
+        target_skill_scan_error,
         path_override,
         path_mode,
     }

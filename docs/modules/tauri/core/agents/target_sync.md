@@ -24,6 +24,8 @@ Downstream: serde_json, std::fs, src-tauri/src/core/skills/scan.rs
 | `build_desired_skill_entries` | Converts selected skills into stable managed target names. |
 | `apply_desired_entries` | Reconciles a target directory using `.skills-manager-system-manifest.json`. |
 | `cleanup_managed_entries` | Removes only entries previously managed by this app. |
+| `load_managed_entry_snapshots` | Exposes target-manifest metadata for read-only target inventory scanning. |
+| `is_manifest_file_name` | Lets inventory scanners hide the app manifest from visible target skill lists. |
 
 ## Core Logic
 

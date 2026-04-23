@@ -32,6 +32,12 @@ struct AgentTargetManifestEntry {
     relative_path: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ManagedTargetEntrySnapshot {
+    pub skill_id: String,
+    pub relative_path: String,
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct DesiredSkillEntry {
     pub skill_id: String,
@@ -137,6 +143,30 @@ pub(crate) fn cleanup_managed_entries(target_dir: &Path, agent_key: &str) -> Res
 
     remove_manifest(target_dir)?;
     Ok(removed_count)
+}
+
+pub(crate) fn load_managed_entry_snapshots(
+    target_dir: &Path,
+    agent_key: &str,
+) -> Result<BTreeMap<String, ManagedTargetEntrySnapshot>> {
+    let manifest = load_manifest(target_dir, agent_key)?;
+    Ok(manifest
+        .entries
+        .into_iter()
+        .map(|(entry_name, entry)| {
+            (
+                entry_name,
+                ManagedTargetEntrySnapshot {
+                    skill_id: entry.skill_id,
+                    relative_path: entry.relative_path,
+                },
+            )
+        })
+        .collect())
+}
+
+pub(crate) fn is_manifest_file_name(file_name: &std::ffi::OsStr) -> bool {
+    file_name == MANIFEST_FILE_NAME
 }
 
 fn load_manifest(target_dir: &Path, agent_key: &str) -> Result<AgentTargetManifest> {

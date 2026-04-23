@@ -5,7 +5,7 @@
 
 ## Overview
 
-Provides the per-agent card UI for sync enablement, path override drafting, direct skill selection, scene selection, and effective preview rendering.
+Provides the per-agent card UI for sync enablement, path override drafting, target-directory skill inventory, direct skill selection, scene selection, and effective preview rendering.
 
 ## Public Surface
 
@@ -15,8 +15,8 @@ Provides the per-agent card UI for sync enablement, path override drafting, dire
 
 ## Core Logic
 
-Renders path badges, default/detected/effective path rows, a draft sync toggle, override input, child selectors, effective preview, and the card-level save button. Persistence and sync execution stay in `AppContext` / `AgentsView`.
+Renders path badges, default/detected/effective path rows, a draft sync toggle, override input, target global skill inventory, child selectors, effective preview, and the card-level save button. Persistence and sync execution stay in `AppContext` / `AgentsView`.
 
 ## Interactions
 
-Must stay aligned with `AgentInventoryItem` and `AgentConfigurationInput` in `src/lib/tauri.ts`, the draft helpers in `src/lib/agent-selection.ts`, and the child selector components under `src/components/agents/`.
+Must stay aligned with `AgentInventoryItem` and `AgentConfigurationInput` in `src/lib/tauri.ts`, the draft helpers in `src/lib/agent-selection.ts`, `AgentGlobalSkillList`, and the child selector components under `src/components/agents/`.

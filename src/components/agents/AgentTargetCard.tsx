@@ -3,6 +3,7 @@ import type { AgentConfigDraft, AgentSelectionPreview } from "../../lib/agent-se
 import type { SceneEntry } from "../../lib/scenes";
 import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
 import { AgentSceneSelector } from "./AgentSceneSelector";
+import { AgentGlobalSkillList } from "./AgentGlobalSkillList";
 import { AgentSelectionSummary } from "./AgentSelectionSummary";
 import { AgentSkillSelector } from "./AgentSkillSelector";
 
@@ -128,6 +129,8 @@ export function AgentTargetCard({
           {t("agents.card.resetOverride")}
         </button>
       </div>
+
+      <AgentGlobalSkillList agent={agent} />
 
       <div className="grid gap-4 xl:grid-cols-3">
         <AgentSkillSelector

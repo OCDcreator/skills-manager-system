@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AgentApplyResults } from "../components/agents/AgentApplyResults";
+import { AgentFloatingNav } from "../components/agents/AgentFloatingNav";
 import { AgentSyncSummary } from "../components/agents/AgentSyncSummary";
 import { AgentTargetCard } from "../components/agents/AgentTargetCard";
 import { useAppContext } from "../context/AppContext";
@@ -173,18 +174,22 @@ export function AgentsView() {
   );
 
   return (
-    <div className="space-y-6">
-      <AgentSyncSummary
-        canApply={canApply}
-        enabledAgentCount={enabledAgentCount}
-        enabledSkillCount={availableSkillCount}
-        isApplying={isApplyingAgentSync || isSavingAll}
-        isSavingMode={isSavingSyncMode}
-        onApply={handleApplyAll}
-        onSyncModeChange={handleSyncModeChange}
-        repoPath={repoPath}
-        syncMode={syncMode}
-      />
+    <div className="space-y-6 pr-12">
+      <AgentFloatingNav agents={agentInventory} />
+
+      <div id="agent-sync-overview" className="scroll-mt-8">
+        <AgentSyncSummary
+          canApply={canApply}
+          enabledAgentCount={enabledAgentCount}
+          enabledSkillCount={availableSkillCount}
+          isApplying={isApplyingAgentSync || isSavingAll}
+          isSavingMode={isSavingSyncMode}
+          onApply={handleApplyAll}
+          onSyncModeChange={handleSyncModeChange}
+          repoPath={repoPath}
+          syncMode={syncMode}
+        />
+      </div>
 
       {hasDirtyDrafts ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-900/60 bg-sky-950/30 px-4 py-3 text-sm text-sky-200">
@@ -216,7 +221,7 @@ export function AgentsView() {
         </div>
       ) : null}
 
-      <section className="space-y-4">
+      <section id="agent-sync-targets" className="scroll-mt-8 space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-100">{t("agents.targets.title")}</h2>
           <p className="mt-1 text-sm text-slate-500">{t("agents.targets.description")}</p>
@@ -237,32 +242,35 @@ export function AgentsView() {
                 sceneConfig?.scenes ?? {},
               );
               return (
-                <AgentTargetCard
-                  agent={agent}
-                  disabledSkillIds={disabledSkillIds}
-                  draft={draft}
-                  isDirty={isAgentDraftDirty(agent, draft)}
-                  isUpdating={
-                    updatingAgentKey === agent.key ||
-                    savingAgentKey === agent.key ||
-                    isSavingAll
-                  }
-                  key={agent.key}
-                  onDraftChange={(nextDraft) =>
-                    setDrafts((current) => ({ ...current, [agent.key]: nextDraft }))
-                  }
-                  onSave={() => handleSaveAgent(agent.key)}
-                  preview={preview}
-                  scenes={sceneList}
-                  skills={scanResult.skills}
-                />
+                <div id={`agent-sync-target-${agent.key}`} className="scroll-mt-8" key={agent.key}>
+                  <AgentTargetCard
+                    agent={agent}
+                    disabledSkillIds={disabledSkillIds}
+                    draft={draft}
+                    isDirty={isAgentDraftDirty(agent, draft)}
+                    isUpdating={
+                      updatingAgentKey === agent.key ||
+                      savingAgentKey === agent.key ||
+                      isSavingAll
+                    }
+                    onDraftChange={(nextDraft) =>
+                      setDrafts((current) => ({ ...current, [agent.key]: nextDraft }))
+                    }
+                    onSave={() => handleSaveAgent(agent.key)}
+                    preview={preview}
+                    scenes={sceneList}
+                    skills={scanResult.skills}
+                  />
+                </div>
               );
             })}
           </div>
         )}
       </section>
 
-      <AgentApplyResults result={lastAgentApplyResult} />
+      <div id="agent-sync-results" className="scroll-mt-8">
+        <AgentApplyResults result={lastAgentApplyResult} />
+      </div>
     </div>
   );
 }

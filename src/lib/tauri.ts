@@ -43,6 +43,18 @@ export type AgentKey =
 
 export type AgentPathMode = "override" | "detected" | "missing";
 export type AgentSyncMode = "copy" | "symlink";
+export type AgentTargetSkillEntryKind = "directory" | "symlink" | "file" | "other";
+
+export interface AgentTargetSkillEntry {
+  entryName: string;
+  displayName: string;
+  absolutePath: string;
+  managed: boolean;
+  skillId: string | null;
+  relativePath: string | null;
+  hasSkillDocument: boolean;
+  entryKind: AgentTargetSkillEntryKind;
+}
 
 export interface AgentInventoryItem {
   key: AgentKey;
@@ -54,6 +66,8 @@ export interface AgentInventoryItem {
   defaultSkillsDir: string;
   detectedSkillsDir: string | null;
   effectiveSkillsDir: string | null;
+  targetSkillEntries: AgentTargetSkillEntry[];
+  targetSkillScanError: string | null;
   pathOverride: string | null;
   pathMode: AgentPathMode;
 }
