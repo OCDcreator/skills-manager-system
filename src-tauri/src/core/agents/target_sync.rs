@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs;
@@ -6,8 +6,9 @@ use std::path::{Path, PathBuf};
 
 use crate::core::skills::scan::SkillSummary;
 
-const APP_ID: &str = "skills-manager-system";
-const MANIFEST_FILE_NAME: &str = ".skills-manager-system-manifest.json";
+use super::target_manifest::{
+    default_manifest, load_manifest, remove_manifest, save_manifest, AgentTargetManifestEntry,
+};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
@@ -17,25 +18,11 @@ pub enum SyncMode {
     Symlink,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-struct AgentTargetManifest {
-    app_id: String,
-    agent_key: String,
-    entries: BTreeMap<String, AgentTargetManifestEntry>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-struct AgentTargetManifestEntry {
-    skill_id: String,
-    relative_path: String,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ManagedTargetEntrySnapshot {
     pub skill_id: String,
     pub relative_path: String,
+    pub preserve_existing: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -76,30 +63,44 @@ pub(crate) fn apply_desired_entries(
     desired_entries: &BTreeMap<String, DesiredSkillEntry>,
     mode: SyncMode,
 ) -> Result<TargetApplyStats> {
-    let mut manifest = load_manifest(target_dir, agent_key)?;
-    let managed_entry_names = manifest
-        .entries
+    let previous_entries = load_manifest(target_dir, agent_key)?.entries;
+    let managed_entry_names = previous_entries
         .keys()
         .cloned()
         .collect::<std::collections::BTreeSet<_>>();
-    let stale_entry_names: Vec<String> = manifest
-        .entries
-        .keys()
-        .filter(|entry_name| !desired_entries.contains_key(*entry_name))
-        .cloned()
-        .collect();
     let mut stats = TargetApplyStats::default();
+    let mut next_entries = BTreeMap::new();
 
-    for entry_name in stale_entry_names {
-        remove_target(&target_dir.join(&entry_name))?;
-        manifest.entries.remove(&entry_name);
+    for (entry_name, existing_entry) in &previous_entries {
+        let target_path = target_dir.join(entry_name);
+        if desired_entries.contains_key(entry_name) {
+            if existing_entry.preserve_existing && target_path.exists() {
+                next_entries.insert(entry_name.clone(), existing_entry.clone());
+            }
+            continue;
+        }
+
+        if existing_entry.preserve_existing {
+            if target_path.exists() {
+                next_entries.insert(entry_name.clone(), existing_entry.clone());
+            }
+            continue;
+        }
+
+        remove_target(&target_path)?;
         stats.removed_count += 1;
     }
 
-    let mut next_entries = BTreeMap::new();
     for (entry_name, desired_entry) in desired_entries {
         let target_path = target_dir.join(entry_name);
         if target_path.exists() && !managed_entry_names.contains(entry_name) {
+            stats.conflict_count += 1;
+            continue;
+        }
+        if previous_entries
+            .get(entry_name)
+            .is_some_and(|entry| entry.preserve_existing && target_path.exists())
+        {
             stats.conflict_count += 1;
             continue;
         }
@@ -112,6 +113,7 @@ pub(crate) fn apply_desired_entries(
             AgentTargetManifestEntry {
                 skill_id: desired_entry.skill_id.clone(),
                 relative_path: desired_entry.relative_path.clone(),
+                preserve_existing: false,
             },
         );
     }
@@ -121,21 +123,21 @@ pub(crate) fn apply_desired_entries(
     } else {
         fs::create_dir_all(target_dir)
             .with_context(|| format!("Failed to create {:?}", target_dir))?;
+        let mut manifest = default_manifest();
         manifest.entries = next_entries;
-        save_manifest(target_dir, &manifest)?;
+        save_manifest(target_dir, agent_key, &manifest)?;
     }
 
     Ok(stats)
 }
 
 pub(crate) fn cleanup_managed_entries(target_dir: &Path, agent_key: &str) -> Result<usize> {
-    if !manifest_path(target_dir).exists() {
+    let manifest = load_manifest(target_dir, agent_key)?;
+    if manifest.entries.is_empty() {
         return Ok(0);
     }
 
-    let manifest = load_manifest(target_dir, agent_key)?;
     let mut removed_count = 0;
-
     for entry_name in manifest.entries.keys() {
         remove_target(&target_dir.join(entry_name))?;
         removed_count += 1;
@@ -159,58 +161,11 @@ pub(crate) fn load_managed_entry_snapshots(
                 ManagedTargetEntrySnapshot {
                     skill_id: entry.skill_id,
                     relative_path: entry.relative_path,
+                    preserve_existing: entry.preserve_existing,
                 },
             )
         })
         .collect())
-}
-
-pub(crate) fn is_manifest_file_name(file_name: &std::ffi::OsStr) -> bool {
-    file_name == MANIFEST_FILE_NAME
-}
-
-fn load_manifest(target_dir: &Path, agent_key: &str) -> Result<AgentTargetManifest> {
-    let path = manifest_path(target_dir);
-    if !path.exists() {
-        return Ok(AgentTargetManifest {
-            app_id: APP_ID.to_string(),
-            agent_key: agent_key.to_string(),
-            entries: BTreeMap::new(),
-        });
-    }
-
-    let raw = fs::read_to_string(&path).with_context(|| format!("Failed to read {:?}", path))?;
-    let manifest = serde_json::from_str::<AgentTargetManifest>(&raw)
-        .with_context(|| format!("Failed to parse {:?}", path))?;
-
-    if manifest.app_id != APP_ID {
-        return Err(anyhow!(
-            "Managed manifest at {:?} belongs to a different app",
-            path
-        ));
-    }
-    if manifest.agent_key != agent_key {
-        return Err(anyhow!(
-            "Managed manifest at {:?} belongs to a different agent",
-            path
-        ));
-    }
-
-    Ok(manifest)
-}
-
-fn save_manifest(target_dir: &Path, manifest: &AgentTargetManifest) -> Result<()> {
-    let json = serde_json::to_string_pretty(manifest)?;
-    fs::write(manifest_path(target_dir), json).context("Failed to write target manifest")?;
-    Ok(())
-}
-
-fn remove_manifest(target_dir: &Path) -> Result<()> {
-    let path = manifest_path(target_dir);
-    if path.exists() {
-        fs::remove_file(&path).with_context(|| format!("Failed to remove {:?}", path))?;
-    }
-    Ok(())
 }
 
 fn deploy_skill(source_dir: &Path, target_dir: &Path, mode: SyncMode) -> Result<()> {
@@ -286,7 +241,7 @@ fn copy_dir_recursive(source_dir: &Path, target_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn remove_target(target: &Path) -> Result<()> {
+pub(crate) fn remove_target(target: &Path) -> Result<()> {
     if !target.exists() {
         return Ok(());
     }
@@ -301,10 +256,6 @@ fn remove_target(target: &Path) -> Result<()> {
     Ok(())
 }
 
-fn manifest_path(target_dir: &Path) -> PathBuf {
-    target_dir.join(MANIFEST_FILE_NAME)
-}
-
-fn managed_entry_name(skill_id: &str) -> String {
+pub(crate) fn managed_entry_name(skill_id: &str) -> String {
     skill_id.replace(':', "--").replace(['/', '\\'], "--")
 }

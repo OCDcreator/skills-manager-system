@@ -50,6 +50,7 @@ export interface AgentTargetSkillEntry {
   displayName: string;
   absolutePath: string;
   managed: boolean;
+  preserveExisting: boolean;
   skillId: string | null;
   relativePath: string | null;
   hasSkillDocument: boolean;
@@ -103,6 +104,12 @@ export interface ApplyAgentSyncResponse {
   results: AgentApplyResult[];
 }
 
+export interface ImportAgentTargetSkillResult {
+  relativePath: string;
+  absolutePath: string;
+  deletedSource: boolean;
+}
+
 export const getRepoPath = () => invoke<string | null>("get_repo_path");
 
 export const setRepoPath = (path: string) =>
@@ -151,4 +158,21 @@ export const applyAgentSync = (syncMode?: AgentSyncMode, agentKey?: string) =>
   invoke<ApplyAgentSyncResponse>("apply_agent_sync", {
     syncMode: syncMode ?? null,
     agentKey: agentKey ?? null,
+  });
+
+export const takeOverAgentTargetSkill = (agentKey: string, entryName: string) =>
+  invoke<void>("take_over_agent_target_skill", { agentKey, entryName });
+
+export const deleteAgentTargetSkill = (agentKey: string, entryName: string) =>
+  invoke<void>("delete_agent_target_skill", { agentKey, entryName });
+
+export const importAgentTargetSkill = (
+  agentKey: string,
+  entryName: string,
+  deleteSourceAfterImport: boolean,
+) =>
+  invoke<ImportAgentTargetSkillResult>("import_agent_target_skill", {
+    agentKey,
+    entryName,
+    deleteSourceAfterImport,
   });

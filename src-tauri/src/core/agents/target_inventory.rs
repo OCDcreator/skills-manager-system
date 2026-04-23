@@ -3,7 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::target_sync::{is_manifest_file_name, load_managed_entry_snapshots};
+use super::target_manifest::is_manifest_file_name;
+use super::target_sync::load_managed_entry_snapshots;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -21,6 +22,7 @@ pub struct AgentTargetSkillEntry {
     pub display_name: String,
     pub absolute_path: String,
     pub managed: bool,
+    pub preserve_existing: bool,
     pub skill_id: Option<String>,
     pub relative_path: Option<String>,
     pub has_skill_document: bool,
@@ -65,6 +67,7 @@ pub fn scan_target_skill_entries(
             entry_name: entry_name.clone(),
             absolute_path: normalize_path(path),
             managed: managed.is_some(),
+            preserve_existing: managed.is_some_and(|item| item.preserve_existing),
             skill_id: managed.map(|item| item.skill_id.clone()),
             relative_path: managed.map(|item| item.relative_path.clone()),
             has_skill_document,

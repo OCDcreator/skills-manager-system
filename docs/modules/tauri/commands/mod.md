@@ -11,15 +11,17 @@ Declares the Rust command submodules exposed to the Tauri application layer.
 
 ```text
 Upstream: src-tauri/src/lib.rs
-Downstream: src-tauri/src/commands/agents.rs, src-tauri/src/commands/git.rs, src-tauri/src/commands/scenes.rs, src-tauri/src/commands/settings.rs, src-tauri/src/commands/skills.rs
+Downstream: src-tauri/src/commands/agent_targets.rs, src-tauri/src/commands/agents.rs, src-tauri/src/commands/git.rs, src-tauri/src/commands/projects.rs, src-tauri/src/commands/scenes.rs, src-tauri/src/commands/settings.rs, src-tauri/src/commands/skills.rs
 ```
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
+| `agent_targets` | Explicit per-entry management commands for global agent skill directories. |
 | `agents` | Agent inventory/config/apply command module. |
 | `git` | Git status/diff/log/pull/push/commit/fetch/sync command module. |
+| `projects` | Project assignment CRUD and apply command module. |
 | `scenes` | Scene CRUD and apply command module. |
 | `settings` | Settings command module. |
 | `skills` | Skill browsing command module. |

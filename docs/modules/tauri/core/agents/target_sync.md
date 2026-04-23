@@ -10,8 +10,8 @@ Owns target-directory reconciliation shared by global agent sync and project-loc
 ## Import Relationships
 
 ```text
-Upstream: src-tauri/src/core/agents/sync.rs, src-tauri/src/core/projects/sync.rs
-Downstream: serde_json, std::fs, src-tauri/src/core/skills/scan.rs
+Upstream: src-tauri/src/core/agents/sync.rs, src-tauri/src/core/projects/sync.rs, src-tauri/src/core/agents/target_management.rs
+Downstream: std::fs, src-tauri/src/core/agents/target_manifest.rs, src-tauri/src/core/skills/scan.rs
 ```
 
 ## Public Surface
@@ -29,11 +29,11 @@ Downstream: serde_json, std::fs, src-tauri/src/core/skills/scan.rs
 
 ## Core Logic
 
-This module loads a target-local manifest, removes stale managed entries, protects unmanaged conflicts, and deploys selected skills by copy or symlink. It skips nested `.git` directories so external source metadata is not copied into agent targets.
+This module loads a target-local manifest, removes stale managed entries, protects unmanaged conflicts, and deploys selected skills by copy or symlink. Manifest entries can also be marked as preserved take-overs, which means manual sync keeps them in place and reports a conflict instead of overwriting them with repo-backed content. The module skips nested `.git` directories so external source metadata is not copied into agent targets.
 
 ## Interactions
 
-Global agent sync calls it with discovered global agent directories. Project sync calls it with project-relative agent directories. Ledger ownership stays outside this module so each caller can track its own lifecycle.
+Global agent sync calls it with discovered global agent directories. Project sync calls it with project-relative agent directories. Explicit target-entry actions reuse its `remove_target` helper while manifest serialization is centralized in `target_manifest.rs`.
 
 ## Change Notes
 

@@ -11,6 +11,9 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
+            commands::agent_targets::take_over_agent_target_skill,
+            commands::agent_targets::delete_agent_target_skill,
+            commands::agent_targets::import_agent_target_skill,
             commands::agents::get_agent_inventory,
             commands::agents::set_agent_enabled,
             commands::agents::set_agent_path_override,

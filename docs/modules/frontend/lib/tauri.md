@@ -17,12 +17,13 @@ Defines TypeScript shapes and thin wrappers for the Tauri commands used by the f
 | `getAgentSyncMode` / `setAgentSyncMode` | Persist the preferred global sync mode. |
 | `setAgentConfiguration` | Persists a full agent draft payload and returns refreshed inventory. |
 | `applyAgentSync` | Runs manual agent sync, optionally scoped to one agent and/or an explicit mode override. |
+| `takeOverAgentTargetSkill` / `deleteAgentTargetSkill` / `importAgentTargetSkill` | Thin wrappers for explicit unmanaged-skill management actions in an agent target directory. |
 | other exports | Existing repo/skill/agent DTOs and invoke wrappers. |
 
 ## Core Logic
 
-Each function delegates directly to `invoke` with the command name and payload, keeping frontend command wiring thin while exposing enough type information for draft editing, scoped sync, and page-level orchestration.
+Each function delegates directly to `invoke` with the command name and payload, keeping frontend command wiring thin while exposing enough type information for draft editing, explicit target-entry management, scoped sync, and page-level orchestration.
 
 ## Interactions
 
-Must stay aligned with `src-tauri/src/commands/settings.rs`, `src-tauri/src/commands/agents.rs`, and the `tauri::generate_handler!` registration in `src-tauri/src/lib.rs`.
+Must stay aligned with `src-tauri/src/commands/settings.rs`, `src-tauri/src/commands/agents.rs`, `src-tauri/src/commands/agent_targets.rs`, and the `tauri::generate_handler!` registration in `src-tauri/src/lib.rs`.

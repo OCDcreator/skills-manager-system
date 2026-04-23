@@ -22,7 +22,7 @@ Downstream: src/components/AppShell.tsx, src/context/AppContext.tsx, src/views/A
 
 ## Core Logic
 
-`AppBody` reads `activeView` from context, chooses the current page view, and can pass a view-specific content-width policy into `AppShell` (the skills browser uses a wider responsive container than the other pages). `App` wraps that body in `AppProvider`.
+`AppBody` reads `activeView` from context, chooses the current page view, and passes a view-specific content-width policy into `AppShell`. The skills browser and Agent Sync view share the wider responsive container so their multi-column layouts have enough room. `App` wraps that body in `AppProvider`.
 
 ## Data Flow
 
@@ -34,7 +34,7 @@ Must stay in sync with `AppView` values in `src/context/AppContext.tsx` and navi
 
 ## Configuration
 
-The skills browser widens the shared shell to `max-w-[min(96vw,1800px)]`; other views keep the default `max-w-7xl`.
+The skills browser and Agent Sync view widen the shared shell to `max-w-[min(96vw,1800px)]`; other views keep the default `max-w-7xl`.
 
 ## Change Notes
 

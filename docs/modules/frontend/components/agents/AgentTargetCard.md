@@ -5,7 +5,7 @@
 
 ## Overview
 
-Provides the per-agent card UI for sync enablement, path override drafting, target-directory skill inventory, direct skill selection, scene selection, and effective preview rendering.
+Provides the primary per-agent configuration card UI for sync enablement, path override drafting, direct skill selection, scene selection, and effective preview rendering.
 
 ## Public Surface
 
@@ -15,7 +15,7 @@ Provides the per-agent card UI for sync enablement, path override drafting, targ
 
 ## Core Logic
 
-Renders path badges, default/detected/effective path rows, a draft sync toggle, override input, target global skill inventory, child selectors, effective preview, and the card-level save button. Persistence and sync execution stay in `AppContext` / `AgentsView`.
+Renders path badges, default/detected/effective path rows, a draft sync toggle, override input, the direct-skill / scene / preview selectors, and the card-level save button. The separate global-skill management card now lives beside this component in `AgentsView`, while persistence and sync execution stay in `AppContext` / `AgentsView`.
 
 ## Interactions
 

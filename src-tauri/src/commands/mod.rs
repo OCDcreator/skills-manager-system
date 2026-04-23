@@ -1,3 +1,4 @@
+pub mod agent_targets;
 pub mod agents;
 pub mod git;
 pub mod projects;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AgentApplyResults } from "../components/agents/AgentApplyResults";
 import { AgentFloatingNav } from "../components/agents/AgentFloatingNav";
+import { AgentGlobalSkillList } from "../components/agents/AgentGlobalSkillList";
 import { AgentSyncSummary } from "../components/agents/AgentSyncSummary";
 import { AgentTargetCard } from "../components/agents/AgentTargetCard";
 import { useAppContext } from "../context/AppContext";
@@ -12,6 +13,7 @@ import {
   resolveAgentSelectionPreview,
   type AgentConfigDraft,
 } from "../lib/agent-selection";
+import { useAgentTargetActions } from "../lib/agent-target-actions";
 import * as scenesApi from "../lib/scenes";
 import type { SceneConfigSnapshot } from "../lib/scenes";
 import * as api from "../lib/tauri";
@@ -35,6 +37,7 @@ export function AgentsView() {
     isLoadingAgents,
     lastAgentApplyResult,
     registerNavigationGuard,
+    refreshSkills,
     refreshAgents,
     repoPath,
     saveAgentConfiguration,
@@ -60,7 +63,17 @@ export function AgentsView() {
   );
 
   useEffect(() => {
-    setDrafts(buildDraftMap(agentInventory));
+    setDrafts((current) =>
+      Object.fromEntries(
+        agentInventory.map((agent) => {
+          const existingDraft = current[agent.key];
+          if (existingDraft && isAgentDraftDirty(agent, existingDraft)) {
+            return [agent.key, existingDraft];
+          }
+          return [agent.key, draftFromAgent(agent)];
+        }),
+      ),
+    );
   }, [agentInventory]);
 
   useEffect(() => {
@@ -100,6 +113,20 @@ export function AgentsView() {
     [agentInventory, drafts],
   );
   const canApply = Boolean(repoPath) && enabledAgentCount > 0;
+  const {
+    actionId: targetActionId,
+    actionNotice,
+    clearActionNotice,
+    deleteTargetSkill,
+    importTargetSkill,
+    takeOverTargetSkill,
+  } = useAgentTargetActions({
+    repoPath,
+    refreshAgents,
+    refreshSkills,
+    setError: setSyncModeError,
+    t,
+  });
 
   const discardDrafts = useCallback(() => {
     setDrafts(buildDraftMap(agentInventory));
@@ -130,10 +157,11 @@ export function AgentsView() {
       await applyAgentSync(syncMode, key);
       await refreshAgents();
       setSyncModeError(null);
+      clearActionNotice();
     } finally {
       setSavingAgentKey(null);
     }
-  }, [applyAgentSync, drafts, refreshAgents, saveAgentConfiguration, syncMode]);
+  }, [applyAgentSync, clearActionNotice, drafts, refreshAgents, saveAgentConfiguration, syncMode]);
 
   const handleSaveAll = useCallback(async () => {
     if (dirtyAgentKeys.length === 0) return;
@@ -149,18 +177,20 @@ export function AgentsView() {
       await applyAgentSync(syncMode);
       await refreshAgents();
       setSyncModeError(null);
+      clearActionNotice();
     } finally {
       setIsSavingAll(false);
     }
-  }, [applyAgentSync, dirtyAgentKeys, drafts, refreshAgents, saveAgentConfiguration, syncMode]);
+  }, [applyAgentSync, clearActionNotice, dirtyAgentKeys, drafts, refreshAgents, saveAgentConfiguration, syncMode]);
 
   const handleApplyAll = useCallback(async () => {
     if (hasDirtyDrafts) {
       await handleSaveAll();
       return;
     }
+    clearActionNotice();
     await applyAgentSync(syncMode);
-  }, [applyAgentSync, handleSaveAll, hasDirtyDrafts, syncMode]);
+  }, [applyAgentSync, clearActionNotice, handleSaveAll, hasDirtyDrafts, syncMode]);
 
   useEffect(
     () =>
@@ -221,6 +251,12 @@ export function AgentsView() {
         </div>
       ) : null}
 
+      {actionNotice ? (
+        <div className="rounded-2xl border border-emerald-900/60 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200">
+          {actionNotice}
+        </div>
+      ) : null}
+
       <section id="agent-sync-targets" className="scroll-mt-8 space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-100">{t("agents.targets.title")}</h2>
@@ -243,24 +279,45 @@ export function AgentsView() {
               );
               return (
                 <div id={`agent-sync-target-${agent.key}`} className="scroll-mt-8" key={agent.key}>
-                  <AgentTargetCard
-                    agent={agent}
-                    disabledSkillIds={disabledSkillIds}
-                    draft={draft}
-                    isDirty={isAgentDraftDirty(agent, draft)}
-                    isUpdating={
-                      updatingAgentKey === agent.key ||
-                      savingAgentKey === agent.key ||
-                      isSavingAll
-                    }
-                    onDraftChange={(nextDraft) =>
-                      setDrafts((current) => ({ ...current, [agent.key]: nextDraft }))
-                    }
-                    onSave={() => handleSaveAgent(agent.key)}
-                    preview={preview}
-                    scenes={sceneList}
-                    skills={scanResult.skills}
-                  />
+                  <div className="grid gap-4 min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
+                    <AgentTargetCard
+                      agent={agent}
+                      disabledSkillIds={disabledSkillIds}
+                      draft={draft}
+                      isDirty={isAgentDraftDirty(agent, draft)}
+                      isUpdating={
+                        updatingAgentKey === agent.key ||
+                        savingAgentKey === agent.key ||
+                        isSavingAll
+                      }
+                      onDraftChange={(nextDraft) =>
+                        setDrafts((current) => ({ ...current, [agent.key]: nextDraft }))
+                      }
+                      onSave={() => handleSaveAgent(agent.key)}
+                      preview={preview}
+                      scenes={sceneList}
+                      skills={scanResult.skills}
+                    />
+                    <AgentGlobalSkillList
+                      actionKey={targetActionId}
+                      agent={agent}
+                      canImport={Boolean(repoPath)}
+                      onDelete={(entry) =>
+                        void deleteTargetSkill(agent.key, agent.displayName, entry)
+                      }
+                      onImport={(entry, deleteSourceAfterImport) =>
+                        void importTargetSkill(
+                          agent.key,
+                          agent.displayName,
+                          entry,
+                          deleteSourceAfterImport,
+                        )
+                      }
+                      onTakeOver={(entry) =>
+                        void takeOverTargetSkill(agent.key, agent.displayName, entry)
+                      }
+                    />
+                  </div>
                 </div>
               );
             })}
