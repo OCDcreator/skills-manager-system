@@ -15,7 +15,7 @@ Displays repository file changes grouped into staged, unstaged, and untracked se
 
 ## Core Logic
 
-Renders three sections (staged, unstaged, untracked) with color-coded status codes. Each file entry is clickable to trigger diff viewing. Uses `Section` sub-component for each group.
+Renders three sections (staged, unstaged, untracked) with color-coded status codes. Each file entry is clickable to trigger diff viewing. Uses `Section` sub-component for each group. The list panel keeps long paths shrinkable with ellipsis, scrolls internally on large screens so a long unstaged list does not stretch the git page, and reuses the skill reading pane scrollbar styling.
 
 ## Data Flow
 

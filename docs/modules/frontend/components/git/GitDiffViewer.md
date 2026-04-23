@@ -5,7 +5,7 @@
 
 ## Overview
 
-Displays git diff content with syntax coloring, staged/unstaged mode toggle, and copy button.
+Displays git diff content with syntax coloring, staged/unstaged mode toggle, and copy button. The diff panel is width-shrinkable, caps its large-screen height so long diffs scroll inside the panel instead of stretching the git page, and reuses the skill reading pane scrollbar styling.
 
 ## Public Surface
 

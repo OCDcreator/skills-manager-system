@@ -15,35 +15,37 @@ export function GitFileList({ staged, unstaged, untracked, selectedPath, onSelec
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-4">
-      <Section
-        entries={staged}
-        selectedPath={selectedPath}
-        onSelect={onSelect}
-        title={t("git.files.staged")}
-        emptyText={t("git.files.empty")}
-        statusColor="text-emerald-400"
-        tooltipPrefix={t("tooltip.git.file.staged")}
-      />
-      <Section
-        entries={unstaged}
-        selectedPath={selectedPath}
-        onSelect={onSelect}
-        title={t("git.files.unstaged")}
-        emptyText={t("git.files.empty")}
-        statusColor="text-amber-400"
-        tooltipPrefix={t("tooltip.git.file.unstaged")}
-      />
-      <Section
-        entries={untracked}
-        selectedPath={selectedPath}
-        onSelect={onSelect}
-        title={t("git.files.untracked")}
-        emptyText={t("git.files.empty")}
-        statusColor="text-slate-400"
-        tooltipPrefix={t("tooltip.git.file.untracked")}
-      />
-    </div>
+    <section className="min-w-0 rounded-2xl border border-slate-800 bg-slate-900">
+      <div className="skill-markdown-scroll space-y-4 overflow-y-auto p-4 lg:max-h-[calc(100vh-16rem)]">
+        <Section
+          entries={staged}
+          selectedPath={selectedPath}
+          onSelect={onSelect}
+          title={t("git.files.staged")}
+          emptyText={t("git.files.empty")}
+          statusColor="text-emerald-400"
+          tooltipPrefix={t("tooltip.git.file.staged")}
+        />
+        <Section
+          entries={unstaged}
+          selectedPath={selectedPath}
+          onSelect={onSelect}
+          title={t("git.files.unstaged")}
+          emptyText={t("git.files.empty")}
+          statusColor="text-amber-400"
+          tooltipPrefix={t("tooltip.git.file.unstaged")}
+        />
+        <Section
+          entries={untracked}
+          selectedPath={selectedPath}
+          onSelect={onSelect}
+          title={t("git.files.untracked")}
+          emptyText={t("git.files.empty")}
+          statusColor="text-slate-400"
+          tooltipPrefix={t("tooltip.git.file.untracked")}
+        />
+      </div>
+    </section>
   );
 }
 
@@ -75,7 +77,7 @@ function Section({
             <li key={entry.path}>
               <button
                 className={clsx(
-                  "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-800",
+                  "flex min-w-0 w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-800",
                   selectedPath === entry.path && "bg-slate-800",
                 )}
                 onClick={() => onSelect(entry)}
@@ -85,7 +87,7 @@ function Section({
                 <span className={`font-mono text-xs ${statusColor}`}>
                   {entry.x}{entry.y}
                 </span>
-                <span className="truncate text-slate-200">{entry.path}</span>
+                <span className="min-w-0 flex-1 truncate text-slate-200">{entry.path}</span>
               </button>
             </li>
           ))}

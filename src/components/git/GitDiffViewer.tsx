@@ -15,7 +15,7 @@ export function GitDiffViewer({ diff, isLoading, diffMode, onModeChange }: GitDi
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 p-8 text-sm text-slate-400">
+      <div className="flex min-w-0 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 p-8 text-sm text-slate-400">
         {t("git.diff.title")}…
       </div>
     );
@@ -23,7 +23,7 @@ export function GitDiffViewer({ diff, isLoading, diffMode, onModeChange }: GitDi
 
   if (!diff) {
     return (
-      <div className="flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 p-8 text-sm text-slate-500">
+      <div className="flex min-w-0 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 p-8 text-sm text-slate-500">
         {t("git.diff.selectFile")}
       </div>
     );
@@ -37,7 +37,7 @@ export function GitDiffViewer({ diff, isLoading, diffMode, onModeChange }: GitDi
   };
 
   return (
-    <div className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900">
+    <div className="flex min-h-0 min-w-0 flex-col rounded-2xl border border-slate-800 bg-slate-900 lg:max-h-[calc(100vh-16rem)]">
       <div className="flex items-center gap-2 border-b border-slate-800 px-4 py-2">
         <button
           className={`rounded px-2 py-1 text-xs ${
@@ -70,7 +70,7 @@ export function GitDiffViewer({ diff, isLoading, diffMode, onModeChange }: GitDi
           {diff.stat}
         </div>
       ) : null}
-      <pre className="flex-1 overflow-auto p-4 text-xs leading-relaxed">
+      <pre className="skill-markdown-scroll min-h-0 flex-1 overflow-auto p-4 text-xs leading-relaxed">
         <DiffContent content={diff.diff} />
       </pre>
     </div>
