@@ -59,7 +59,7 @@ export function AgentSkillSelector({
         placeholder={t("agents.card.searchSkills")}
         value={search}
       />
-      <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+      <div className="skill-markdown-scroll max-h-56 space-y-1 overflow-y-auto pr-1">
         {filteredSkills.map((skill) => {
           const isSelected = selected.has(skill.id);
           const isGloballyDisabled = disabled.has(skill.id);

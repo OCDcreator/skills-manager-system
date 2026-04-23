@@ -15,4 +15,4 @@ Lets one agent draft choose direct skills with search and global-hard-disable fe
 
 ## Core Logic
 
-Filters skills by search text, keeps already-selected globally disabled skills removable, and clears matching exclusions when a direct skill is re-selected so the save payload stays coherent.
+Filters skills by search text, keeps already-selected globally disabled skills removable, clears matching exclusions when a direct skill is re-selected, and reuses the skill reading pane scrollbar styling for its internal list.

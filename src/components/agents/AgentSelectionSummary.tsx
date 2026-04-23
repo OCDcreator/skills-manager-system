@@ -30,7 +30,7 @@ export function AgentSelectionSummary({
         </span>
       </div>
 
-      <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
+      <div className="skill-markdown-scroll max-h-48 space-y-1 overflow-y-auto pr-1">
         {preview.items.length === 0 ? (
           <div className="text-xs text-slate-500">{t("agents.card.noEffectiveSkills")}</div>
         ) : (
