@@ -298,25 +298,29 @@ export function AgentsView() {
                       scenes={sceneList}
                       skills={scanResult.skills}
                     />
-                    <AgentGlobalSkillList
-                      actionKey={targetActionId}
-                      agent={agent}
-                      canImport={Boolean(repoPath)}
-                      onDelete={(entry) =>
-                        void deleteTargetSkill(agent.key, agent.displayName, entry)
-                      }
-                      onImport={(entry, deleteSourceAfterImport) =>
-                        void importTargetSkill(
-                          agent.key,
-                          agent.displayName,
-                          entry,
-                          deleteSourceAfterImport,
-                        )
-                      }
-                      onTakeOver={(entry) =>
-                        void takeOverTargetSkill(agent.key, agent.displayName, entry)
-                      }
-                    />
+                    <div className="min-h-0 min-[1380px]:relative min-[1380px]:overflow-hidden">
+                      <div className="min-[1380px]:absolute min-[1380px]:inset-0">
+                        <AgentGlobalSkillList
+                          actionKey={targetActionId}
+                          agent={agent}
+                          canImport={Boolean(repoPath)}
+                          onDelete={(entry) =>
+                            void deleteTargetSkill(agent.key, agent.displayName, entry)
+                          }
+                          onImport={(entry, deleteSourceAfterImport) =>
+                            void importTargetSkill(
+                              agent.key,
+                              agent.displayName,
+                              entry,
+                              deleteSourceAfterImport,
+                            )
+                          }
+                          onTakeOver={(entry) =>
+                            void takeOverTargetSkill(agent.key, agent.displayName, entry)
+                          }
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               );

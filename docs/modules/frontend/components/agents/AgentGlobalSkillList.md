@@ -15,7 +15,7 @@ Renders the sidecar inventory and explicit management actions for skills already
 
 ## Core Logic
 
-Counts managed versus unmanaged entries, reports target scan errors, highlights taken-over entries separately from synced ones, and lists per-entry actions. The sidecar shell is a full-height flex column and the scrollable list uses `flex-1` instead of a fixed max-height so it fills the available card height. The component never mutates files directly: it forwards explicit button clicks back to `AgentsView`, which owns confirmation dialogs and Tauri command calls.
+Counts managed versus unmanaged entries, reports target scan errors, highlights taken-over entries separately from synced ones, and lists per-entry actions. The sidecar shell is a full-height flex column with hidden overflow, and the scrollable list uses `flex-1` instead of a fixed max-height so it fills the wrapper height without stretching the surrounding grid row. The component never mutates files directly: it forwards explicit button clicks back to `AgentsView`, which owns confirmation dialogs and Tauri command calls.
 
 ## Data Flow
 

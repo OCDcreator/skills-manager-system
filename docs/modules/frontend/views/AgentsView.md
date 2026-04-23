@@ -19,7 +19,7 @@ The view reads inventory and sync actions from `AppContext`, loads scene config 
 
 ## Data Flow
 
-Context state provides repo/skill/agent state; `src/lib/scenes.ts` loads reusable scene definitions; `src/lib/agent-selection.ts` handles draft/preview normalization; and child components only receive normalized props and callbacks. The page also coordinates inventory refreshes after target-management actions so the right-hand global-skill card and left-hand draft card stay in sync without dropping unsaved edits.
+Context state provides repo/skill/agent state; `src/lib/scenes.ts` loads reusable scene definitions; `src/lib/agent-selection.ts` handles draft/preview normalization; and child components only receive normalized props and callbacks. The page also coordinates inventory refreshes after target-management actions so the right-hand global-skill card and left-hand draft card stay in sync without dropping unsaved edits. On wide screens, the global-skill sidecar is absolutely filled inside an overflow-hidden grid cell so its long inventory scrolls internally while the row height stays anchored to the adjacent agent card.
 
 ## Interactions
 
