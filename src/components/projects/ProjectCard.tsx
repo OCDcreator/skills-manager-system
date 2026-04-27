@@ -2,17 +2,17 @@ import type { ProjectAssignment } from "../../lib/projects";
 
 interface ProjectCardProps {
   project: ProjectAssignment;
-  isApplying: boolean;
+  sessionApplyMessage: string | null;
   onDelete: () => void;
-  onApply: () => void;
+  onEdit: () => void;
   t: (key: string, options?: Record<string, unknown>) => string;
 }
 
 export function ProjectCard({
   project,
-  isApplying,
+  sessionApplyMessage,
   onDelete,
-  onApply,
+  onEdit,
   t,
 }: ProjectCardProps) {
   return (
@@ -46,16 +46,27 @@ export function ProjectCard({
         </span>
       </div>
 
-      <div className="mt-3">
+      <div className="mt-4 flex items-center gap-2">
         <button
-          className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-50"
-          disabled={isApplying}
-          onClick={onApply}
-          title={t("tooltip.projects.apply")}
+          className="rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700"
+          onClick={onEdit}
+          type="button"
         >
-          {isApplying ? t("projects.card.applying") : t("projects.card.apply")}
+          {t("projects.saved.edit")}
+        </button>
+        <button
+          className="rounded-lg border border-rose-800 px-4 py-2 text-sm text-rose-200 hover:bg-rose-950/50"
+          onClick={onDelete}
+          type="button"
+        >
+          {t("projects.saved.delete")}
         </button>
       </div>
+      {sessionApplyMessage ? (
+        <div className="mt-3 rounded-xl border border-sky-900 bg-sky-950/40 px-3 py-2 text-xs text-sky-200">
+          {sessionApplyMessage}
+        </div>
+      ) : null}
     </div>
   );
 }

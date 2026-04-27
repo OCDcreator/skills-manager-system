@@ -15,7 +15,7 @@ export function suggestProjectDisplayName(projectPath: string) {
   const trimmed = projectPath.trim();
   if (!trimmed) return "";
   const segments = trimmed.split(/[/\\]/).filter(Boolean);
-  return segments.at(-1) ?? trimmed;
+  return segments[segments.length - 1] ?? trimmed;
 }
 
 export function isProjectDraftDirty(

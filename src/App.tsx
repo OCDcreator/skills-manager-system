@@ -10,7 +10,7 @@ import { SkillsView } from "./views/SkillsView";
 function AppBody() {
   const { activeView } = useAppContext();
   const contentWidthClassName =
-    activeView === "skills" || activeView === "agents"
+    activeView === "skills" || activeView === "agents" || activeView === "projects"
       ? "max-w-[min(96vw,1800px)]"
       : "max-w-7xl";
 
