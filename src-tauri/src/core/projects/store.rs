@@ -4,6 +4,8 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use super::project_paths::normalize_project_path;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ProjectAssignment {
@@ -127,18 +129,6 @@ impl ProjectConfigStore {
     }
 }
 
-fn normalize_project_path(project_path: &str) -> Result<String> {
-    let project_path = project_path.trim();
-    if project_path.is_empty() {
-        return Err(anyhow!("Project path is required"));
-    }
-    let path = Path::new(project_path);
-    if !path.is_absolute() {
-        return Err(anyhow!("Project path must be absolute"));
-    }
-    Ok(project_path.to_string())
-}
-
 fn normalize_display_name(project_path: &str, display_name: &str) -> String {
     let display_name = display_name.trim();
     if !display_name.is_empty() {
@@ -218,5 +208,15 @@ mod tests {
 
         let snapshot = store.remove_project(&project_path).unwrap();
         assert!(!snapshot.projects.contains_key(&project_path));
+    }
+
+    #[test]
+    fn normalize_project_path_accepts_trimmed_absolute_path() {
+        let temp = tempdir().unwrap();
+        let project_path = format!("  {}  ", temp.path().join("workspace/app").display());
+
+        let normalized = normalize_project_path(&project_path).unwrap();
+
+        assert_eq!(normalized, temp.path().join("workspace/app").display().to_string());
     }
 }

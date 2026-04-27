@@ -39,6 +39,8 @@ pub struct AgentInventoryItem {
     pub selected_skill_ids: Vec<String>,
     pub selected_scene_ids: Vec<String>,
     pub excluded_skill_ids: Vec<String>,
+    pub skills_dir_rule: String,
+    pub detect_dir_rule: String,
     pub default_skills_dir: String,
     pub detected_skills_dir: Option<String>,
     pub effective_skills_dir: Option<String>,
@@ -117,6 +119,8 @@ fn build_agent_inventory_item(
         selected_skill_ids: config.selected_skill_ids,
         selected_scene_ids: config.selected_scene_ids,
         excluded_skill_ids: config.excluded_skill_ids,
+        skills_dir_rule: definition.skills_dir_rule.to_string(),
+        detect_dir_rule: definition.detect_dir_rule.to_string(),
         default_skills_dir: path_to_string(default_skills_dir),
         detected_skills_dir,
         effective_skills_dir,
@@ -286,5 +290,26 @@ mod tests {
             .as_deref()
             .is_some_and(|path| path.ends_with("/home/.kimi/skills")));
         assert_eq!(kimi.effective_skills_dir, kimi.detected_skills_dir);
+    }
+
+    #[test]
+    fn inventory_exposes_catalog_rules_for_project_preview() {
+        let temp_root = tempfile::tempdir().unwrap();
+        let inventory = build_agent_inventory(
+            &empty_snapshot(),
+            &AgentSystemDirs {
+                home_dir: temp_root.path().join("home"),
+                config_dir: Some(temp_root.path().join("config")),
+            },
+        );
+
+        let codex = inventory
+            .agents
+            .iter()
+            .find(|agent| agent.key == "codex")
+            .unwrap();
+
+        assert_eq!(codex.skills_dir_rule, ".codex/skills");
+        assert_eq!(codex.detect_dir_rule, ".codex");
     }
 }

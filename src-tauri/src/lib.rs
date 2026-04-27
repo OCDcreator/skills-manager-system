@@ -33,6 +33,7 @@ pub fn run() {
             commands::projects::add_project,
             commands::projects::update_project,
             commands::projects::remove_project,
+            commands::projects::inspect_project_assignment_path,
             commands::projects::apply_project_assignments,
             commands::git::run_sync_script,
             commands::scenes::get_scene_config,

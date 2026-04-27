@@ -3,6 +3,9 @@ use std::path::Path;
 use tauri::Manager;
 
 use crate::core::agents::discovery::AgentSystemDirs;
+use crate::core::projects::path_inspection::{
+    inspect_project_assignment_path as inspect_project_assignment_path_core, ProjectPathInspection,
+};
 use crate::core::projects::store::{ProjectConfigSnapshot, ProjectConfigStore};
 use crate::core::projects::sync::{
     apply_project_assignments as apply_project_assignments_core, ApplyProjectAssignmentsResponse,
@@ -74,6 +77,15 @@ pub fn remove_project(
 ) -> Result<ProjectConfigSnapshot, String> {
     project_store(&app)?
         .remove_project(&project_path)
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn inspect_project_assignment_path(
+    project_path: String,
+    agent_keys: Vec<String>,
+) -> Result<ProjectPathInspection, String> {
+    inspect_project_assignment_path_core(&project_path, &agent_keys)
         .map_err(|error| error.to_string())
 }
 
