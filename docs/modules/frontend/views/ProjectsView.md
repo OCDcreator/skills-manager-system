@@ -5,12 +5,12 @@
 
 ## Overview
 
-Page for managing project-level skill assignments, including project-local deployment into supported agent config directories.
+Path-first project assignment workbench for create/edit flows plus a secondary saved-project management list.
 
 ## Core Logic
 
-Loads `ProjectConfigSnapshot` via a deferred initial refresh, lets the user add project assignments, uses the globally sorted agent inventory for consistent checklist ordering, allows all supported agents to be selected regardless of global detection state, and reads `ApplyProjectAssignmentsResponse` so per-project apply feedback matches the backend payload shape.
+Loads `ProjectConfigSnapshot` via a deferred refresh, keeps one `ProjectDraft` state object, inspects the current path through `useProjectDraftInspection`, and derives duplicate-path / expected-target / unsupported-agent state before save. Saved projects can be reopened in edit mode and the saved-project section now applies assignments with one section-level `applyProjectAssignments()` action.
 
 ## Data Flow
 
-`useAppContext()` provides scanned skills plus the full supported-agent inventory in sorted order; `src/lib/projects.ts` handles CRUD/apply calls; `ProjectCard` renders each saved assignment.
+`useAppContext()` provides `scanResult`, `sortedAgentInventory`, and `disabledSkillIds`; `src/lib/projects.ts` handles CRUD/apply/inspection calls; `src/lib/project-draft.ts` provides pure draft helpers; `ProjectIdentityPanel`, `ProjectAssignmentEditor`, `ProjectAssignmentSummary`, and `ProjectCard` split the page into focused UI units.

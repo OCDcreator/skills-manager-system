@@ -15,9 +15,11 @@ Thin Tauri command wrappers for project assignment operations. Maps core results
 | `add_project` | Register a new project with skills/agents |
 | `update_project` | Modify project skill/agent assignments |
 | `remove_project` | Remove a project assignment |
+| `inspect_project_assignment_path` | Read-only path validation and per-agent marker/target inspection |
 | `apply_project_assignments` | Deploy skills to project-local agent dirs |
 
 ## Interactions
 
 - `core::projects::store` — CRUD operations
+- `core::projects::path_inspection` — preview inspection logic
 - `core::projects::sync` — apply logic

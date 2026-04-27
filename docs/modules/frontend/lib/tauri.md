@@ -13,6 +13,7 @@ Defines TypeScript shapes and thin wrappers for the Tauri commands used by the f
 |---|---|
 | `AgentKey` | Union of all supported global/project agent keys. |
 | `AgentSyncMode` | Frontend union for `copy` vs `symlink`. |
+| `AgentInventoryItem.skillsDirRule` / `detectDirRule` | Static catalog rules for project-local target and marker previews. |
 | `AgentConfigurationInput` | Save payload for one persisted agent configuration. |
 | `getAgentSyncMode` / `setAgentSyncMode` | Persist the preferred global sync mode. |
 | `getAgentOrder` / `setAgentOrder` | Load or update the persisted global agent ordering keys. |
@@ -23,7 +24,7 @@ Defines TypeScript shapes and thin wrappers for the Tauri commands used by the f
 
 ## Core Logic
 
-Each function delegates directly to `invoke` with the command name and payload, keeping frontend command wiring thin while exposing enough type information for draft editing, explicit target-entry management, global ordering, scoped sync, and page-level orchestration. `AgentKey` must stay aligned with the Rust catalog, including Kimi Code CLI's `kimi` key.
+Each function delegates directly to `invoke` with the command name and payload, keeping frontend command wiring thin while exposing enough type information for draft editing, explicit target-entry management, global ordering, scoped sync, project-local preview, and page-level orchestration. `AgentKey` must stay aligned with the Rust catalog, including Kimi Code CLI's `kimi` key.
 
 ## Interactions
 

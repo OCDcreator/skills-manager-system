@@ -5,11 +5,13 @@
 
 ## Overview
 
-Barrel module for the projects subsystem, exporting store and sync sub-modules.
+Barrel module for the projects subsystem, exporting persistence, sync, shared path helpers, and read-only inspection.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
+| `project_paths` | Shared project-path normalization helpers |
+| `path_inspection` | Read-only draft-path inspection logic |
 | `store` | Project assignment config persistence |
 | `sync` | Project-local skill deployment logic |

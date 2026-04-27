@@ -1,0 +1,22 @@
+# Project Path Inspection
+
+> **Source**: `src-tauri/src/core/projects/path_inspection.rs`
+> **Status**: [REVIEW]
+
+## Overview
+
+Read-only inspection module for the Projects workbench.
+
+## Public Surface
+
+| Export | Purpose |
+|---|---|
+| `ProjectPathInspectionAgentResult` | Per-agent marker/target existence result. |
+| `ProjectPathInspection` | Aggregate inspection payload for one draft path. |
+| `inspect_project_assignment_path` | Validates a draft path and reports marker/target status for requested or default agents. |
+
+## Responsibilities
+
+- reuses shared path normalization
+- resolves static agent rules from the catalog
+- reports unsupported agent keys without mutating stored configuration
