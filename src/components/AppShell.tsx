@@ -25,7 +25,10 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur">
+      <header
+        className="border-b border-slate-800 bg-slate-900/90 backdrop-blur"
+        data-app-shell-header
+      >
         <div className={`mx-auto flex ${widthClassName} items-center justify-between px-6 py-4`}>
           <div>
             <h1 className="text-2xl font-semibold">{t("app.title")}</h1>
@@ -55,7 +58,9 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
         ) : null}
       </header>
 
-      <main className={`mx-auto ${widthClassName} px-6 py-8`}>{children}</main>
+      <main className={`mx-auto ${widthClassName} px-6 py-8`} data-app-shell-main>
+        {children}
+      </main>
 
       <ProjectAssistantLauncher />
 

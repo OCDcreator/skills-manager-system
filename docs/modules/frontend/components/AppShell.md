@@ -15,7 +15,7 @@ Provides the shared page chrome for the desktop app, including the header, guard
 
 ## Core Logic
 
-The shell reads `activeView`, `errorMessage`, guarded `setActiveView`, and pending-navigation actions from context. It renders the translated app title/subtitle, six view buttons, an error strip, and the unsaved-changes dialog whenever the Agents page blocks a route change.
+The shell reads `activeView`, `errorMessage`, guarded `setActiveView`, and pending-navigation actions from context. It renders the translated app title/subtitle, six view buttons, an error strip, and the unsaved-changes dialog whenever the Agents page blocks a route change. The header and main wrappers expose stable `data-*` anchors so floating overlays such as the Agent Sync icon rail can measure the real usable viewport space instead of assuming the whole window is free.
 
 ## Interactions
 

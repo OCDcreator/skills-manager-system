@@ -1,5 +1,5 @@
 import { ArrowDownUp, ChevronDown, ChevronUp } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AgentInventoryItem } from "../../lib/tauri";
 import { AgentBrandIcon } from "./AgentBrandIcon";
@@ -17,6 +17,13 @@ interface AgentFloatingNavItem {
   agentKey?: string;
   direction?: "up" | "down";
 }
+
+const APP_HEADER_SELECTOR = "[data-app-shell-header]";
+const APP_MAIN_SELECTOR = "[data-app-shell-main]";
+const ASSISTANT_LAUNCHER_SELECTOR = "[data-project-assistant-launcher]";
+const MIN_TOP_OFFSET_PX = 16;
+const MIN_BOTTOM_OFFSET_PX = 24;
+const CHROME_GAP_PX = 16;
 
 function targetHref(agentKey: string) {
   return `#agent-sync-target-${agentKey}`;
@@ -79,6 +86,10 @@ function motionForIndex(index: number, activeIndex: number | null) {
 export function AgentFloatingNav({ agents, onOpenOrderModal }: AgentFloatingNavProps) {
   const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [{ topOffsetPx, bottomOffsetPx }, setLayoutBounds] = useState({
+    topOffsetPx: 96,
+    bottomOffsetPx: 96,
+  });
   const navItems = useMemo<AgentFloatingNavItem[]>(
     () => [
       {
@@ -108,10 +119,59 @@ export function AgentFloatingNav({ agents, onOpenOrderModal }: AgentFloatingNavP
     [agents, t],
   );
 
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>(APP_HEADER_SELECTOR);
+    const main = document.querySelector<HTMLElement>(APP_MAIN_SELECTOR);
+    const launcher = document.querySelector<HTMLElement>(ASSISTANT_LAUNCHER_SELECTOR);
+
+    const updateLayoutBounds = () => {
+      const viewportHeight = window.innerHeight;
+      const headerBottom = header?.getBoundingClientRect().bottom ?? 0;
+      const mainBottom = main?.getBoundingClientRect().bottom ?? viewportHeight;
+      const launcherTop = launcher?.getBoundingClientRect().top ?? viewportHeight;
+      const topOffsetPx = Math.max(
+        MIN_TOP_OFFSET_PX,
+        Math.round(headerBottom + CHROME_GAP_PX),
+      );
+      const bottomOffsetPx = Math.max(
+        MIN_BOTTOM_OFFSET_PX,
+        Math.round(viewportHeight - Math.min(mainBottom, viewportHeight) + CHROME_GAP_PX),
+        Math.round(viewportHeight - launcherTop + CHROME_GAP_PX),
+      );
+
+      setLayoutBounds((current) =>
+        current.topOffsetPx === topOffsetPx && current.bottomOffsetPx === bottomOffsetPx
+          ? current
+          : { topOffsetPx, bottomOffsetPx },
+      );
+    };
+
+    updateLayoutBounds();
+
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(() => updateLayoutBounds());
+
+    if (header) resizeObserver?.observe(header);
+    if (main) resizeObserver?.observe(main);
+    if (launcher) resizeObserver?.observe(launcher);
+
+    window.addEventListener("resize", updateLayoutBounds);
+    window.addEventListener("scroll", updateLayoutBounds, { passive: true });
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", updateLayoutBounds);
+      window.removeEventListener("scroll", updateLayoutBounds);
+    };
+  }, []);
+
   return (
     <nav
       aria-label={t("agents.sideNav.label")}
-      className="pointer-events-none fixed right-3 top-1/2 z-50 w-96 max-w-[calc(100vw-1.5rem)] -translate-y-1/2 bg-transparent"
+      className="pointer-events-none fixed right-3 z-50 w-96 max-w-[calc(100vw-1.5rem)] bg-transparent"
+      style={{ top: topOffsetPx, bottom: bottomOffsetPx }}
     >
       {/* The rail is transparent; only the nodes and labels visibly float above the content. */}
       <div className="relative">
@@ -120,7 +180,7 @@ export function AgentFloatingNav({ agents, onOpenOrderModal }: AgentFloatingNavP
           className="absolute bottom-7 right-7 top-7 w-px bg-gradient-to-b from-slate-800/0 via-slate-600/35 to-slate-800/0"
         />
         <ul
-          className="relative max-h-[calc(100vh-5rem)] overflow-y-auto py-1 pr-1"
+          className="relative h-full overflow-y-auto py-1 pr-1"
           onMouseLeave={() => setActiveIndex(null)}
         >
           {navItems.map((item, index) => {

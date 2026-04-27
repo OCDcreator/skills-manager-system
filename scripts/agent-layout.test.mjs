@@ -54,3 +54,29 @@ test('Agent order modal caps its height and keeps the reorder list scrollable', 
   assert.match(source, /flex max-h-\[calc\(100vh-2rem\)\] w-full max-w-xl flex-col overflow-hidden/);
   assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-5 overflow-y-auto/);
 });
+
+test('Agent floating nav measures app chrome bounds instead of using raw viewport centering', () => {
+  const shellSource = fs.readFileSync(
+    path.resolve('src/components/AppShell.tsx'),
+    'utf8',
+  );
+  const launcherSource = fs.readFileSync(
+    path.resolve('src/components/assistant/ProjectAssistantLauncher.tsx'),
+    'utf8',
+  );
+  const navSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentFloatingNav.tsx'),
+    'utf8',
+  );
+
+  assert.match(shellSource, /data-app-shell-header/);
+  assert.match(shellSource, /data-app-shell-main/);
+  assert.match(launcherSource, /data-project-assistant-launcher/);
+  assert.match(navSource, /data-app-shell-header/);
+  assert.match(navSource, /data-project-assistant-launcher/);
+  assert.match(navSource, /style=\{\{\s*top:\s*topOffsetPx,\s*bottom:\s*bottomOffsetPx\s*\}\}/);
+  assert.match(navSource, /className="relative h-full overflow-y-auto py-1 pr-1"/);
+  assert.doesNotMatch(navSource, /fixed right-3 top-1\/2/);
+  assert.doesNotMatch(navSource, /fixed right-3 top-1\/2 z-50 .* -translate-y-1\/2/);
+  assert.doesNotMatch(navSource, /max-h-\[calc\(100vh-5rem\)\]/);
+});
