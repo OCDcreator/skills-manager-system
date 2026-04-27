@@ -30,6 +30,22 @@ export interface ApplyProjectAssignmentsResponse {
   results: ProjectApplyResult[];
 }
 
+export interface ProjectPathInspectionAgentResult {
+  agentKey: string;
+  displayName: string;
+  markerDir: string;
+  targetDir: string;
+  markerExists: boolean;
+  targetExists: boolean;
+}
+
+export interface ProjectPathInspection {
+  normalizedPath: string;
+  agents: ProjectPathInspectionAgentResult[];
+  unsupportedAgentKeys: string[];
+  warnings: string[];
+}
+
 export const getProjectConfig = () =>
   invoke<ProjectConfigSnapshot>("get_project_config");
 
@@ -61,6 +77,15 @@ export const updateProject = (
 
 export const removeProject = (projectPath: string) =>
   invoke<ProjectConfigSnapshot>("remove_project", { projectPath });
+
+export const inspectProjectAssignmentPath = (
+  projectPath: string,
+  agentKeys: string[],
+) =>
+  invoke<ProjectPathInspection>("inspect_project_assignment_path", {
+    projectPath,
+    agentKeys,
+  });
 
 export const applyProjectAssignments = () =>
   invoke<ApplyProjectAssignmentsResponse>("apply_project_assignments");
