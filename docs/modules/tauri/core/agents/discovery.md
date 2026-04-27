@@ -20,7 +20,7 @@ Builds the frontend-facing agent inventory snapshot by combining catalog metadat
 
 ## Core Logic
 
-Resolves path candidates from catalog rules, handles `.config/...` dual-candidate lookup, determines detected/default/effective paths, normalizes emitted path strings, scans the effective target directory for managed/unmanaged skill entries, and carries saved direct skills, scene IDs, and exclusion IDs into the inventory payload shown by the editor.
+Resolves path candidates from catalog rules, handles `.config/...` dual-candidate lookup, determines detected/default/effective paths, normalizes emitted path strings, scans the effective target directory for managed/unmanaged skill entries, and carries saved direct skills, scene IDs, and exclusion IDs into the inventory payload shown by the editor. Hidden home-directory tools such as Kimi Code CLI therefore detect directly from `~/.kimi` and surface `~/.kimi/skills` as both the default and detected sync target when present.
 
 ## Interactions
 

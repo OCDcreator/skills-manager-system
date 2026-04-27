@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { AgentConfigDraft, AgentSelectionPreview } from "../../lib/agent-selection";
 import type { SceneEntry } from "../../lib/scenes";
 import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
+import { AgentBrandIcon } from "./AgentBrandIcon";
 import { AgentSceneSelector } from "./AgentSceneSelector";
 import { AgentSelectionSummary } from "./AgentSelectionSummary";
 import { AgentSkillSelector } from "./AgentSkillSelector";
@@ -43,25 +44,30 @@ export function AgentTargetCard({
       }`}
     >
       <header className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-100">{agent.displayName}</h3>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <span
-              className={`inline-flex rounded-full px-2.5 py-1 text-xs ${
-                agent.pathMode === "missing"
-                  ? "bg-amber-500/15 text-amber-200"
-                  : agent.pathMode === "override"
-                    ? "bg-violet-500/15 text-violet-200"
-                    : "bg-emerald-500/15 text-emerald-200"
-              }`}
-            >
-              {t(`agents.pathMode.${agent.pathMode}`)}
-            </span>
-            {isDirty ? (
-              <span className="inline-flex rounded-full bg-sky-500/15 px-2.5 py-1 text-xs text-sky-200">
-                {t("agents.card.unsaved")}
+        <div className="flex items-start gap-3">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-slate-700 bg-slate-950">
+            <AgentBrandIcon agentKey={agent.key} className="size-[70%]" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-slate-100">{agent.displayName}</h3>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <span
+                className={`inline-flex rounded-full px-2.5 py-1 text-xs ${
+                  agent.pathMode === "missing"
+                    ? "bg-amber-500/15 text-amber-200"
+                    : agent.pathMode === "override"
+                      ? "bg-violet-500/15 text-violet-200"
+                      : "bg-emerald-500/15 text-emerald-200"
+                }`}
+              >
+                {t(`agents.pathMode.${agent.pathMode}`)}
               </span>
-            ) : null}
+              {isDirty ? (
+                <span className="inline-flex rounded-full bg-sky-500/15 px-2.5 py-1 text-xs text-sky-200">
+                  {t("agents.card.unsaved")}
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
 

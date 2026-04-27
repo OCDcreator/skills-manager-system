@@ -260,4 +260,31 @@ mod tests {
             Some(override_dir.to_string_lossy().replace('\\', "/").as_str())
         );
     }
+
+    #[test]
+    fn kimi_uses_hidden_home_skills_directory_when_detected() {
+        let temp_root = tempfile::tempdir().unwrap();
+        let home_dir = temp_root.path().join("home");
+        fs::create_dir_all(home_dir.join(".kimi/skills")).unwrap();
+
+        let inventory = build_agent_inventory(
+            &empty_snapshot(),
+            &AgentSystemDirs {
+                home_dir,
+                config_dir: Some(temp_root.path().join("config")),
+            },
+        );
+
+        let kimi = inventory
+            .agents
+            .iter()
+            .find(|agent| agent.key == "kimi")
+            .unwrap();
+        assert_eq!(kimi.path_mode, AgentPathMode::Detected);
+        assert!(kimi
+            .detected_skills_dir
+            .as_deref()
+            .is_some_and(|path| path.ends_with("/home/.kimi/skills")));
+        assert_eq!(kimi.effective_skills_dir, kimi.detected_skills_dir);
+    }
 }

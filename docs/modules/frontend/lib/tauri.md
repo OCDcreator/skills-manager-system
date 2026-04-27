@@ -23,7 +23,7 @@ Defines TypeScript shapes and thin wrappers for the Tauri commands used by the f
 
 ## Core Logic
 
-Each function delegates directly to `invoke` with the command name and payload, keeping frontend command wiring thin while exposing enough type information for draft editing, explicit target-entry management, global ordering, scoped sync, and page-level orchestration.
+Each function delegates directly to `invoke` with the command name and payload, keeping frontend command wiring thin while exposing enough type information for draft editing, explicit target-entry management, global ordering, scoped sync, and page-level orchestration. `AgentKey` must stay aligned with the Rust catalog, including Kimi Code CLI's `kimi` key.
 
 ## Interactions
 

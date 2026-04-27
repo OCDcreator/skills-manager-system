@@ -35,6 +35,7 @@ export type AgentKey =
   | "cursor"
   | "amp"
   | "kilo_code"
+  | "kimi"
   | "roo_code"
   | "goose"
   | "gemini_cli"

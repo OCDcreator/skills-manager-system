@@ -36,6 +36,8 @@ function bubbleClassName(agentKey?: string) {
       return "border-fuchsia-200/45 bg-fuchsia-500 text-white shadow-fuchsia-950/35";
     case "kilo_code":
       return "border-slate-200/40 bg-slate-950 text-white shadow-slate-950/45";
+    case "kimi":
+      return "border-orange-200/45 bg-orange-100 text-orange-950 shadow-orange-950/30";
     case "roo_code":
       return "border-emerald-200/45 bg-emerald-500 text-white shadow-emerald-950/35";
     case "goose":

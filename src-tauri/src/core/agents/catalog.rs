@@ -6,7 +6,7 @@ pub struct AgentCatalogEntry {
     pub detect_dir_rule: &'static str,
 }
 
-const AGENT_CATALOG: [AgentCatalogEntry; 11] = [
+const AGENT_CATALOG: [AgentCatalogEntry; 12] = [
     AgentCatalogEntry {
         key: "codex",
         display_name: "Codex",
@@ -42,6 +42,12 @@ const AGENT_CATALOG: [AgentCatalogEntry; 11] = [
         display_name: "Kilo Code",
         skills_dir_rule: ".kilo/skills",
         detect_dir_rule: ".kilo",
+    },
+    AgentCatalogEntry {
+        key: "kimi",
+        display_name: "Kimi Code CLI",
+        skills_dir_rule: ".kimi/skills",
+        detect_dir_rule: ".kimi",
     },
     AgentCatalogEntry {
         key: "roo_code",
@@ -100,6 +106,7 @@ mod tests {
                 "cursor",
                 "amp",
                 "kilo_code",
+                "kimi",
                 "roo_code",
                 "goose",
                 "gemini_cli",

@@ -5,7 +5,7 @@
 
 ## Overview
 
-Defines the built-in agent catalog covering all supported AI coding tools. Currently 11 agents: Codex, Claude Code, OpenCode, Cursor, Amp, Kilo Code, Roo Code, Goose, Gemini CLI, GitHub Copilot, Windsurf.
+Defines the built-in agent catalog covering all supported AI coding tools. Currently 12 agents: Codex, Claude Code, OpenCode, Cursor, Amp, Kilo Code, Kimi Code CLI, Roo Code, Goose, Gemini CLI, GitHub Copilot, Windsurf.
 
 ## Import Relationships
 
@@ -24,7 +24,7 @@ Downstream: none
 
 ## Core Logic
 
-Stores the stable definitions for all supported agents, including display name plus skills-dir/detect-dir rules. Cursor shares `.claude/skills` with Claude Code. Goose and GitHub Copilot have project-only skills directories.
+Stores the stable definitions for all supported agents, including display name plus skills-dir/detect-dir rules. Cursor shares `.claude/skills` with Claude Code. Kimi Code CLI resolves from the hidden home-directory pair `.kimi` and `.kimi/skills`. Goose and GitHub Copilot have project-only skills directories.
 
 ## Data Flow
 

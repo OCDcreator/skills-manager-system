@@ -17,7 +17,7 @@ Renders the fixed right-side icon rail for the Agent Sync view, keeping a global
 
 Builds a compact vertical anchor list from one action node plus top/bottom jump targets and the current ordered agent inventory. The visual treatment uses a transparent viewport rail, right-aligned circular nodes, SVG brand badges, a subtle guide line, reserved row height to prevent scaled-node overlap, fixed-distance left labels, and a magnetic neighborhood interaction where the hovered item grows and moves left most while adjacent items grow and pull left with tapering strength.
 
-Each anchor keeps a narrow right-aligned hit area (`w-14`) instead of stretching across the whole rail so hover/focus only activates once the pointer is actually near the icon. The transparent rail wrapper stays non-interactive, each list row opts out of pointer events, and only the real button/link hit targets opt back in; labels still expand leftward via absolutely positioned overflow without blocking the page behind them.
+Each anchor keeps a narrow right-aligned hit area (`w-14`) instead of stretching across the whole rail so hover/focus only activates once the pointer is actually near the icon. The transparent rail wrapper stays non-interactive, each list row opts out of pointer events, and only the real button/link hit targets opt back in; labels still expand leftward via absolutely positioned overflow without blocking the page behind them. Agent-specific bubble colors are keyed locally so new brand entries such as Kimi Code CLI can join the rail without changing the shared icon renderer.
 
 ## Data Flow
 

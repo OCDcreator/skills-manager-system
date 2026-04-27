@@ -44,6 +44,9 @@ const BRAND_ICONS: Record<string, IconDefinition> = {
   kilo_code: {
     src: new URL("../../assets/agents/kilo-code-logo.png", import.meta.url).href,
   },
+  kimi: {
+    src: new URL("../../assets/agents/kimi-logo.webp", import.meta.url).href,
+  },
   roo_code: {
     src: new URL("../../assets/agents/roo-code-logo.svg", import.meta.url).href,
   },
