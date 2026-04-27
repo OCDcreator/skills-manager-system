@@ -13,7 +13,7 @@ This module is `pub(crate)` to the agents domain and exposes selection context l
 
 ## Core Logic
 
-Loads repository skills, repo-scoped disabled skill IDs, and scene definitions; computes globally available skill count; resolves `direct ∪ scenes - exclusions`; and filters missing or globally disabled skill IDs before sync builds target entries.
+Loads repository skills, repo-scoped disabled skill IDs, and scene definitions; computes globally available skill count; resolves `direct ∪ scenes - exclusions`; and filters missing or globally disabled skill IDs before sync builds target entries. Scene membership now flows through the scene model's selection-mode helper so both legacy all-except-disabled scenes and explicit selected-skill scenes resolve correctly.
 
 ## Interactions
 

@@ -1,3 +1,4 @@
+import { isSceneSkillEnabled } from "./scene-skill-order";
 import type { SceneEntry } from "./scenes";
 import type { AgentConfigurationInput, AgentInventoryItem, SkillSummary } from "./tauri";
 
@@ -82,9 +83,8 @@ export function resolveAgentSelectionPreview(
   for (const sceneId of draft.selectedSceneIds) {
     const scene = scenes[sceneId];
     if (!scene) continue;
-    const sceneDisabled = new Set(scene.disabledSkillIds);
     for (const skill of skills) {
-      if (sceneDisabled.has(skill.id)) continue;
+      if (!isSceneSkillEnabled(scene, skill.id)) continue;
       const entry = contributions.get(skill.id) ?? { direct: false, sceneNames: new Set() };
       entry.sceneNames.add(scene.name || scene.id);
       contributions.set(skill.id, entry);

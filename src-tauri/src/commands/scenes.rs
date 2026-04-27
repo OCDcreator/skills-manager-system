@@ -79,10 +79,10 @@ pub fn set_active_scene(
 pub fn set_scene_skills(
     app: tauri::AppHandle,
     id: String,
-    disabled_skill_ids: Vec<String>,
+    skill_ids: Vec<String>,
 ) -> Result<SceneConfigSnapshot, String> {
     scene_store(&app)?
-        .set_scene_skills(&id, disabled_skill_ids)
+        .set_scene_skills(&id, skill_ids)
         .map_err(|error| error.to_string())
 }
 

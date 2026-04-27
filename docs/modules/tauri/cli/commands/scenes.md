@@ -23,9 +23,8 @@ Downstream: src-tauri/src/app_runtime/*, src-tauri/src/core/scenes/*
 
 ## Core Logic
 
-Config mutations and apply operations acquire the advisory config lock before touching shared state. The adapter delegates all scene business rules to `SceneConfigStore` and `apply_scene`.
+Config mutations and apply operations acquire the advisory config lock before touching shared state. The adapter delegates all scene business rules to `SceneConfigStore` and `apply_scene`, including the mode-aware interpretation of `set-skills` payloads for explicit-empty new scenes versus legacy scenes.
 
 ## Interactions
 
 Scene-not-found and duplicate-scene errors are mapped to stable CLI error bodies; apply requires an effective repo path and current agent system dirs.
-

@@ -20,4 +20,4 @@ Provides frontend-only helpers for editable agent drafts, dirty checking, and ef
 
 ## Core Logic
 
-Normalizes ID arrays, preserves trimmed path input, and resolves `direct ∪ scenes - exclusions` in the same shape the UI needs for unsaved previews without replacing Rust as the source of sync truth.
+Normalizes ID arrays, preserves trimmed path input, and resolves `direct ∪ scenes - exclusions` in the same shape the UI needs for unsaved previews without replacing Rust as the source of sync truth. Scene-derived contributions now honor the same selection-mode helper used by the Scenes UI, so legacy scenes and explicit-empty scenes preview the same way they sync.

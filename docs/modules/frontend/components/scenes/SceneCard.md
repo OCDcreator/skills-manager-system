@@ -20,7 +20,7 @@ Card component for one scene, including edit controls, skill enable/disable togg
 
 ## Rendering Logic
 
-Enabled skills are ordered through `getOrderedEnabledSceneSkills`, rendered as draggable rows with a drop target highlight, and disabled skills remain listed below without drag affordances.
+Enabled-skill counts and row membership are derived through the shared scene selection helper, then ordered through `getOrderedEnabledSceneSkills`. That keeps explicit-empty new scenes rendering as zero selected skills while legacy scenes still read as all-except-disabled. Disabled skills remain listed below without drag affordances.
 
 ## Interactions
 

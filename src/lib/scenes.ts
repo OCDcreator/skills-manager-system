@@ -1,10 +1,14 @@
 import { invoke } from "@tauri-apps/api/core";
 
+export type SceneSkillSelectionMode = "allExceptDisabled" | "onlySelected";
+
 export interface SceneEntry {
   id: string;
   name: string;
   description: string;
+  skillSelectionMode: SceneSkillSelectionMode;
   disabledSkillIds: string[];
+  selectedSkillIds: string[];
   enabledAgentKeys: string[];
   skillOrder: string[];
 }
@@ -39,8 +43,8 @@ export const deleteScene = (id: string) =>
 export const setActiveScene = (id: string | null) =>
   invoke<SceneConfigSnapshot>("set_active_scene", { id });
 
-export const setSceneSkills = (id: string, disabledSkillIds: string[]) =>
-  invoke<SceneConfigSnapshot>("set_scene_skills", { id, disabledSkillIds });
+export const setSceneSkills = (id: string, skillIds: string[]) =>
+  invoke<SceneConfigSnapshot>("set_scene_skills", { id, skillIds });
 
 export const setSceneAgents = (id: string, enabledAgentKeys: string[]) =>
   invoke<SceneConfigSnapshot>("set_scene_agents", { id, enabledAgentKeys });

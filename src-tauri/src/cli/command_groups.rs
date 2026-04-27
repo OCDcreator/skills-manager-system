@@ -104,7 +104,7 @@ pub enum ScenesCommand {
     SetSkills {
         id: String,
         #[arg(value_name = "SKILL_ID", num_args = 0..)]
-        disabled_skill_ids: Vec<String>,
+        skill_ids: Vec<String>,
     },
     SetAgents {
         id: String,

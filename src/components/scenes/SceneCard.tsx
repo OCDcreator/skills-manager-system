@@ -11,7 +11,11 @@ import {
   Square,
   Trash2,
 } from "lucide-react";
-import { getOrderedEnabledSceneSkills } from "../../lib/scene-skill-order";
+import {
+  getOrderedEnabledSceneSkills,
+  getSceneEnabledSkillCount,
+  isSceneSkillEnabled,
+} from "../../lib/scene-skill-order";
 import type { SceneEntry } from "../../lib/scenes";
 
 export interface SceneCardProps {
@@ -65,19 +69,15 @@ export function SceneCard({
 }: SceneCardProps) {
   const [draggedSkillId, setDraggedSkillId] = useState<string | null>(null);
   const [dropTargetSkillId, setDropTargetSkillId] = useState<string | null>(null);
-  const disabledSkillIdSet = useMemo(
-    () => new Set(scene.disabledSkillIds),
-    [scene.disabledSkillIds],
-  );
-  const allSkillsEnabled = scene.disabledSkillIds.length === 0;
-  const enabledSkillCount = skills.length - scene.disabledSkillIds.length;
+  const allSkillsEnabled = skills.length > 0 && skills.every((skill) => isSceneSkillEnabled(scene, skill.id));
+  const enabledSkillCount = getSceneEnabledSkillCount(scene, skills);
   const orderedEnabled = useMemo(
     () => getOrderedEnabledSceneSkills(scene, skills),
     [scene, skills],
   );
   const disabledSkills = useMemo(
-    () => skills.filter((skill) => disabledSkillIdSet.has(skill.id)),
-    [disabledSkillIdSet, skills],
+    () => skills.filter((skill) => !isSceneSkillEnabled(scene, skill.id)),
+    [scene, skills],
   );
 
   const resetDragState = () => {

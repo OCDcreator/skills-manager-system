@@ -57,7 +57,7 @@ fn scenes_mutations_update_config_snapshot() {
         &context,
         &ScenesCommand::SetSkills {
             id: "focus".to_string(),
-            disabled_skill_ids: vec!["custom:beta".to_string()],
+            skill_ids: vec!["custom:alpha".to_string()],
         },
     );
     run(
@@ -135,7 +135,7 @@ fn scenes_apply_syncs_agent_targets_and_sets_active_scene() {
         &context,
         &ScenesCommand::SetSkills {
             id: "focus".to_string(),
-            disabled_skill_ids: vec!["custom:beta".to_string()],
+            skill_ids: vec!["custom:alpha".to_string()],
         },
     );
     run(

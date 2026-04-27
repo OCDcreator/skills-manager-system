@@ -24,9 +24,8 @@ Downstream: clap, std::path
 
 ## Core Logic
 
-This module owns argument shape only. It does not touch runtime state or core stores; adapters in `commands/` interpret parsed values.
+This module owns argument shape only. It does not touch runtime state or core stores; adapters in `commands/` interpret parsed values. The `scenes set-skills` leaf intentionally uses generic `skill_ids` so the adapter can honor either explicit selected-skill scenes or legacy all-except-disabled scenes.
 
 ## Interactions
 
 Any new enum variant must be routed in `cli/mod.rs`, implemented under `cli/commands/`, and documented with matching module docs.
-

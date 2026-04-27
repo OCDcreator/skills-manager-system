@@ -77,15 +77,8 @@ fn add_scene_skill_ids(
     context: &SkillSelectionContext,
     selected_skill_ids: &mut BTreeSet<String>,
 ) {
-    let scene_disabled_skill_ids = scene
-        .disabled_skill_ids
-        .iter()
-        .map(String::as_str)
-        .collect::<BTreeSet<_>>();
-
     for skill in &context.skills {
-        if !context.globally_disabled_skill_ids.contains(&skill.id)
-            && !scene_disabled_skill_ids.contains(skill.id.as_str())
+        if !context.globally_disabled_skill_ids.contains(&skill.id) && scene.includes_skill(&skill.id)
         {
             selected_skill_ids.insert(skill.id.clone());
         }

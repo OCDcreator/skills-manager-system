@@ -122,8 +122,15 @@ fn scene_and_direct_skill_duplicates_are_written_once() {
 
     create_skill(repo_dir.path(), "custom/alpha");
     create_skill(repo_dir.path(), "external/vendor/beta");
-    SceneConfigStore::new(config_dir.path().to_path_buf())
+    let scene_store = SceneConfigStore::new(config_dir.path().to_path_buf());
+    scene_store
         .create_scene("work", "Work", "")
+        .unwrap();
+    scene_store
+        .set_scene_skills(
+            "work",
+            vec!["custom:alpha".to_string(), "external:vendor/beta".to_string()],
+        )
         .unwrap();
     configure_agent(
         config_dir.path(),
@@ -162,8 +169,15 @@ fn excluded_scene_skill_is_removed_on_reapply() {
 
     create_skill(repo_dir.path(), "custom/alpha");
     create_skill(repo_dir.path(), "external/vendor/beta");
-    SceneConfigStore::new(config_dir.path().to_path_buf())
+    let scene_store = SceneConfigStore::new(config_dir.path().to_path_buf());
+    scene_store
         .create_scene("work", "Work", "")
+        .unwrap();
+    scene_store
+        .set_scene_skills(
+            "work",
+            vec!["custom:alpha".to_string(), "external:vendor/beta".to_string()],
+        )
         .unwrap();
     configure_agent(
         config_dir.path(),

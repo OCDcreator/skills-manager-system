@@ -24,7 +24,7 @@ Downstream: clap, src-tauri/src/cli/command_groups.rs
 
 ## Core Logic
 
-The parser keeps JSON as the default mode, allows `--pretty` as the human-readable escape hatch, and exposes label helpers so the runtime/output layer can emit stable `command` strings. `projects apply` intentionally has no path argument.
+The parser keeps JSON as the default mode, allows `--pretty` as the human-readable escape hatch, and exposes label helpers so the runtime/output layer can emit stable `command` strings. `projects apply` intentionally has no path argument, and `scenes set-skills` stays generic so the runtime can map the provided skill IDs through the scene's stored selection mode.
 
 ## Interactions
 

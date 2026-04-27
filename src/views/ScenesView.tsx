@@ -107,10 +107,19 @@ export function ScenesView() {
   const handleToggleSkill = async (sceneId: string, skillId: string) => {
     const scene = config?.scenes[sceneId];
     if (!scene) return;
-    const disabled = new Set(scene.disabledSkillIds);
-    if (disabled.has(skillId)) disabled.delete(skillId);
-    else disabled.add(skillId);
     try {
+      if (scene.skillSelectionMode === "onlySelected") {
+        const selected = new Set(scene.selectedSkillIds);
+        if (selected.has(skillId)) selected.delete(skillId);
+        else selected.add(skillId);
+        const snapshot = await scenesApi.setSceneSkills(sceneId, [...selected].sort());
+        setConfig(snapshot);
+        return;
+      }
+
+      const disabled = new Set(scene.disabledSkillIds);
+      if (disabled.has(skillId)) disabled.delete(skillId);
+      else disabled.add(skillId);
       const snapshot = await scenesApi.setSceneSkills(sceneId, [...disabled].sort());
       setConfig(snapshot);
     } catch (error) {

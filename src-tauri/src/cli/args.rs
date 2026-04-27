@@ -152,7 +152,7 @@ mod tests {
             RootCommand::Scenes {
                 command: ScenesCommand::SetSkills {
                     id: "focus".to_string(),
-                    disabled_skill_ids: vec!["custom:one".to_string(), "external:two".to_string()],
+                    skill_ids: vec!["custom:one".to_string(), "external:two".to_string()],
                 },
             }
         );

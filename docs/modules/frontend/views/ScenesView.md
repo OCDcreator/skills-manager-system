@@ -15,7 +15,7 @@ Page-level scene management view for creating, editing, configuring, applying, a
 
 ## Core Logic
 
-Owns scene CRUD form state, loads `SceneConfigSnapshot` through a deferred initial refresh, updates disabled skills and enabled agents through `src/lib/scenes.ts`, computes drag-drop reorder payloads via `src/lib/scene-skill-order.ts`, and refreshes both scene config and global app context after a scene apply.
+Owns scene CRUD form state, loads `SceneConfigSnapshot` through a deferred initial refresh, updates scene skills and enabled agents through `src/lib/scenes.ts`, computes drag-drop reorder payloads via `src/lib/scene-skill-order.ts`, and refreshes both scene config and global app context after a scene apply.
 
 ## Data Flow
 
@@ -25,4 +25,4 @@ Owns scene CRUD form state, loads `SceneConfigSnapshot` through a deferred initi
 
 ## Interactions
 
-Applying a scene now refreshes both skill state and agent inventory so the rest of the app reflects the new active scene immediately.
+Skill toggles now branch on `scene.skillSelectionMode`: new scenes persist explicit selected IDs, while legacy scenes keep their all-except-disabled behavior. Applying a scene still refreshes both skill state and agent inventory so the rest of the app reflects the new active scene immediately.

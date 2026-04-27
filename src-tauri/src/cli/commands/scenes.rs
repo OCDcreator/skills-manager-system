@@ -41,9 +41,9 @@ pub fn run(context: &AppRuntimeContext, command: &ScenesCommand) -> CliRunResult
         }
         ScenesCommand::SetSkills {
             id,
-            disabled_skill_ids,
+            skill_ids,
         } => mutate_config(context, "scenes set-skills", Some(id), |store| {
-            store.set_scene_skills(id, disabled_skill_ids.clone())
+            store.set_scene_skills(id, skill_ids.clone())
         }),
         ScenesCommand::SetAgents {
             id,

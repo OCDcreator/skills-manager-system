@@ -16,7 +16,7 @@ Thin Tauri command layer for scene CRUD and application.
 | `update_scene` | Update name/description |
 | `delete_scene` | Delete a scene |
 | `set_active_scene` | Set active scene ID |
-| `set_scene_skills` | Set disabled skill IDs for a scene |
+| `set_scene_skills` | Update scene skill IDs using the scene's stored selection mode |
 | `set_scene_agents` | Set enabled agent keys for a scene |
 | `set_scene_skill_order` | Set skill priority order for a scene |
 | `apply_scene` | Apply scene (update skills + agents + set active) |
@@ -25,4 +25,4 @@ Thin Tauri command layer for scene CRUD and application.
 
 - `core::scenes::config` — all CRUD operations
 - `core::scenes::manager` — apply logic
-- `src/lib/scenes.ts` — matching TypeScript wrappers
+- `src/lib/scenes.ts` — matching TypeScript wrappers that send generic scene skill IDs rather than assuming a disabled-only payload

@@ -1,8 +1,16 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::PathBuf;
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum SceneSkillSelectionMode {
+    #[default]
+    AllExceptDisabled,
+    OnlySelected,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -10,10 +18,37 @@ pub struct SceneEntry {
     pub id: String,
     pub name: String,
     pub description: String,
+    #[serde(default)]
+    pub skill_selection_mode: SceneSkillSelectionMode,
     pub disabled_skill_ids: Vec<String>,
+    #[serde(default)]
+    pub selected_skill_ids: Vec<String>,
     pub enabled_agent_keys: Vec<String>,
     #[serde(default)]
     pub skill_order: Vec<String>,
+}
+
+impl SceneEntry {
+    pub fn includes_skill(&self, skill_id: &str) -> bool {
+        match self.skill_selection_mode {
+            SceneSkillSelectionMode::AllExceptDisabled => {
+                !self.disabled_skill_ids.iter().any(|id| id == skill_id)
+            }
+            SceneSkillSelectionMode::OnlySelected => {
+                self.selected_skill_ids.iter().any(|id| id == skill_id)
+            }
+        }
+    }
+
+    pub fn disabled_skill_count<'a, I>(&self, skill_ids: I) -> usize
+    where
+        I: IntoIterator<Item = &'a str>,
+    {
+        skill_ids
+            .into_iter()
+            .filter(|skill_id| !self.includes_skill(skill_id))
+            .count()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -74,7 +109,9 @@ impl SceneConfigStore {
                     id: owned_id,
                     name: name.trim().to_string(),
                     description: description.trim().to_string(),
+                    skill_selection_mode: SceneSkillSelectionMode::OnlySelected,
                     disabled_skill_ids: Vec::new(),
+                    selected_skill_ids: Vec::new(),
                     enabled_agent_keys: Vec::new(),
                     skill_order: Vec::new(),
                 },
@@ -131,14 +168,29 @@ impl SceneConfigStore {
     pub fn set_scene_skills(
         &self,
         id: &str,
-        disabled_skill_ids: Vec<String>,
+        skill_ids: Vec<String>,
     ) -> Result<SceneConfigSnapshot> {
         self.update(|snapshot| {
             let entry = snapshot
                 .scenes
                 .get_mut(id)
                 .ok_or_else(|| anyhow::anyhow!("Scene '{}' not found", id))?;
-            entry.disabled_skill_ids = disabled_skill_ids;
+            match entry.skill_selection_mode {
+                SceneSkillSelectionMode::AllExceptDisabled => {
+                    entry.disabled_skill_ids = normalize_skill_ids(skill_ids);
+                    entry.selected_skill_ids.clear();
+                    entry
+                        .skill_order
+                        .retain(|skill_id| !entry.disabled_skill_ids.contains(skill_id));
+                }
+                SceneSkillSelectionMode::OnlySelected => {
+                    entry.selected_skill_ids = normalize_skill_ids(skill_ids);
+                    entry.disabled_skill_ids.clear();
+                    entry
+                        .skill_order
+                        .retain(|skill_id| entry.selected_skill_ids.contains(skill_id));
+                }
+            }
             Ok(())
         })
     }
@@ -196,6 +248,15 @@ impl SceneConfigStore {
     }
 }
 
+fn normalize_skill_ids(ids: Vec<String>) -> Vec<String> {
+    ids.into_iter()
+        .map(|id| id.trim().to_string())
+        .filter(|id| !id.is_empty())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -218,6 +279,11 @@ mod tests {
 
         assert!(snapshot.scenes.contains_key("work"));
         assert_eq!(snapshot.scenes["work"].name, "Work");
+        assert_eq!(snapshot.scenes["work"].selected_skill_ids, Vec::<String>::new());
+        assert_eq!(
+            snapshot.scenes["work"].skill_selection_mode,
+            SceneSkillSelectionMode::OnlySelected
+        );
     }
 
     #[test]
@@ -247,8 +313,39 @@ mod tests {
             .set_scene_skills("work", vec!["external:foo".to_string()])
             .unwrap();
         assert_eq!(
-            snapshot.scenes["work"].disabled_skill_ids,
+            snapshot.scenes["work"].selected_skill_ids,
             vec!["external:foo"]
+        );
+        assert!(snapshot.scenes["work"].disabled_skill_ids.is_empty());
+    }
+
+    #[test]
+    fn legacy_scene_without_selection_mode_stays_all_except_disabled() {
+        let dir = tempdir().unwrap();
+        let store = SceneConfigStore::new(dir.path().to_path_buf());
+        fs::create_dir_all(dir.path()).unwrap();
+        fs::write(
+            dir.path().join("scene-config.json"),
+            r#"{
+  "scenes": {
+    "legacy": {
+      "id": "legacy",
+      "name": "Legacy",
+      "description": "",
+      "disabledSkillIds": ["custom:beta"],
+      "enabledAgentKeys": [],
+      "skillOrder": []
+    }
+  },
+  "activeSceneId": null
+}"#,
+        )
+        .unwrap();
+
+        let snapshot = store.load().unwrap();
+        assert_eq!(
+            snapshot.scenes["legacy"].skill_selection_mode,
+            SceneSkillSelectionMode::AllExceptDisabled
         );
     }
 }
