@@ -129,6 +129,15 @@ input {
     linear-gradient(180deg, rgba(186, 230, 253, 0.78), rgba(56, 189, 248, 0.4));
 }
 
+.agent-floating-nav-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.agent-floating-nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .skill-frontmatter-pre {
   box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08);
 }

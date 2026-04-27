@@ -55,40 +55,33 @@ test('Agent order modal caps its height and keeps the reorder list scrollable', 
   assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-5 overflow-y-auto/);
 });
 
-test('Agent floating nav measures app chrome bounds instead of using raw viewport centering', () => {
-  const shellSource = fs.readFileSync(
-    path.resolve('src/components/AppShell.tsx'),
-    'utf8',
-  );
-  const launcherSource = fs.readFileSync(
-    path.resolve('src/components/assistant/ProjectAssistantLauncher.tsx'),
-    'utf8',
-  );
+test('Agent floating nav stays centered in the viewport and caps its own scroll height', () => {
   const navSource = fs.readFileSync(
     path.resolve('src/components/agents/AgentFloatingNav.tsx'),
     'utf8',
   );
 
-  assert.match(shellSource, /data-app-shell-header/);
-  assert.match(shellSource, /data-app-shell-main/);
-  assert.match(launcherSource, /data-project-assistant-launcher/);
-  assert.match(navSource, /data-app-shell-header/);
-  assert.match(navSource, /data-project-assistant-launcher/);
-  assert.match(navSource, /style=\{\{\s*top:\s*topOffsetPx,\s*bottom:\s*bottomOffsetPx\s*\}\}/);
-  assert.match(navSource, /className="relative h-full min-h-0 overflow-y-auto py-1 pr-1"/);
-  assert.doesNotMatch(navSource, /fixed right-3 top-1\/2/);
-  assert.doesNotMatch(navSource, /fixed right-3 top-1\/2 z-50 .* -translate-y-1\/2/);
-  assert.doesNotMatch(navSource, /max-h-\[calc\(100vh-5rem\)\]/);
+  assert.match(navSource, /className="pointer-events-none fixed right-3 top-1\/2 z-50/);
+  assert.match(navSource, /-translate-y-1\/2 bg-transparent/);
+  assert.match(
+    navSource,
+    /className="agent-floating-nav-scroll relative max-h-\[calc\(100vh-2rem\)\] overflow-y-auto py-1 pr-1"/,
+  );
 });
 
-test('Agent floating nav gives the scroll container a full-height chain', () => {
+test('Agent floating nav hides its own scrollbar while remaining scrollable', () => {
   const navSource = fs.readFileSync(
     path.resolve('src/components/agents/AgentFloatingNav.tsx'),
     'utf8',
   );
+  const styleSource = fs.readFileSync(
+    path.resolve('src/styles.css'),
+    'utf8',
+  );
 
-  assert.match(navSource, /className="pointer-events-none fixed right-3 z-50/);
-  assert.match(navSource, /overflow-hidden bg-transparent/);
-  assert.match(navSource, /<div className="relative h-full">/);
-  assert.match(navSource, /className="relative h-full min-h-0 overflow-y-auto py-1 pr-1"/);
+  assert.match(navSource, /agent-floating-nav-scroll/);
+  assert.match(styleSource, /\.agent-floating-nav-scroll\s*\{/);
+  assert.match(styleSource, /scrollbar-width:\s*none/);
+  assert.match(styleSource, /\.agent-floating-nav-scroll::\-webkit-scrollbar\s*\{/);
+  assert.match(styleSource, /display:\s*none/);
 });
