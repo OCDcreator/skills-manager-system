@@ -48,6 +48,8 @@ pub fn run() {
             commands::settings::set_repo_path,
             commands::settings::get_agent_sync_mode,
             commands::settings::set_agent_sync_mode,
+            commands::settings::get_agent_order,
+            commands::settings::set_agent_order,
             commands::skills::scan_skills,
             commands::skills::get_skill_document,
             commands::skills::get_skill_state,

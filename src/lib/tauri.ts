@@ -121,6 +121,12 @@ export const getAgentSyncMode = () =>
 export const setAgentSyncMode = (syncMode: AgentSyncMode) =>
   invoke<AgentSyncMode>("set_agent_sync_mode", { syncMode });
 
+export const getAgentOrder = () =>
+  invoke<AgentKey[]>("get_agent_order");
+
+export const setAgentOrder = (agentOrder: AgentKey[]) =>
+  invoke<AgentKey[]>("set_agent_order", { agentOrder });
+
 export const scanSkills = () => invoke<ScanSkillsResponse>("scan_skills");
 
 export const getSkillDocument = (relativePath: string) =>

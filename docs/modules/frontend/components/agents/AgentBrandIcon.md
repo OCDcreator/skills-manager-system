@@ -15,7 +15,7 @@ Renders compact brand marks for Agent Sync surfaces, using public brand-style ve
 
 ## Core Logic
 
-Maintains a small keyed icon registry and falls back to a neutral glyph when no agent-specific mark exists. The component renders either inline SVG paths or local asset URLs so the UI does not depend on runtime network image fetches.
+Maintains a small keyed icon registry and falls back to a neutral glyph when no agent-specific mark exists. The component renders either inline SVG paths or local asset URLs so the UI does not depend on runtime network image fetches. Brand entries that need multi-color fidelity, including Gemini CLI, should prefer repo-local asset files over simplified inline monochrome paths.
 
 ## Data Flow
 

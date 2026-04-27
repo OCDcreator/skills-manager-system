@@ -1,6 +1,7 @@
 import type {
   AgentConfigurationInput,
   AgentInventoryItem,
+  AgentKey,
   AgentSyncMode,
   ApplyAgentSyncResponse,
   ScanSkillsResponse,
@@ -23,7 +24,9 @@ export interface AppContextValue {
   selectedSkill: SkillSummary | null;
   selectedDocument: SkillDocument | null;
   disabledSkillIds: string[];
+  agentOrder: AgentKey[];
   agentInventory: AgentInventoryItem[];
+  sortedAgentInventory: AgentInventoryItem[];
   lastAgentApplyResult: ApplyAgentSyncResponse | null;
   isLoading: boolean;
   isLoadingAgents: boolean;
@@ -43,6 +46,7 @@ export interface AppContextValue {
   setAgentPathOverride: (key: string, path: string) => Promise<void>;
   clearAgentPathOverride: (key: string) => Promise<void>;
   saveAgentConfiguration: (config: AgentConfigurationInput) => Promise<void>;
+  saveAgentOrder: (agentOrder: AgentKey[]) => Promise<void>;
   applyAgentSync: (syncMode?: AgentSyncMode, agentKey?: string) => Promise<void>;
   registerNavigationGuard: (guard: NavigationGuard) => () => void;
   confirmNavigationSave: () => Promise<void>;

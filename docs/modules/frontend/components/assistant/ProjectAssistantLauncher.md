@@ -22,7 +22,7 @@ Downstream: src/lib/assistant.ts, src/components/assistant/ProjectAssistantPanel
 
 ## Core Logic
 
-On first open, prefetches `getAssistantContextStatus()` and passes status and errors into the panel. The launcher button toggles between a robot icon and a close icon.
+On first open, prefetches `getAssistantContextStatus()` and passes status and errors into the panel. The launcher button toggles between a robot icon and a close icon. When the panel is closed, the hint chip stays collapsed by default and only fades/slides in while the floating launcher group is hovered or keyboard-focused.
 
 ## Data Flow
 

@@ -55,3 +55,24 @@ pub fn set_agent_sync_mode(
         .map(|settings| settings.agent_sync_mode)
         .map_err(|error| error.to_string())
 }
+
+#[tauri::command]
+pub fn get_agent_order(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+    let config_dir = app_config_dir(&app)?;
+    SettingsStore::new(config_dir)
+        .load()
+        .map(|settings| settings.agent_order)
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn set_agent_order(
+    app: tauri::AppHandle,
+    agent_order: Vec<String>,
+) -> Result<Vec<String>, String> {
+    let config_dir = app_config_dir(&app)?;
+    SettingsStore::new(config_dir)
+        .save_agent_order(&agent_order)
+        .map(|settings| settings.agent_order)
+        .map_err(|error| error.to_string())
+}

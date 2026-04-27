@@ -9,7 +9,13 @@ import type { SceneConfigSnapshot, SceneEntry } from "../lib/scenes";
 
 export function ScenesView() {
   const { t } = useTranslation();
-  const { repoPath, scanResult, agentInventory, refreshAgents, refreshSkills } = useAppContext();
+  const {
+    repoPath,
+    scanResult,
+    refreshAgents,
+    refreshSkills,
+    sortedAgentInventory,
+  } = useAppContext();
   const [config, setConfig] = useState<SceneConfigSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -176,7 +182,7 @@ export function ScenesView() {
 
   const sceneList = config ? Object.values(config.scenes) : [];
   const skills = scanResult.skills;
-  const agents = agentInventory;
+  const agents = sortedAgentInventory;
 
   return (
     <div className="space-y-6">

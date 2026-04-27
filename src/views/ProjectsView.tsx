@@ -8,7 +8,7 @@ import type { ProjectConfigSnapshot } from "../lib/projects";
 
 export function ProjectsView() {
   const { t } = useTranslation();
-  const { repoPath, scanResult, agentInventory } = useAppContext();
+  const { repoPath, scanResult, sortedAgentInventory } = useAppContext();
   const [config, setConfig] = useState<ProjectConfigSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [newPath, setNewPath] = useState("");
@@ -111,7 +111,7 @@ export function ProjectsView() {
 
   const projectList = config ? Object.values(config.projects) : [];
   const skills = scanResult.skills;
-  const agents = agentInventory;
+  const agents = sortedAgentInventory;
 
   return (
     <div className="space-y-6">

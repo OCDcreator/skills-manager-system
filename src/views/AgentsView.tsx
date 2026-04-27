@@ -3,7 +3,9 @@ import { useTranslation } from "react-i18next";
 import { AgentApplyResults } from "../components/agents/AgentApplyResults";
 import { AgentFloatingNav } from "../components/agents/AgentFloatingNav";
 import { AgentGlobalSkillList } from "../components/agents/AgentGlobalSkillList";
+import { AgentOrderModal } from "../components/agents/AgentOrderModal";
 import { AgentSyncSummary } from "../components/agents/AgentSyncSummary";
+import { AgentTargetsSection } from "../components/agents/AgentTargetsSection";
 import { AgentTargetCard } from "../components/agents/AgentTargetCard";
 import { useAppContext } from "../context/AppContext";
 import {
@@ -31,6 +33,7 @@ export function AgentsView() {
   const { t } = useTranslation();
   const {
     agentInventory,
+    agentOrder,
     applyAgentSync,
     disabledSkillIds,
     isApplyingAgentSync,
@@ -41,7 +44,9 @@ export function AgentsView() {
     refreshAgents,
     repoPath,
     saveAgentConfiguration,
+    saveAgentOrder,
     scanResult,
+    sortedAgentInventory,
     updatingAgentKey,
   } = useAppContext();
   const [syncMode, setSyncMode] = useState<AgentSyncMode>("copy");
@@ -51,6 +56,8 @@ export function AgentsView() {
   const [drafts, setDrafts] = useState<Record<string, AgentConfigDraft>>({});
   const [savingAgentKey, setSavingAgentKey] = useState<string | null>(null);
   const [isSavingAll, setIsSavingAll] = useState(false);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isSavingAgentOrder, setIsSavingAgentOrder] = useState(false);
 
   const disabledSkillIdSet = useMemo(() => new Set(disabledSkillIds), [disabledSkillIds]);
   const availableSkillCount = useMemo(
@@ -192,6 +199,16 @@ export function AgentsView() {
     await applyAgentSync(syncMode);
   }, [applyAgentSync, clearActionNotice, handleSaveAll, hasDirtyDrafts, syncMode]);
 
+  const handleSaveAgentOrder = useCallback(async (nextOrder: api.AgentKey[]) => {
+    setIsSavingAgentOrder(true);
+    try {
+      await saveAgentOrder(nextOrder);
+      setIsOrderModalOpen(false);
+    } finally {
+      setIsSavingAgentOrder(false);
+    }
+  }, [saveAgentOrder]);
+
   useEffect(
     () =>
       registerNavigationGuard({
@@ -205,7 +222,10 @@ export function AgentsView() {
 
   return (
     <div className="space-y-6 pr-12">
-      <AgentFloatingNav agents={agentInventory} />
+      <AgentFloatingNav
+        agents={sortedAgentInventory}
+        onOpenOrderModal={() => setIsOrderModalOpen(true)}
+      />
 
       <div id="agent-sync-overview" className="scroll-mt-8">
         <AgentSyncSummary
@@ -268,70 +288,42 @@ export function AgentsView() {
             {t("agents.targets.loading")}
           </div>
         ) : (
-          <div className="grid gap-4">
-            {agentInventory.map((agent) => {
-              const draft = drafts[agent.key] ?? draftFromAgent(agent);
-              const preview = resolveAgentSelectionPreview(
-                draft,
-                scanResult.skills,
-                disabledSkillIds,
-                sceneConfig?.scenes ?? {},
-              );
-              return (
-                <div id={`agent-sync-target-${agent.key}`} className="scroll-mt-8" key={agent.key}>
-                  <div className="grid gap-4 min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
-                    <AgentTargetCard
-                      agent={agent}
-                      disabledSkillIds={disabledSkillIds}
-                      draft={draft}
-                      isDirty={isAgentDraftDirty(agent, draft)}
-                      isUpdating={
-                        updatingAgentKey === agent.key ||
-                        savingAgentKey === agent.key ||
-                        isSavingAll
-                      }
-                      onDraftChange={(nextDraft) =>
-                        setDrafts((current) => ({ ...current, [agent.key]: nextDraft }))
-                      }
-                      onSave={() => handleSaveAgent(agent.key)}
-                      preview={preview}
-                      scenes={sceneList}
-                      skills={scanResult.skills}
-                    />
-                    <div className="min-h-0 min-[1380px]:relative min-[1380px]:overflow-hidden">
-                      <div className="min-[1380px]:absolute min-[1380px]:inset-0">
-                        <AgentGlobalSkillList
-                          actionKey={targetActionId}
-                          agent={agent}
-                          canImport={Boolean(repoPath)}
-                          onDelete={(entry) =>
-                            void deleteTargetSkill(agent.key, agent.displayName, entry)
-                          }
-                          onImport={(entry, deleteSourceAfterImport) =>
-                            void importTargetSkill(
-                              agent.key,
-                              agent.displayName,
-                              entry,
-                              deleteSourceAfterImport,
-                            )
-                          }
-                          onTakeOver={(entry) =>
-                            void takeOverTargetSkill(agent.key, agent.displayName, entry)
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <AgentTargetsSection
+            actionKey={targetActionId}
+            agents={sortedAgentInventory}
+            canImport={Boolean(repoPath)}
+            deleteTargetSkill={deleteTargetSkill}
+            disabledSkillIds={disabledSkillIds}
+            drafts={drafts}
+            importTargetSkill={importTargetSkill}
+            isSavingAll={isSavingAll}
+            onDraftChange={(agentKey, nextDraft) =>
+              setDrafts((current) => ({ ...current, [agentKey]: nextDraft }))
+            }
+            onSaveAgent={handleSaveAgent}
+            savingAgentKey={savingAgentKey}
+            sceneConfig={sceneConfig}
+            scenes={sceneList}
+            skills={scanResult.skills}
+            takeOverTargetSkill={takeOverTargetSkill}
+            updatingAgentKey={updatingAgentKey}
+          />
         )}
       </section>
 
       <div id="agent-sync-results" className="scroll-mt-8">
         <AgentApplyResults result={lastAgentApplyResult} />
       </div>
+
+      {isOrderModalOpen ? (
+        <AgentOrderModal
+          agents={agentInventory}
+          initialOrder={agentOrder}
+          isSaving={isSavingAgentOrder}
+          onClose={() => setIsOrderModalOpen(false)}
+          onSave={handleSaveAgentOrder}
+        />
+      ) : null}
     </div>
   );
 }

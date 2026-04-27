@@ -20,4 +20,4 @@ Downstream: src-tauri/src/app_runtime/*, src-tauri/src/cli/*, src-tauri/src/core
 
 ## Interactions
 
-Must stay aligned with every `#[tauri::command]` wrapper under `src-tauri/src/commands/`, including the assistant context and ask commands, the dedicated agent-target management commands, full agent-configuration save/apply flows, the feature declarations in `src-tauri/Cargo.toml`, and the CLI modules under `src-tauri/src/cli/`.
+Must stay aligned with every `#[tauri::command]` wrapper under `src-tauri/src/commands/`, including the assistant context and ask commands, the dedicated agent-target management commands, the settings commands for repo path, sync mode, and global agent ordering, the full agent-configuration save/apply flows, the feature declarations in `src-tauri/Cargo.toml`, and the CLI modules under `src-tauri/src/cli/`.

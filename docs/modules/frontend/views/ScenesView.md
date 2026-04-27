@@ -19,7 +19,7 @@ Owns scene CRUD form state, loads `SceneConfigSnapshot` through a deferred initi
 
 ## Data Flow
 
-- `useAppContext()` provides repo path, scanned skills, agent inventory, and refresh callbacks.
+- `useAppContext()` provides repo path, scanned skills, sorted agent inventory, and refresh callbacks.
 - `SceneCard` renders each scene and emits edit/configure/reorder actions.
 - `src/lib/scenes.ts` carries every Tauri command invocation.
 

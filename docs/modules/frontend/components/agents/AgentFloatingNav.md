@@ -5,21 +5,23 @@
 
 ## Overview
 
-Renders the fixed right-side icon rail for the Agent Sync view, keeping top/bottom jumps plus per-agent anchors visible while the page scrolls.
+Renders the fixed right-side icon rail for the Agent Sync view, keeping a global ordering action, top/bottom jumps, and per-agent anchors visible while the page scrolls.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `AgentFloatingNav` | Fixed viewport icon-rail navigation for top/bottom jumps and individual agent cards. |
+| `AgentFloatingNav` | Fixed viewport icon-rail navigation for the ordering modal, top/bottom jumps, and individual agent cards. |
 
 ## Core Logic
 
-Builds a compact vertical anchor list from top/bottom jump targets plus the current agent inventory. The visual treatment uses a transparent viewport rail, right-aligned circular nodes, SVG brand badges, a subtle guide line, reserved row height to prevent scaled-node overlap, fixed-distance left labels, and a magnetic neighborhood interaction where the hovered item grows and moves left most while adjacent items grow and pull left with tapering strength.
+Builds a compact vertical anchor list from one action node plus top/bottom jump targets and the current ordered agent inventory. The visual treatment uses a transparent viewport rail, right-aligned circular nodes, SVG brand badges, a subtle guide line, reserved row height to prevent scaled-node overlap, fixed-distance left labels, and a magnetic neighborhood interaction where the hovered item grows and moves left most while adjacent items grow and pull left with tapering strength.
+
+Each anchor keeps a narrow right-aligned hit area (`w-14`) instead of stretching across the whole rail so hover/focus only activates once the pointer is actually near the icon. The transparent rail wrapper stays non-interactive, each list row opts out of pointer events, and only the real button/link hit targets opt back in; labels still expand leftward via absolutely positioned overflow without blocking the page behind them.
 
 ## Data Flow
 
-Receives agent keys and display names from `AgentsView`; all section IDs are owned by the same view so anchors remain local to the Agent Sync page.
+Receives ordered agent keys and display names plus an `onOpenOrderModal` callback from `AgentsView`; all section IDs are owned by the same view so anchors remain local to the Agent Sync page while the first rail node opens the ordering modal instead of scrolling.
 
 ## Interactions
 

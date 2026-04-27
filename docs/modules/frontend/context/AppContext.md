@@ -5,7 +5,7 @@
 
 ## Overview
 
-Owns the frontend global state for active view, configured repository path, skill scan results, selected skill document, repo-scoped disabled skill IDs, agent inventory, manual apply results, loading flags, shared error messages, and guarded-navigation actions.
+Owns the frontend global state for active view, configured repository path, skill scan results, selected skill document, repo-scoped disabled skill IDs, persisted global agent order, sorted agent inventory, manual apply results, loading flags, shared error messages, and guarded-navigation actions.
 
 ## Public Surface
 
@@ -16,7 +16,7 @@ Owns the frontend global state for active view, configured repository path, skil
 
 ## Core Logic
 
-The provider loads repo path on mount, defers agent/skill refresh calls through microtasks, persists skill toggles and saved agent draft payloads, exposes scoped or global `applyAgentSync(syncMode?, agentKey?)`, and delegates unsaved-navigation state to `navigation-guard.ts`.
+The provider loads repo path on mount, defers agent, agent-order, and skill refresh calls through microtasks, persists skill toggles, saved agent draft payloads, and the global `agentOrder`, derives `sortedAgentInventory` through `src/lib/agent-order.ts`, exposes scoped or global `applyAgentSync(syncMode?, agentKey?)`, and delegates unsaved-navigation state to `navigation-guard.ts`.
 
 ## Interactions
 

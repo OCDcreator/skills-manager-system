@@ -16,4 +16,4 @@ Defines the frontend context contract separately from the provider implementatio
 
 ## Core Logic
 
-Bundles app-wide view state, repo path, skill scan state, agent inventory, sync actions, and navigation-guard actions into one typed interface used by the provider and all consumers.
+Bundles app-wide view state, repo path, skill scan state, persisted agent ordering, sorted agent inventory, sync actions, and navigation-guard actions into one typed interface used by the provider and all consumers.

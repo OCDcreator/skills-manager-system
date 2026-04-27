@@ -1,25 +1,12 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { PropsWithChildren } from "react";
 import * as api from "../lib/tauri";
-import type {
-  AgentInventoryItem,
-  ApplyAgentSyncResponse,
-  ScanSkillsResponse,
-  SkillDocument,
-  SkillSummary,
-} from "../lib/tauri";
+import type { AgentInventoryItem, ApplyAgentSyncResponse, ScanSkillsResponse, SkillDocument, SkillSummary } from "../lib/tauri";
+import { useAgentOrderState } from "./agent-order-state";
 import type { AppContextValue, AppView } from "./app-context-types";
 import { useNavigationGuardState } from "./navigation-guard";
 
 export type { AppView } from "./app-context-types";
-
 const AppContext = createContext<AppContextValue | null>(null);
 function errorMessageFrom(error: unknown) {
   return error instanceof Error ? error.message : String(error);
@@ -28,16 +15,12 @@ function errorMessageFrom(error: unknown) {
 export function AppProvider({ children }: PropsWithChildren) {
   const [activeView, setActiveViewState] = useState<AppView>("skills");
   const [repoPath, setRepoPath] = useState<string | null>(null);
-  const [scanResult, setScanResult] = useState<ScanSkillsResponse>({
-    skills: [],
-    warnings: [],
-  });
+  const [scanResult, setScanResult] = useState<ScanSkillsResponse>({ skills: [], warnings: [] });
   const [selectedSkill, setSelectedSkill] = useState<SkillSummary | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<SkillDocument | null>(null);
   const [disabledSkillIds, setDisabledSkillIds] = useState<string[]>([]);
   const [agentInventory, setAgentInventory] = useState<AgentInventoryItem[]>([]);
-  const [lastAgentApplyResult, setLastAgentApplyResult] =
-    useState<ApplyAgentSyncResponse | null>(null);
+  const [lastAgentApplyResult, setLastAgentApplyResult] = useState<ApplyAgentSyncResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAgents, setIsLoadingAgents] = useState(true);
   const [isSavingPath, setIsSavingPath] = useState(false);
@@ -46,6 +29,11 @@ export function AppProvider({ children }: PropsWithChildren) {
   const [updatingAgentKey, setUpdatingAgentKey] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigation = useNavigationGuardState(activeView, setActiveViewState);
+  const { agentOrder, sortedAgentInventory, refreshAgentOrder, saveAgentOrder } = useAgentOrderState({
+    agentInventory,
+    errorMessageFrom,
+    setErrorMessage,
+  });
 
   const refreshSkills = useCallback(async () => {
     if (!repoPath) {
@@ -172,9 +160,12 @@ export function AppProvider({ children }: PropsWithChildren) {
     await updateAgentInventory(key, () => api.clearAgentPathOverride(key));
   }, [updateAgentInventory]);
 
-  const saveAgentConfiguration = useCallback(async (config: api.AgentConfigurationInput) => {
-    await updateAgentInventory(config.key, () => api.setAgentConfiguration(config));
-  }, [updateAgentInventory]);
+  const saveAgentConfiguration = useCallback(
+    async (config: api.AgentConfigurationInput) => {
+      await updateAgentInventory(config.key, () => api.setAgentConfiguration(config));
+    },
+    [updateAgentInventory],
+  );
 
   const applyAgentSync = useCallback(async (syncMode?: api.AgentSyncMode, agentKey?: string) => {
     setIsApplyingAgentSync(true);
@@ -223,7 +214,9 @@ export function AppProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     queueMicrotask(() => void refreshAgents());
   }, [refreshAgents]);
-
+  useEffect(() => {
+    queueMicrotask(() => void refreshAgentOrder());
+  }, [refreshAgentOrder]);
   useEffect(() => {
     queueMicrotask(() => void refreshSkills());
   }, [refreshSkills, repoPath]);
@@ -236,7 +229,9 @@ export function AppProvider({ children }: PropsWithChildren) {
       selectedSkill,
       selectedDocument,
       disabledSkillIds,
+      agentOrder,
       agentInventory,
+      sortedAgentInventory,
       lastAgentApplyResult,
       isLoading,
       isLoadingAgents,
@@ -256,6 +251,7 @@ export function AppProvider({ children }: PropsWithChildren) {
       setAgentPathOverride,
       clearAgentPathOverride,
       saveAgentConfiguration,
+      saveAgentOrder,
       applyAgentSync,
       registerNavigationGuard: navigation.registerNavigationGuard,
       confirmNavigationSave: navigation.confirmNavigationSave,
@@ -269,7 +265,9 @@ export function AppProvider({ children }: PropsWithChildren) {
       selectedSkill,
       selectedDocument,
       disabledSkillIds,
+      agentOrder,
       agentInventory,
+      sortedAgentInventory,
       lastAgentApplyResult,
       isLoading,
       isLoadingAgents,
@@ -289,6 +287,7 @@ export function AppProvider({ children }: PropsWithChildren) {
       setAgentPathOverride,
       clearAgentPathOverride,
       saveAgentConfiguration,
+      saveAgentOrder,
       applyAgentSync,
       navigation.registerNavigationGuard,
       navigation.confirmNavigationSave,
