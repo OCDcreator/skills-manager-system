@@ -170,17 +170,17 @@ export function AgentFloatingNav({ agents, onOpenOrderModal }: AgentFloatingNavP
   return (
     <nav
       aria-label={t("agents.sideNav.label")}
-      className="pointer-events-none fixed right-3 z-50 w-96 max-w-[calc(100vw-1.5rem)] bg-transparent"
+      className="pointer-events-none fixed right-3 z-50 w-96 max-w-[calc(100vw-1.5rem)] overflow-hidden bg-transparent"
       style={{ top: topOffsetPx, bottom: bottomOffsetPx }}
     >
       {/* The rail is transparent; only the nodes and labels visibly float above the content. */}
-      <div className="relative">
+      <div className="relative h-full">
         <div
           aria-hidden="true"
           className="absolute bottom-7 right-7 top-7 w-px bg-gradient-to-b from-slate-800/0 via-slate-600/35 to-slate-800/0"
         />
         <ul
-          className="relative h-full overflow-y-auto py-1 pr-1"
+          className="relative h-full min-h-0 overflow-y-auto py-1 pr-1"
           onMouseLeave={() => setActiveIndex(null)}
         >
           {navItems.map((item, index) => {

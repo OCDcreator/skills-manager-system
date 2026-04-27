@@ -75,8 +75,20 @@ test('Agent floating nav measures app chrome bounds instead of using raw viewpor
   assert.match(navSource, /data-app-shell-header/);
   assert.match(navSource, /data-project-assistant-launcher/);
   assert.match(navSource, /style=\{\{\s*top:\s*topOffsetPx,\s*bottom:\s*bottomOffsetPx\s*\}\}/);
-  assert.match(navSource, /className="relative h-full overflow-y-auto py-1 pr-1"/);
+  assert.match(navSource, /className="relative h-full min-h-0 overflow-y-auto py-1 pr-1"/);
   assert.doesNotMatch(navSource, /fixed right-3 top-1\/2/);
   assert.doesNotMatch(navSource, /fixed right-3 top-1\/2 z-50 .* -translate-y-1\/2/);
   assert.doesNotMatch(navSource, /max-h-\[calc\(100vh-5rem\)\]/);
+});
+
+test('Agent floating nav gives the scroll container a full-height chain', () => {
+  const navSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentFloatingNav.tsx'),
+    'utf8',
+  );
+
+  assert.match(navSource, /className="pointer-events-none fixed right-3 z-50/);
+  assert.match(navSource, /overflow-hidden bg-transparent/);
+  assert.match(navSource, /<div className="relative h-full">/);
+  assert.match(navSource, /className="relative h-full min-h-0 overflow-y-auto py-1 pr-1"/);
 });
