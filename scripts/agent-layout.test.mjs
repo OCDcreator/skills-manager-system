@@ -43,3 +43,14 @@ test('Agent floating nav exposes an order button above the jump-top control', ()
   assert.match(navSource, /actionKey: "open-order-modal"/);
   assert.match(navSource, /onOpenOrderModal/);
 });
+
+test('Agent order modal caps its height and keeps the reorder list scrollable', () => {
+  const source = fs.readFileSync(
+    path.resolve('src/components/agents/AgentOrderModal.tsx'),
+    'utf8',
+  );
+
+  assert.match(source, /max-h-\[calc\(100vh-2rem\)\]/);
+  assert.match(source, /flex max-h-\[calc\(100vh-2rem\)\] w-full max-w-xl flex-col overflow-hidden/);
+  assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-5 overflow-y-auto/);
+});

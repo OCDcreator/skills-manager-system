@@ -66,7 +66,7 @@ export function AgentOrderModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-slate-950/60">
+      <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-slate-950/60">
         <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-5 py-4">
           <div>
             <div className="flex items-center gap-2 text-sky-300">
@@ -88,7 +88,7 @@ export function AgentOrderModal({
           </button>
         </div>
 
-        <div className="space-y-5 px-5 py-4">
+        <div className="skill-markdown-scroll min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">
           {sections.map((section) => (
             <section key={section.key}>
               <div className="mb-2 flex items-center justify-between gap-2">
