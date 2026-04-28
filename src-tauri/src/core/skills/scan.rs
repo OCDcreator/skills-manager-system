@@ -3,7 +3,22 @@ use serde::Serialize;
 use std::path::Path;
 use walkdir::{DirEntry, WalkDir};
 
+use super::identity::{
+    build_skill_id_from_relative_path, canonicalize_repo_relative_path, resolve_source_type,
+};
 use super::metadata::parse_skill_metadata;
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ManagedSourceInfo {
+    pub kind: String,
+    pub import_id: String,
+    pub repo_url: String,
+    pub pinned_commit: String,
+    pub agent_key: String,
+    pub update_available: bool,
+    pub integrity: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -15,6 +30,7 @@ pub struct SkillSummary {
     pub relative_path: String,
     pub directory_path: String,
     pub skill_document_path: String,
+    pub managed_source: Option<ManagedSourceInfo>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -48,7 +64,7 @@ pub fn scan_repo_skills(repo_root: &Path) -> Result<ScanSkillsResponse> {
                 continue;
             }
 
-            skills.push(build_skill_summary(repo_root, &skill_dir, "custom")?);
+            skills.push(build_skill_summary(repo_root, &skill_dir)?);
         }
     } else {
         warnings.push("Missing custom/ directory; continuing with remaining sources.".to_string());
@@ -63,7 +79,7 @@ pub fn scan_repo_skills(repo_root: &Path) -> Result<ScanSkillsResponse> {
         {
             if entry.file_type().is_file() && entry.file_name() == "SKILL.md" {
                 let skill_dir = entry.path().parent().expect("SKILL.md must have a parent");
-                skills.push(build_skill_summary(repo_root, skill_dir, "external")?);
+                skills.push(build_skill_summary(repo_root, skill_dir)?);
             }
         }
     } else {
@@ -76,51 +92,37 @@ pub fn scan_repo_skills(repo_root: &Path) -> Result<ScanSkillsResponse> {
     Ok(ScanSkillsResponse { skills, warnings })
 }
 
-pub fn build_skill_id(source_type: &str, relative_path: &str) -> String {
-    let source_relative = relative_path
-        .strip_prefix("custom/")
-        .or_else(|| relative_path.strip_prefix("external/"))
-        .unwrap_or(relative_path);
-    format!("{source_type}:{source_relative}")
-}
-
 fn should_walk(entry: &DirEntry) -> bool {
     !IGNORED_DIRS
         .iter()
         .any(|ignored| entry.file_name() == *ignored)
 }
 
-fn build_skill_summary(
-    repo_root: &Path,
-    skill_dir: &Path,
-    source_type: &str,
-) -> Result<SkillSummary> {
+fn build_skill_summary(repo_root: &Path, skill_dir: &Path) -> Result<SkillSummary> {
     let relative_path = normalize_relative_path(repo_root, skill_dir)?;
     let skill_md_path = skill_dir.join("SKILL.md");
     let metadata = parse_skill_metadata(&skill_md_path)?;
+    let source_type = resolve_source_type(&relative_path)?;
     let default_name = skill_dir
         .file_name()
         .map(|value| value.to_string_lossy().to_string())
         .unwrap_or_else(|| "unknown-skill".to_string());
 
     Ok(SkillSummary {
-        id: build_skill_id(source_type, &relative_path),
+        id: build_skill_id_from_relative_path(&relative_path)?,
         name: metadata.name.unwrap_or(default_name),
         description: metadata.description.unwrap_or_default(),
         source_type: source_type.to_string(),
         relative_path,
         directory_path: path_to_string(skill_dir),
         skill_document_path: path_to_string(&skill_md_path),
+        managed_source: None,
     })
 }
 
 fn normalize_relative_path(repo_root: &Path, skill_dir: &Path) -> Result<String> {
     let relative = skill_dir.strip_prefix(repo_root)?;
-    Ok(relative
-        .components()
-        .map(|component| component.as_os_str().to_string_lossy().to_string())
-        .collect::<Vec<_>>()
-        .join("/"))
+    canonicalize_repo_relative_path(&path_to_string(relative))
 }
 
 fn path_to_string(path: &Path) -> String {
@@ -218,5 +220,28 @@ mod tests {
 
         assert!(!ids.iter().any(|id| id.contains("node_modules")));
         assert!(ids.contains(&"external:anthropics-skills/frontend-design"));
+    }
+
+    #[test]
+    fn scan_external_managed_path_keeps_external_source_type() {
+        let repo = tempdir().unwrap();
+        fs::create_dir_all(repo.path().join("external/managed/github/owner__repo/codex/skill"))
+            .unwrap();
+        fs::write(
+            repo.path()
+                .join("external/managed/github/owner__repo/codex/skill/SKILL.md"),
+            "---\nname: managed-skill\n---",
+        )
+        .unwrap();
+
+        let response = scan_repo_skills(repo.path()).unwrap();
+        let skill = response
+            .skills
+            .iter()
+            .find(|skill| skill.relative_path == "external/managed/github/owner__repo/codex/skill")
+            .unwrap();
+
+        assert_eq!(skill.source_type, "external");
+        assert_eq!(skill.id, "external:managed/github/owner__repo/codex/skill");
     }
 }

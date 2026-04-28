@@ -26,6 +26,7 @@ fn custom_skill(repo_root: &Path, name: &str) -> SkillSummary {
         relative_path,
         directory_path: skill_dir.to_string_lossy().replace('\\', "/"),
         skill_document_path: skill_dir.join("SKILL.md").to_string_lossy().replace('\\', "/"),
+        managed_source: None,
     }
 }
 

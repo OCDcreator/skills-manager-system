@@ -1,5 +1,29 @@
 import { invoke } from "@tauri-apps/api/core";
 
+export type AgentKey =
+  | "codex"
+  | "claude_code"
+  | "opencode"
+  | "cursor"
+  | "amp"
+  | "kilo_code"
+  | "kimi"
+  | "roo_code"
+  | "goose"
+  | "gemini_cli"
+  | "github_copilot"
+  | "windsurf";
+
+export interface ManagedSourceInfo {
+  kind: "github_import";
+  importId: string;
+  repoUrl: string;
+  pinnedCommit: string;
+  agentKey: AgentKey;
+  updateAvailable: boolean;
+  integrity: "mismatch" | null;
+}
+
 export interface SkillSummary {
   id: string;
   name: string;
@@ -8,6 +32,7 @@ export interface SkillSummary {
   relativePath: string;
   directoryPath: string;
   skillDocumentPath: string;
+  managedSource?: ManagedSourceInfo | null;
 }
 
 export interface ScanSkillsResponse {
@@ -22,25 +47,12 @@ export interface SkillDocument {
   sourceType: "custom" | "external";
   relativePath: string;
   content: string;
+  managedSource?: ManagedSourceInfo | null;
 }
 
 export interface SkillStateSnapshot {
   disabledSkillIds: string[];
 }
-
-export type AgentKey =
-  | "codex"
-  | "claude_code"
-  | "opencode"
-  | "cursor"
-  | "amp"
-  | "kilo_code"
-  | "kimi"
-  | "roo_code"
-  | "goose"
-  | "gemini_cli"
-  | "github_copilot"
-  | "windsurf";
 
 export type AgentPathMode = "override" | "detected" | "missing";
 export type AgentSyncMode = "copy" | "symlink";

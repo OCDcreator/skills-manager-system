@@ -21,6 +21,7 @@ fn create_skill(repo_root: &Path, relative_path: &str) -> SkillSummary {
         relative_path: relative_path.to_string(),
         directory_path: skill_dir.to_string_lossy().replace('\\', "/"),
         skill_document_path: skill_dir.join("SKILL.md").to_string_lossy().replace('\\', "/"),
+        managed_source: None,
     }
 }
 

@@ -1,10 +1,13 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::Serialize;
 use std::fs;
-use std::path::{Component, Path};
+use std::path::Path;
 
+use super::identity::{
+    build_skill_id_from_relative_path, canonicalize_repo_relative_path, resolve_source_type,
+};
 use super::metadata::parse_skill_metadata;
-use super::scan::build_skill_id;
+use super::scan::ManagedSourceInfo;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -15,23 +18,17 @@ pub struct SkillDocument {
     pub source_type: String,
     pub relative_path: String,
     pub content: String,
+    pub managed_source: Option<ManagedSourceInfo>,
 }
 
 pub fn read_skill_document(repo_root: &Path, relative_path: &str) -> Result<SkillDocument> {
-    validate_relative_path(relative_path)?;
+    let canonical_relative_path = canonicalize_repo_relative_path(relative_path)?;
+    let source_type = resolve_source_type(&canonical_relative_path)?;
 
-    let skill_dir = repo_root.join(relative_path);
+    let skill_dir = repo_root.join(&canonical_relative_path);
     let skill_md_path = skill_dir.join("SKILL.md");
     let content = fs::read_to_string(&skill_md_path)?;
     let metadata = parse_skill_metadata(&skill_md_path)?;
-
-    let source_type = if relative_path.starts_with("custom/") {
-        "custom"
-    } else if relative_path.starts_with("external/") {
-        "external"
-    } else {
-        return Err(anyhow!("Invalid skill source path"));
-    };
 
     let name = metadata.name.unwrap_or_else(|| {
         skill_dir
@@ -41,27 +38,14 @@ pub fn read_skill_document(repo_root: &Path, relative_path: &str) -> Result<Skil
     });
 
     Ok(SkillDocument {
-        id: build_skill_id(source_type, relative_path),
+        id: build_skill_id_from_relative_path(&canonical_relative_path)?,
         name,
         description: metadata.description.unwrap_or_default(),
         source_type: source_type.to_string(),
-        relative_path: relative_path.to_string(),
+        relative_path: canonical_relative_path,
         content,
+        managed_source: None,
     })
-}
-
-fn validate_relative_path(relative_path: &str) -> Result<()> {
-    let path = Path::new(relative_path);
-    for component in path.components() {
-        if matches!(
-            component,
-            Component::ParentDir | Component::Prefix(_) | Component::RootDir
-        ) {
-            return Err(anyhow!("Invalid relative path"));
-        }
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]
@@ -109,5 +93,31 @@ mod tests {
         let repo = tempdir().unwrap();
         let error = read_skill_document(repo.path(), "../outside").unwrap_err();
         assert!(error.to_string().contains("Invalid relative path"));
+    }
+
+    #[test]
+    fn read_skill_document_accepts_external_managed_paths() {
+        let repo = tempdir().unwrap();
+        fs::create_dir_all(repo.path().join("external/managed/github/owner__repo/codex/skill"))
+            .unwrap();
+        fs::write(
+            repo.path()
+                .join("external/managed/github/owner__repo/codex/skill/SKILL.md"),
+            "---\nname: managed-skill\ndescription: imported\n---\n# Managed",
+        )
+        .unwrap();
+
+        let document = read_skill_document(
+            repo.path(),
+            r".\external\managed\github\owner__repo\codex\skill\.",
+        )
+        .unwrap();
+
+        assert_eq!(document.source_type, "external");
+        assert_eq!(
+            document.relative_path,
+            "external/managed/github/owner__repo/codex/skill"
+        );
+        assert_eq!(document.id, "external:managed/github/owner__repo/codex/skill");
     }
 }
