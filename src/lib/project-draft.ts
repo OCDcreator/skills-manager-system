@@ -6,6 +6,7 @@ export interface ProjectDraft {
   sourceProjectPath: string | null;
   projectPath: string;
   displayName: string;
+  displayNameManuallyEdited: boolean;
   selectedSkillIds: string[];
   selectedAgentKeys: string[];
   unsupportedAgentKeys: string[];
@@ -55,6 +56,27 @@ export function filterProjectAgents(agents: AgentInventoryItem[], query: string)
   return agents.filter((agent) =>
     `${agent.displayName} ${agent.key}`.toLowerCase().includes(needle),
   );
+}
+
+export function applyProjectPathToDraft(draft: ProjectDraft, projectPath: string) {
+  return {
+    ...draft,
+    projectPath,
+    displayName: draft.displayNameManuallyEdited
+      ? draft.displayName
+      : suggestProjectDisplayName(projectPath),
+  };
+}
+
+export function applyProjectDisplayNameToDraft(
+  draft: ProjectDraft,
+  displayName: string,
+) {
+  return {
+    ...draft,
+    displayName,
+    displayNameManuallyEdited: true,
+  };
 }
 
 export function buildProjectSummary(

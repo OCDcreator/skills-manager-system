@@ -1,3 +1,4 @@
+import { FolderSearch } from "lucide-react";
 import type { ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +10,8 @@ interface ProjectIdentityPanelProps {
   duplicatePath: boolean;
   inspectionError: string | null;
   isInspecting: boolean;
+  canBrowseProjectPath: boolean;
+  onBrowseProjectPath: () => void;
   onProjectPathChange: (value: string) => void;
   onDisplayNameChange: (value: string) => void;
 }
@@ -18,35 +21,58 @@ export function ProjectIdentityPanel(props: ProjectIdentityPanelProps) {
   const readOnlyPath = props.mode === "edit";
 
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-      <div className="flex flex-col gap-4 xl:flex-row">
-        <label className="flex-1">
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-400">
-            {t("projects.identity.pathLabel")}
-          </span>
-          <input
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400"
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              props.onProjectPathChange(event.target.value)
-            }
-            readOnly={readOnlyPath}
-            value={props.projectPath}
-          />
+    <section className="rounded-[1.75rem] border border-slate-800/90 bg-gradient-to-br from-slate-900/95 via-slate-900/85 to-slate-950/95 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.34)]">
+      <div className="space-y-5">
+        <label className="block space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="block text-xs font-medium uppercase tracking-[0.22em] text-slate-400">
+              {t("projects.identity.pathLabel")}
+            </span>
+            {props.canBrowseProjectPath ? (
+              <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
+                {t("projects.identity.browse")}
+              </span>
+            ) : null}
+          </div>
+          <div className="group flex items-center gap-2 rounded-[1.35rem] border border-slate-700/80 bg-slate-950/90 p-2 shadow-inner shadow-slate-950/40 transition-colors focus-within:border-sky-400/80">
+            <input
+              className="min-w-0 flex-1 rounded-[1rem] border-0 bg-transparent px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-600"
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                props.onProjectPathChange(event.target.value)
+              }
+              readOnly={readOnlyPath}
+              value={props.projectPath}
+            />
+            {props.canBrowseProjectPath ? (
+              <button
+                className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-[1rem] border border-slate-600/80 bg-slate-800/80 px-4 py-3 text-sm font-medium text-slate-100 transition hover:border-sky-400/50 hover:bg-slate-800"
+                onClick={props.onBrowseProjectPath}
+                title={t("tooltip.projects.browsePath")}
+                type="button"
+              >
+                <FolderSearch className="size-4" strokeWidth={1.9} />
+                <span>{t("projects.identity.browse")}</span>
+              </button>
+            ) : null}
+          </div>
         </label>
-        <label className="flex-1">
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-400">
+
+        <label className="mt-1 block max-w-xl space-y-3">
+          <span className="block text-xs font-medium uppercase tracking-[0.22em] text-slate-400">
             {t("projects.identity.nameLabel")}
           </span>
-          <input
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400"
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              props.onDisplayNameChange(event.target.value)
-            }
-            value={props.displayName}
-          />
+          <div className="group rounded-[1.2rem] border border-slate-700/80 bg-slate-950/90 p-2 shadow-inner shadow-slate-950/35 transition-colors focus-within:border-sky-400/75">
+            <input
+              className="w-full rounded-[0.95rem] border-0 bg-transparent px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-600"
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                props.onDisplayNameChange(event.target.value)
+              }
+              value={props.displayName}
+            />
+          </div>
         </label>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-400">
+      <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-400">
         <span className="rounded-full border border-slate-700 px-3 py-1">
           {t("projects.identity.suggested")}: {props.inferredName || "—"}
         </span>

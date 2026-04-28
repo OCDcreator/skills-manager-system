@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { open } from "@tauri-apps/plugin-dialog";
 import { useTranslation } from "react-i18next";
 import { ProjectAssignmentEditor } from "../components/projects/ProjectAssignmentEditor";
 import { ProjectAssignmentSummary } from "../components/projects/ProjectAssignmentSummary";
@@ -7,6 +8,8 @@ import { ProjectIdentityPanel } from "../components/projects/ProjectIdentityPane
 import { useProjectDraftInspection } from "../components/projects/useProjectDraftInspection";
 import { useAppContext } from "../context/AppContext";
 import {
+  applyProjectDisplayNameToDraft,
+  applyProjectPathToDraft,
   buildProjectSummary,
   filterProjectAgents,
   filterProjectSkills,
@@ -36,6 +39,7 @@ export function ProjectsView() {
       sourceProjectPath: null,
       projectPath: "",
       displayName: "",
+      displayNameManuallyEdited: false,
       selectedSkillIds: [],
       selectedAgentKeys: [],
       unsupportedAgentKeys: [],
@@ -105,6 +109,18 @@ export function ProjectsView() {
         ? current.selectedAgentKeys.filter((key) => key !== agentKey)
         : [...current.selectedAgentKeys, agentKey],
     }));
+  };
+
+  const handleBrowseProjectPath = async () => {
+    const selected = await open({
+      directory: true,
+      multiple: false,
+      defaultPath: draft.projectPath.trim() || undefined,
+    });
+
+    if (typeof selected === "string") {
+      setDraft((current) => applyProjectPathToDraft(current, selected));
+    }
   };
 
   const handleDelete = async (projectPath: string) => {
@@ -183,6 +199,7 @@ export function ProjectsView() {
       sourceProjectPath: project.projectPath,
       projectPath: project.projectPath,
       displayName: project.displayName,
+      displayNameManuallyEdited: true,
       selectedSkillIds: [...project.skillIds],
       selectedAgentKeys: project.agentKeys.filter((key) =>
         sortedAgentInventory.some((agent) => agent.key === key),
@@ -216,17 +233,19 @@ export function ProjectsView() {
       <div className="grid gap-6 min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
         <div className="space-y-4">
           <ProjectIdentityPanel
+            canBrowseProjectPath={draft.mode === "create"}
             displayName={draft.displayName}
             duplicatePath={duplicatePath}
             inferredName={suggestProjectDisplayName(draft.projectPath)}
             inspectionError={inspectionError}
             isInspecting={isInspecting}
             mode={draft.mode}
+            onBrowseProjectPath={() => void handleBrowseProjectPath()}
             onDisplayNameChange={(value) =>
-              setDraft((current) => ({ ...current, displayName: value }))
+              setDraft((current) => applyProjectDisplayNameToDraft(current, value))
             }
             onProjectPathChange={(value) =>
-              setDraft((current) => ({ ...current, projectPath: value }))
+              setDraft((current) => applyProjectPathToDraft(current, value))
             }
             projectPath={draft.projectPath}
           />

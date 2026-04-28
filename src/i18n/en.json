@@ -181,6 +181,7 @@
   "projects.empty": "No project assignments yet. Start with the workbench above.",
   "projects.identity.pathLabel": "Project path",
   "projects.identity.nameLabel": "Display name",
+  "projects.identity.browse": "Browse",
   "projects.identity.suggested": "Suggested",
   "projects.identity.duplicate": "Path already exists in saved projects",
   "projects.identity.readOnlyPath": "Project path is locked while editing an existing assignment.",
@@ -306,6 +307,7 @@
   "tooltip.scenes.dismiss": "Dismiss this notification",
 
   "tooltip.projects.delete": "Remove this project assignment permanently",
+  "tooltip.projects.browsePath": "Open a folder picker to choose the project directory",
   "tooltip.projects.dismiss": "Dismiss this notification",
 
   "tooltip.settings.browse": "Open a folder picker to select the repository directory",
