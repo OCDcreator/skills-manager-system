@@ -125,6 +125,63 @@ export interface ImportAgentTargetSkillResult {
   deletedSource: boolean;
 }
 
+export interface ExternalSourceWarning {
+  code: string;
+  severity: "warning" | "error" | string;
+  message: string;
+}
+
+export interface ExternalSourceRecord {
+  id: string;
+  repoUrl: string;
+  defaultBranch: string | null;
+  cachedRepoPath: string | null;
+  detectedKind: string | null;
+  lastFetchedCommit: string | null;
+  lastFetchedAt: string | null;
+  status: "pending" | "ok" | "warning" | "error" | string | null;
+  warnings: ExternalSourceWarning[];
+}
+
+export interface ExternalVariantSnapshot {
+  agentKey: AgentKey;
+  variantPath: string;
+  sourceOfTruthPath: string | null;
+  metadataPath: string | null;
+}
+
+export interface ImportedExternalSkillRecord {
+  importId: string;
+  externalSourceId: string;
+  agentKey: AgentKey;
+  upstreamVariantPath: string;
+  pinnedCommit: string;
+  pinnedVariantFingerprint: string | null;
+  skillId: string;
+  mirrorRelativePath: string;
+  lastCheckedCommit: string | null;
+  importedAt: string | null;
+  warnings: ExternalSourceWarning[];
+  updateAvailable: boolean;
+}
+
+export interface ExternalSourceSnapshotItem {
+  record: ExternalSourceRecord;
+  variants: ExternalVariantSnapshot[];
+  imports: ImportedExternalSkillRecord[];
+}
+
+export interface ExternalSourcesListResponse {
+  sources: ExternalSourceSnapshotItem[];
+}
+
+export interface ExternalImportResult {
+  importId: string;
+  skillId: string;
+  mirrorRelativePath: string;
+  warnings: string[];
+}
+
 export const getRepoPath = () => invoke<string | null>("get_repo_path");
 
 export const setRepoPath = (path: string) =>
@@ -197,3 +254,35 @@ export const importAgentTargetSkill = (
     entryName,
     deleteSourceAfterImport,
   });
+
+export const listExternalSources = () =>
+  invoke<ExternalSourcesListResponse>("list_external_sources");
+
+export const addExternalSource = (repoUrl: string) =>
+  invoke<ExternalSourcesListResponse>("add_external_source", { repoUrl });
+
+export const fetchExternalSource = (sourceId: string) =>
+  invoke<ExternalSourcesListResponse>("fetch_external_source", { sourceId });
+
+export const importExternalVariant = (
+  sourceId: string,
+  agentKey: AgentKey,
+  variantPath: string,
+) =>
+  invoke<ExternalImportResult>("import_external_variant", {
+    sourceId,
+    agentKey,
+    variantPath,
+  });
+
+export const updateExternalImport = (importId: string) =>
+  invoke<ExternalImportResult>("update_external_import", { importId });
+
+export const removeExternalSource = (sourceId: string, removeImports: boolean) =>
+  invoke<ExternalSourcesListResponse>("remove_external_source", {
+    sourceId,
+    removeImports,
+  });
+
+export const repairExternalImport = (importId: string) =>
+  invoke<ExternalImportResult>("repair_external_import", { importId });

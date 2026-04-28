@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
-export type AppView = "skills" | "agents" | "git" | "scenes" | "projects" | "settings";
+export type AppView = "skills" | "agents" | "git" | "scenes" | "projects" | "sources" | "settings";
 
 export interface NavigationGuard {
   view: AppView;

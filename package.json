@@ -15,6 +15,7 @@
     "test:assistant-layout": "node --test scripts/assistant-layout.test.mjs",
     "test:agent-order": "node --test scripts/agent-order.test.mjs",
     "test:project-draft": "node --test scripts/project-draft.test.mjs",
+    "test:external-sources-ui": "node --test scripts/external-sources-ui.test.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -22,7 +23,7 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
     "tauri:build": "tauri build",
-    "verify": "npm run check:module-docs && npm run check:architecture && npm run test:architecture && npm run test:git-layout && npm run test:agent-layout && npm run test:agent-brand-icon && npm run test:assistant-layout && npm run test:agent-order && npm run test:project-draft && npm run build && cargo check --manifest-path src-tauri/Cargo.toml && cargo test --manifest-path src-tauri/Cargo.toml"
+    "verify": "npm run check:module-docs && npm run check:architecture && npm run test:architecture && npm run test:git-layout && npm run test:agent-layout && npm run test:agent-brand-icon && npm run test:assistant-layout && npm run test:agent-order && npm run test:project-draft && npm run test:external-sources-ui && npm run build && cargo check --manifest-path src-tauri/Cargo.toml && cargo test --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.10.1",

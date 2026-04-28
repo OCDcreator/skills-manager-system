@@ -1,6 +1,7 @@
 pub mod agent_targets;
 pub mod agents;
 pub mod assistant;
+pub mod external_sources;
 pub mod git;
 pub mod projects;
 pub mod scenes;

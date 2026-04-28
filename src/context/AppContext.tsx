@@ -1,13 +1,22 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { PropsWithChildren } from "react";
 import * as api from "../lib/tauri";
-import type { AgentInventoryItem, ApplyAgentSyncResponse, ScanSkillsResponse, SkillDocument, SkillSummary } from "../lib/tauri";
+import type {
+  AgentInventoryItem,
+  ApplyAgentSyncResponse,
+  ExternalSourceSnapshotItem,
+  ScanSkillsResponse,
+  SkillDocument,
+  SkillSummary,
+} from "../lib/tauri";
 import { useAgentOrderState } from "./agent-order-state";
 import type { AppContextValue, AppView } from "./app-context-types";
 import { useNavigationGuardState } from "./navigation-guard";
 
 export type { AppView } from "./app-context-types";
+
 const AppContext = createContext<AppContextValue | null>(null);
+
 function errorMessageFrom(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
@@ -21,12 +30,17 @@ export function AppProvider({ children }: PropsWithChildren) {
   const [disabledSkillIds, setDisabledSkillIds] = useState<string[]>([]);
   const [agentInventory, setAgentInventory] = useState<AgentInventoryItem[]>([]);
   const [lastAgentApplyResult, setLastAgentApplyResult] = useState<ApplyAgentSyncResponse | null>(null);
+  const [externalSources, setExternalSources] = useState<ExternalSourceSnapshotItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAgents, setIsLoadingAgents] = useState(true);
+  const [isLoadingExternalSources, setIsLoadingExternalSources] = useState(true);
   const [isSavingPath, setIsSavingPath] = useState(false);
   const [isApplyingAgentSync, setIsApplyingAgentSync] = useState(false);
+  const [isAddingExternalSource, setIsAddingExternalSource] = useState(false);
   const [updatingSkillId, setUpdatingSkillId] = useState<string | null>(null);
   const [updatingAgentKey, setUpdatingAgentKey] = useState<string | null>(null);
+  const [updatingExternalSourceId, setUpdatingExternalSourceId] = useState<string | null>(null);
+  const [updatingExternalImportId, setUpdatingExternalImportId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigation = useNavigationGuardState(activeView, setActiveViewState);
   const { agentOrder, sortedAgentInventory, refreshAgentOrder, saveAgentOrder } = useAgentOrderState({
@@ -49,24 +63,18 @@ export function AppProvider({ children }: PropsWithChildren) {
     try {
       const response = await api.scanSkills();
       setScanResult(response);
-
       let nextError: string | null = null;
-
       try {
         const state = await api.getSkillState();
         setDisabledSkillIds(state.disabledSkillIds);
       } catch (error) {
         setDisabledSkillIds([]);
-        nextError = error instanceof Error ? error.message : String(error);
+        nextError = errorMessageFrom(error);
       }
 
       setSelectedSkill((currentSkill) => {
-        if (!currentSkill) {
-          return null;
-        }
-
-        const refreshedSkill =
-          response.skills.find((skill) => skill.id === currentSkill.id) ?? null;
+        if (!currentSkill) return null;
+        const refreshedSkill = response.skills.find((skill) => skill.id === currentSkill.id) ?? null;
         if (!refreshedSkill) {
           setSelectedDocument(null);
         }
@@ -75,7 +83,7 @@ export function AppProvider({ children }: PropsWithChildren) {
 
       setErrorMessage(nextError);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : String(error));
+      setErrorMessage(errorMessageFrom(error));
     } finally {
       setIsLoading(false);
     }
@@ -91,6 +99,19 @@ export function AppProvider({ children }: PropsWithChildren) {
       setErrorMessage(errorMessageFrom(error));
     } finally {
       setIsLoadingAgents(false);
+    }
+  }, []);
+
+  const refreshExternalSources = useCallback(async () => {
+    setIsLoadingExternalSources(true);
+    try {
+      const snapshot = await api.listExternalSources();
+      setExternalSources(snapshot.sources);
+      setErrorMessage(null);
+    } catch (error) {
+      setErrorMessage(errorMessageFrom(error));
+    } finally {
+      setIsLoadingExternalSources(false);
     }
   }, []);
 
@@ -181,6 +202,110 @@ export function AppProvider({ children }: PropsWithChildren) {
       setIsApplyingAgentSync(false);
     }
   }, []);
+
+  const addExternalSource = useCallback(async (repoUrl: string) => {
+    setIsAddingExternalSource(true);
+    try {
+      const snapshot = await api.addExternalSource(repoUrl);
+      setExternalSources(snapshot.sources);
+      setErrorMessage(null);
+    } catch (error) {
+      const message = errorMessageFrom(error);
+      setErrorMessage(message);
+      throw error instanceof Error ? error : new Error(message);
+    } finally {
+      setIsAddingExternalSource(false);
+    }
+  }, []);
+
+  const fetchExternalSource = useCallback(async (sourceId: string) => {
+    setUpdatingExternalSourceId(sourceId);
+    try {
+      const snapshot = await api.fetchExternalSource(sourceId);
+      setExternalSources(snapshot.sources);
+      setErrorMessage(null);
+    } catch (error) {
+      const message = errorMessageFrom(error);
+      setErrorMessage(message);
+      throw error instanceof Error ? error : new Error(message);
+    } finally {
+      setUpdatingExternalSourceId(null);
+    }
+  }, []);
+
+  const importExternalVariant = useCallback(
+    async (sourceId: string, agentKey: api.AgentKey, variantPath: string) => {
+      setUpdatingExternalSourceId(sourceId);
+      try {
+        await api.importExternalVariant(sourceId, agentKey, variantPath);
+        await Promise.all([refreshExternalSources(), refreshSkills()]);
+        setErrorMessage(null);
+      } catch (error) {
+        const message = errorMessageFrom(error);
+        setErrorMessage(message);
+        throw error instanceof Error ? error : new Error(message);
+      } finally {
+        setUpdatingExternalSourceId(null);
+      }
+    },
+    [refreshExternalSources, refreshSkills],
+  );
+
+  const updateExternalImport = useCallback(
+    async (importId: string) => {
+      setUpdatingExternalImportId(importId);
+      try {
+        await api.updateExternalImport(importId);
+        await Promise.all([refreshExternalSources(), refreshSkills()]);
+        setErrorMessage(null);
+      } catch (error) {
+        const message = errorMessageFrom(error);
+        setErrorMessage(message);
+        throw error instanceof Error ? error : new Error(message);
+      } finally {
+        setUpdatingExternalImportId(null);
+      }
+    },
+    [refreshExternalSources, refreshSkills],
+  );
+
+  const removeExternalSource = useCallback(
+    async (sourceId: string, removeImports: boolean) => {
+      setUpdatingExternalSourceId(sourceId);
+      try {
+        const snapshot = await api.removeExternalSource(sourceId, removeImports);
+        setExternalSources(snapshot.sources);
+        await refreshSkills();
+        setErrorMessage(null);
+      } catch (error) {
+        const message = errorMessageFrom(error);
+        setErrorMessage(message);
+        throw error instanceof Error ? error : new Error(message);
+      } finally {
+        setUpdatingExternalSourceId(null);
+      }
+    },
+    [refreshSkills],
+  );
+
+  const repairExternalImport = useCallback(
+    async (importId: string) => {
+      setUpdatingExternalImportId(importId);
+      try {
+        await api.repairExternalImport(importId);
+        await Promise.all([refreshExternalSources(), refreshSkills()]);
+        setErrorMessage(null);
+      } catch (error) {
+        const message = errorMessageFrom(error);
+        setErrorMessage(message);
+        throw error instanceof Error ? error : new Error(message);
+      } finally {
+        setUpdatingExternalImportId(null);
+      }
+    },
+    [refreshExternalSources, refreshSkills],
+  );
+
   const selectSkill = useCallback(async (skill: SkillSummary | null) => {
     setSelectedSkill(skill);
     if (!skill) {
@@ -214,9 +339,15 @@ export function AppProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     queueMicrotask(() => void refreshAgents());
   }, [refreshAgents]);
+
   useEffect(() => {
     queueMicrotask(() => void refreshAgentOrder());
   }, [refreshAgentOrder]);
+
+  useEffect(() => {
+    queueMicrotask(() => void refreshExternalSources());
+  }, [refreshExternalSources, repoPath]);
+
   useEffect(() => {
     queueMicrotask(() => void refreshSkills());
   }, [refreshSkills, repoPath]);
@@ -233,17 +364,23 @@ export function AppProvider({ children }: PropsWithChildren) {
       agentInventory,
       sortedAgentInventory,
       lastAgentApplyResult,
+      externalSources,
       isLoading,
       isLoadingAgents,
+      isLoadingExternalSources,
       isSavingPath,
       isApplyingAgentSync,
+      isAddingExternalSource,
       updatingSkillId,
       updatingAgentKey,
+      updatingExternalSourceId,
+      updatingExternalImportId,
       errorMessage,
       pendingNavigation: navigation.pendingNavigation,
       setActiveView: navigation.setActiveView,
       refreshSkills,
       refreshAgents,
+      refreshExternalSources,
       saveRepoPath,
       selectSkill,
       setSkillEnabled,
@@ -253,6 +390,12 @@ export function AppProvider({ children }: PropsWithChildren) {
       saveAgentConfiguration,
       saveAgentOrder,
       applyAgentSync,
+      addExternalSource,
+      fetchExternalSource,
+      importExternalVariant,
+      updateExternalImport,
+      removeExternalSource,
+      repairExternalImport,
       registerNavigationGuard: navigation.registerNavigationGuard,
       confirmNavigationSave: navigation.confirmNavigationSave,
       confirmNavigationDiscard: navigation.confirmNavigationDiscard,
@@ -269,17 +412,23 @@ export function AppProvider({ children }: PropsWithChildren) {
       agentInventory,
       sortedAgentInventory,
       lastAgentApplyResult,
+      externalSources,
       isLoading,
       isLoadingAgents,
+      isLoadingExternalSources,
       isSavingPath,
       isApplyingAgentSync,
+      isAddingExternalSource,
       updatingSkillId,
       updatingAgentKey,
+      updatingExternalSourceId,
+      updatingExternalImportId,
       errorMessage,
       navigation.pendingNavigation,
       navigation.setActiveView,
       refreshSkills,
       refreshAgents,
+      refreshExternalSources,
       saveRepoPath,
       selectSkill,
       setSkillEnabled,
@@ -289,6 +438,12 @@ export function AppProvider({ children }: PropsWithChildren) {
       saveAgentConfiguration,
       saveAgentOrder,
       applyAgentSync,
+      addExternalSource,
+      fetchExternalSource,
+      importExternalVariant,
+      updateExternalImport,
+      removeExternalSource,
+      repairExternalImport,
       navigation.registerNavigationGuard,
       navigation.confirmNavigationSave,
       navigation.confirmNavigationDiscard,

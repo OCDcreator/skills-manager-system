@@ -4,6 +4,7 @@ import type {
   AgentKey,
   AgentSyncMode,
   ApplyAgentSyncResponse,
+  ExternalSourceSnapshotItem,
   ScanSkillsResponse,
   SkillDocument,
   SkillStateSnapshot,
@@ -28,17 +29,23 @@ export interface AppContextValue {
   agentInventory: AgentInventoryItem[];
   sortedAgentInventory: AgentInventoryItem[];
   lastAgentApplyResult: ApplyAgentSyncResponse | null;
+  externalSources: ExternalSourceSnapshotItem[];
   isLoading: boolean;
   isLoadingAgents: boolean;
+  isLoadingExternalSources: boolean;
   isSavingPath: boolean;
   isApplyingAgentSync: boolean;
+  isAddingExternalSource: boolean;
   updatingSkillId: string | null;
   updatingAgentKey: string | null;
+  updatingExternalSourceId: string | null;
+  updatingExternalImportId: string | null;
   errorMessage: string | null;
   pendingNavigation: PendingNavigation | null;
   setActiveView: (view: AppView) => void;
   refreshSkills: () => Promise<void>;
   refreshAgents: () => Promise<void>;
+  refreshExternalSources: () => Promise<void>;
   saveRepoPath: (path: string) => Promise<void>;
   selectSkill: (skill: SkillSummary | null) => Promise<void>;
   setSkillEnabled: (skillId: string, enabled: boolean) => Promise<void>;
@@ -48,6 +55,12 @@ export interface AppContextValue {
   saveAgentConfiguration: (config: AgentConfigurationInput) => Promise<void>;
   saveAgentOrder: (agentOrder: AgentKey[]) => Promise<void>;
   applyAgentSync: (syncMode?: AgentSyncMode, agentKey?: string) => Promise<void>;
+  addExternalSource: (repoUrl: string) => Promise<void>;
+  fetchExternalSource: (sourceId: string) => Promise<void>;
+  importExternalVariant: (sourceId: string, agentKey: AgentKey, variantPath: string) => Promise<void>;
+  updateExternalImport: (importId: string) => Promise<void>;
+  removeExternalSource: (sourceId: string, removeImports: boolean) => Promise<void>;
+  repairExternalImport: (importId: string) => Promise<void>;
   registerNavigationGuard: (guard: NavigationGuard) => () => void;
   confirmNavigationSave: () => Promise<void>;
   confirmNavigationDiscard: () => void;

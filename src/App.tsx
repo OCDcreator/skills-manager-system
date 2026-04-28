@@ -1,6 +1,7 @@
 import { AppShell } from "./components/AppShell";
 import { AppProvider, useAppContext } from "./context/AppContext";
 import { AgentsView } from "./views/AgentsView";
+import { ExternalSourcesView } from "./views/ExternalSourcesView";
 import { GitView } from "./views/GitView";
 import { ProjectsView } from "./views/ProjectsView";
 import { ScenesView } from "./views/ScenesView";
@@ -10,7 +11,10 @@ import { SkillsView } from "./views/SkillsView";
 function AppBody() {
   const { activeView } = useAppContext();
   const contentWidthClassName =
-    activeView === "skills" || activeView === "agents" || activeView === "projects"
+    activeView === "skills" ||
+    activeView === "agents" ||
+    activeView === "projects" ||
+    activeView === "sources"
       ? "max-w-[min(96vw,1800px)]"
       : "max-w-7xl";
 
@@ -25,6 +29,8 @@ function AppBody() {
       <ScenesView />
     ) : activeView === "projects" ? (
       <ProjectsView />
+    ) : activeView === "sources" ? (
+      <ExternalSourcesView />
     ) : (
       <SettingsView />
     );

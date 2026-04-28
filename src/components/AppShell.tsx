@@ -4,7 +4,7 @@ import { useAppContext, type AppView } from "../context/AppContext";
 import { ProjectAssistantLauncher } from "./assistant/ProjectAssistantLauncher";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 
-const NAV_ITEMS: AppView[] = ["skills", "agents", "git", "scenes", "projects", "settings"];
+const NAV_ITEMS: AppView[] = ["skills", "agents", "git", "scenes", "projects", "sources", "settings"];
 
 interface AppShellProps extends PropsWithChildren {
   contentWidthClassName?: string;

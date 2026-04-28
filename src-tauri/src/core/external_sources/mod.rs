@@ -4,6 +4,7 @@ mod hash;
 pub mod imports;
 pub mod models;
 pub mod reference_check;
+pub mod service;
 pub mod store;
 
 pub use detect::{DetectedExternalVariant, DetectionResult, detect_external_source_variants};
@@ -17,4 +18,9 @@ pub use models::{
     ImportedExternalSkillRecord, ManagedSkillMirrorManifest,
 };
 pub use reference_check::{BlockingReferences, find_skill_references};
+pub use service::{
+    ExternalSourceSnapshotItem, ExternalSourcesListResponse, ExternalVariantSnapshot,
+    add_external_source, fetch_external_source, import_external_variant, list_external_sources,
+    remove_external_source, repair_external_import, update_external_import,
+};
 pub use store::ExternalSourcesStore;
