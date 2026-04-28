@@ -40,6 +40,17 @@ export function SkillList(props: SkillListProps) {
           {skills.map((skill) => {
             const isDisabled = disabledSkillIds.has(skill.id);
             const isUpdating = updatingSkillId === skill.id;
+            const externalBadge = skill.sourceType === "external"
+              ? skill.managedSource
+                ? {
+                    className: "bg-sky-500/15 text-sky-100",
+                    label: t("skills.badges.managedGithubMirror"),
+                  }
+                : {
+                    className: "bg-amber-500/15 text-amber-200",
+                    label: t("skills.badges.manualExternal"),
+                  }
+              : null;
 
             return (
               <article
@@ -74,6 +85,11 @@ export function SkillList(props: SkillListProps) {
                         ? t("skills.status.disabled")
                         : t("skills.status.enabled")}
                     </span>
+                    {externalBadge ? (
+                      <span className={`rounded-full px-2 py-1 text-xs ${externalBadge.className}`}>
+                        {externalBadge.label}
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-2 flex-1 text-sm text-slate-400">
                     {skill.description

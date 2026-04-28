@@ -2,7 +2,9 @@ import hljs from "highlight.js";
 import { Marked, type Tokens } from "marked";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { SkillDocument, SkillSummary } from "../../lib/tauri";
+import { useAppContext } from "../../context/AppContext";
+import { shortCommit } from "../../lib/external-sources";
+import type { ExternalSourceWarning, SkillDocument, SkillSummary } from "../../lib/tauri";
 
 interface SkillDetailPanelProps {
   skill: SkillSummary | null;
@@ -46,8 +48,29 @@ function convertFrontmatterToYamlFence(content: string) {
   return body ? `${yamlBlock}\n\n${body}` : yamlBlock;
 }
 
+function warningMessageFrom(
+  warning: ExternalSourceWarning,
+  skill: SkillSummary,
+  variantPath: string,
+  t: ReturnType<typeof useTranslation>["t"],
+) {
+  if (warning.code === "variant_disappeared") {
+    return t("skills.warnings.variantDisappeared", {
+      agent: skill.managedSource?.agentKey ?? "unknown",
+      variant: variantPath,
+    });
+  }
+
+  if (warning.code === "integrity_mismatch") {
+    return t("skills.detail.managedSource.integrityMismatch");
+  }
+
+  return warning.message;
+}
+
 export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPanelProps) {
   const { t } = useTranslation();
+  const { externalSources } = useAppContext();
   const [wrapFrontmatter, setWrapFrontmatter] = useState(true);
   const basePanelClassName =
     "min-w-0 rounded-2xl border border-slate-800 bg-slate-900 p-6";
@@ -61,6 +84,33 @@ export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPane
     const previewContent = convertFrontmatterToYamlFence(document.content);
     return markdownRenderer.parse(previewContent);
   }, [document]);
+  const managedImport = useMemo(() => {
+    if (!skill?.managedSource) {
+      return null;
+    }
+
+    return externalSources
+      .flatMap((source) => source.imports)
+      .find((item) => item.importId === skill.managedSource?.importId) ?? null;
+  }, [externalSources, skill]);
+  const managedWarnings = useMemo(() => {
+    if (!skill?.managedSource) {
+      return [];
+    }
+
+    const warnings = managedImport?.warnings.map((warning) =>
+      warningMessageFrom(
+        warning,
+        skill,
+        managedImport?.upstreamVariantPath ?? skill.relativePath,
+        t,
+      ),
+    ) ?? [];
+    if (skill.managedSource.integrity === "mismatch") {
+      warnings.unshift(t("skills.detail.managedSource.integrityMismatch"));
+    }
+    return [...new Set(warnings)];
+  }, [managedImport, skill, t]);
 
   if (!skill) {
     return (
@@ -108,6 +158,50 @@ export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPane
           <dt className="text-slate-500">{t("skills.detail.pathLabel")}</dt>
           <dd className="break-all">{skill.relativePath}</dd>
         </dl>
+        {skill.managedSource ? (
+          <section className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <h4 className="text-sm font-semibold text-slate-100">
+                {t("skills.detail.managedSource.title")}
+              </h4>
+              <span className="rounded-full bg-sky-500/15 px-2 py-1 text-xs text-sky-100">
+                {t("skills.badges.managedGithubMirror")}
+              </span>
+              {skill.managedSource.updateAvailable ? (
+                <span className="rounded-full bg-amber-500/15 px-2 py-1 text-xs text-amber-200">
+                  {t("skills.detail.managedSource.updateAvailable")}
+                </span>
+              ) : null}
+            </div>
+            <dl className="mt-3 grid grid-cols-[120px_1fr] gap-2 text-sm text-slate-300">
+              <dt className="text-slate-500">{t("skills.detail.managedSource.repoUrl")}</dt>
+              <dd className="break-all">{skill.managedSource.repoUrl}</dd>
+              <dt className="text-slate-500">{t("skills.detail.managedSource.pinnedCommit")}</dt>
+              <dd>{shortCommit(skill.managedSource.pinnedCommit, skill.managedSource.pinnedCommit)}</dd>
+              <dt className="text-slate-500">{t("skills.detail.managedSource.agent")}</dt>
+              <dd>{skill.managedSource.agentKey}</dd>
+              {managedImport ? (
+                <>
+                  <dt className="text-slate-500">{t("skills.detail.managedSource.variantPath")}</dt>
+                  <dd className="break-all">{managedImport.upstreamVariantPath}</dd>
+                </>
+              ) : null}
+            </dl>
+            {managedWarnings.length ? (
+              <div className="mt-3 rounded-xl border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-xs text-amber-100">
+                {managedWarnings.map((warning) => (
+                  <p key={warning}>{warning}</p>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        ) : skill.sourceType === "external" ? (
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full bg-amber-500/15 px-2 py-1 text-xs text-amber-200">
+              {t("skills.badges.manualExternal")}
+            </span>
+          </div>
+        ) : null}
       </div>
 
       <div className="skill-markdown-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-4">

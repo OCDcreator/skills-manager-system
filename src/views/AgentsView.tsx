@@ -1,18 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AgentApplyResults } from "../components/agents/AgentApplyResults";
+import { AgentExternalVariantPanel } from "../components/agents/AgentExternalVariantPanel";
 import { AgentFloatingNav } from "../components/agents/AgentFloatingNav";
-import { AgentGlobalSkillList } from "../components/agents/AgentGlobalSkillList";
 import { AgentOrderModal } from "../components/agents/AgentOrderModal";
 import { AgentSyncSummary } from "../components/agents/AgentSyncSummary";
 import { AgentTargetsSection } from "../components/agents/AgentTargetsSection";
-import { AgentTargetCard } from "../components/agents/AgentTargetCard";
 import { useAppContext } from "../context/AppContext";
 import {
   draftFromAgent,
   draftToConfig,
   isAgentDraftDirty,
-  resolveAgentSelectionPreview,
   type AgentConfigDraft,
 } from "../lib/agent-selection";
 import { useAgentTargetActions } from "../lib/agent-target-actions";
@@ -36,10 +34,14 @@ export function AgentsView() {
     agentOrder,
     applyAgentSync,
     disabledSkillIds,
+    externalSources,
     isApplyingAgentSync,
     isLoadingAgents,
+    isLoadingExternalSources,
     lastAgentApplyResult,
+    importExternalVariant,
     registerNavigationGuard,
+    repairExternalImport,
     refreshSkills,
     refreshAgents,
     repoPath,
@@ -47,7 +49,10 @@ export function AgentsView() {
     saveAgentOrder,
     scanResult,
     sortedAgentInventory,
+    updateExternalImport,
     updatingAgentKey,
+    updatingExternalImportId,
+    updatingExternalSourceId,
   } = useAppContext();
   const [syncMode, setSyncMode] = useState<AgentSyncMode>("copy");
   const [isSavingSyncMode, setIsSavingSyncMode] = useState(false);
@@ -64,10 +69,7 @@ export function AgentsView() {
     () => scanResult.skills.filter((skill) => !disabledSkillIdSet.has(skill.id)).length,
     [scanResult.skills, disabledSkillIdSet],
   );
-  const sceneList = useMemo(
-    () => Object.values(sceneConfig?.scenes ?? {}),
-    [sceneConfig],
-  );
+  const sceneList = useMemo(() => Object.values(sceneConfig?.scenes ?? {}), [sceneConfig]);
 
   useEffect(() => {
     setDrafts((current) =>
@@ -222,10 +224,7 @@ export function AgentsView() {
 
   return (
     <div className="space-y-6 pr-12">
-      <AgentFloatingNav
-        agents={sortedAgentInventory}
-        onOpenOrderModal={() => setIsOrderModalOpen(true)}
-      />
+      <AgentFloatingNav agents={sortedAgentInventory} onOpenOrderModal={() => setIsOrderModalOpen(true)} />
 
       <div id="agent-sync-overview" className="scroll-mt-8">
         <AgentSyncSummary
@@ -278,10 +277,7 @@ export function AgentsView() {
       ) : null}
 
       <section id="agent-sync-targets" className="scroll-mt-8 space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-100">{t("agents.targets.title")}</h2>
-          <p className="mt-1 text-sm text-slate-500">{t("agents.targets.description")}</p>
-        </div>
+        <div><h2 className="text-lg font-semibold text-slate-100">{t("agents.targets.title")}</h2><p className="mt-1 text-sm text-slate-500">{t("agents.targets.description")}</p></div>
 
         {isLoadingAgents ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-400">
@@ -308,6 +304,26 @@ export function AgentsView() {
             takeOverTargetSkill={takeOverTargetSkill}
             updatingAgentKey={updatingAgentKey}
           />
+        )}
+      </section>
+
+      <section className="space-y-4">
+        {isLoadingExternalSources ? (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-400">{t("sources.loading")}</div>
+        ) : (
+          sortedAgentInventory.map((agent) => (
+            <AgentExternalVariantPanel
+              agent={agent}
+              key={`external-${agent.key}`}
+              onImportVariant={importExternalVariant}
+              onRepairImport={repairExternalImport}
+              onUpdateImport={updateExternalImport}
+              repoPath={repoPath}
+              sources={externalSources}
+              updatingExternalImportId={updatingExternalImportId}
+              updatingExternalSourceId={updatingExternalSourceId}
+            />
+          ))
         )}
       </section>
 
