@@ -1,7 +1,12 @@
 use anyhow::{anyhow, Result};
 use serde::Serialize;
+use std::fs;
 use std::path::Path;
 use walkdir::{DirEntry, WalkDir};
+
+use crate::core::external_sources::{
+    ExternalSourcesStore, ImportedExternalSkillRecord, ManagedSkillMirrorManifest,
+};
 
 use super::identity::{
     build_skill_id_from_relative_path, canonicalize_repo_relative_path, resolve_source_type,
@@ -92,6 +97,47 @@ pub fn scan_repo_skills(repo_root: &Path) -> Result<ScanSkillsResponse> {
     Ok(ScanSkillsResponse { skills, warnings })
 }
 
+pub fn scan_repo_skills_with_external_sources(
+    repo_root: &Path,
+    config_dir: &Path,
+) -> Result<ScanSkillsResponse> {
+    let mut response = scan_repo_skills(repo_root)?;
+    let snapshot = ExternalSourcesStore::new(config_dir.to_path_buf()).load()?;
+
+    for skill in &mut response.skills {
+        if skill.source_type != "external" {
+            continue;
+        }
+
+        let manifest_path = Path::new(&skill.directory_path).join(".skills-manager-source.json");
+        if !manifest_path.exists() {
+            continue;
+        }
+
+        match read_managed_manifest(&manifest_path) {
+            Ok(manifest) => {
+                let managed_source = build_managed_source_info(
+                    skill,
+                    &manifest,
+                    snapshot
+                        .imports
+                        .iter()
+                        .find(|record| record.skill_id == skill.id),
+                );
+                skill.managed_source = Some(managed_source);
+            }
+            Err(error) => {
+                response.warnings.push(format!(
+                    "Failed to parse managed mirror manifest at {}: {error}",
+                    manifest_path.display()
+                ));
+            }
+        }
+    }
+
+    Ok(response)
+}
+
 fn should_walk(entry: &DirEntry) -> bool {
     !IGNORED_DIRS
         .iter()
@@ -127,6 +173,55 @@ fn normalize_relative_path(repo_root: &Path, skill_dir: &Path) -> Result<String>
 
 fn path_to_string(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
+}
+
+fn read_managed_manifest(path: &Path) -> Result<ManagedSkillMirrorManifest> {
+    let raw = fs::read_to_string(path)?;
+    Ok(serde_json::from_str(&raw)?)
+}
+
+fn build_managed_source_info(
+    skill: &SkillSummary,
+    manifest: &ManagedSkillMirrorManifest,
+    import_record: Option<&ImportedExternalSkillRecord>,
+) -> ManagedSourceInfo {
+    let Some(import_record) = import_record else {
+        return mismatch_managed_source(manifest);
+    };
+
+    if !manifest.managed
+        || manifest.skill_id != skill.id
+        || manifest.mirror_relative_path != skill.relative_path
+        || manifest.import_id != import_record.import_id
+        || manifest.source_id != import_record.external_source_id
+        || manifest.agent_key != import_record.agent_key
+        || manifest.variant_path != import_record.upstream_variant_path
+        || manifest.pinned_commit != import_record.pinned_commit
+    {
+        return mismatch_managed_source(manifest);
+    }
+
+    ManagedSourceInfo {
+        kind: "github_import".to_string(),
+        import_id: import_record.import_id.clone(),
+        repo_url: manifest.repo_url.clone(),
+        pinned_commit: import_record.pinned_commit.clone(),
+        agent_key: import_record.agent_key.clone(),
+        update_available: import_record.update_available,
+        integrity: None,
+    }
+}
+
+fn mismatch_managed_source(manifest: &ManagedSkillMirrorManifest) -> ManagedSourceInfo {
+    ManagedSourceInfo {
+        kind: "github_import".to_string(),
+        import_id: manifest.import_id.clone(),
+        repo_url: manifest.repo_url.clone(),
+        pinned_commit: manifest.pinned_commit.clone(),
+        agent_key: manifest.agent_key.clone(),
+        update_available: false,
+        integrity: Some("mismatch".to_string()),
+    }
 }
 
 #[cfg(test)]
@@ -243,5 +338,182 @@ mod tests {
 
         assert_eq!(skill.source_type, "external");
         assert_eq!(skill.id, "external:managed/github/owner__repo/codex/skill");
+    }
+
+    #[test]
+    fn scan_enriches_managed_external_skill_when_manifest_and_record_match() {
+        use crate::app_runtime::config_lock::acquire_config_lock;
+        use crate::core::external_sources::models::{
+            ExternalSourceRecord, ExternalSourcesSnapshot, ImportedExternalSkillRecord,
+            ManagedSkillMirrorManifest,
+        };
+
+        let root = tempdir().unwrap();
+        let repo_root = root.path().join("repo");
+        let config_dir = root.path().join("config");
+        let skill_relative_path = "external/managed/github/owner__repo/codex/impeccable";
+        let skill_dir = repo_root.join(skill_relative_path);
+        fs::create_dir_all(&skill_dir).unwrap();
+        fs::write(
+            skill_dir.join("SKILL.md"),
+            "---\nname: impeccable\ndescription: imported\n---\n# Managed\n",
+        )
+        .unwrap();
+        fs::write(
+            skill_dir.join(".skills-manager-source.json"),
+            serde_json::to_string_pretty(&ManagedSkillMirrorManifest {
+                schema_version: 1,
+                managed: true,
+                import_id: "imp_01".to_string(),
+                source_id: "src_01".to_string(),
+                repo_url: "git@github.com:owner/repo.git".to_string(),
+                agent_key: "codex".to_string(),
+                variant_path: "dist/agents/.agents/skills/impeccable".to_string(),
+                mirror_relative_path: skill_relative_path.to_string(),
+                skill_id: "external:managed/github/owner__repo/codex/impeccable".to_string(),
+                pinned_commit: "abc123".to_string(),
+            })
+            .unwrap(),
+        )
+        .unwrap();
+
+        let store = ExternalSourcesStore::new(config_dir.clone());
+        let guard = acquire_config_lock(&config_dir).unwrap();
+        store
+            .save(
+                &guard,
+                &ExternalSourcesSnapshot {
+                    schema_version: 1,
+                    sources: vec![ExternalSourceRecord {
+                        id: "src_01".to_string(),
+                        repo_url: "git@github.com:owner/repo.git".to_string(),
+                        ..ExternalSourceRecord::default()
+                    }],
+                    imports: vec![ImportedExternalSkillRecord {
+                        import_id: "imp_01".to_string(),
+                        external_source_id: "src_01".to_string(),
+                        agent_key: "codex".to_string(),
+                        upstream_variant_path: "dist/agents/.agents/skills/impeccable"
+                            .to_string(),
+                        pinned_commit: "abc123".to_string(),
+                        pinned_variant_fingerprint: Some("sha256:1234".to_string()),
+                        skill_id: "external:managed/github/owner__repo/codex/impeccable"
+                            .to_string(),
+                        mirror_relative_path: skill_relative_path.to_string(),
+                        last_checked_commit: Some("def456".to_string()),
+                        imported_at: Some("2026-04-29T00:00:00Z".to_string()),
+                        warnings: Vec::new(),
+                        update_available: true,
+                    }],
+                },
+            )
+            .unwrap();
+        drop(guard);
+
+        let response = scan_repo_skills_with_external_sources(&repo_root, &config_dir).unwrap();
+        let skill = response
+            .skills
+            .iter()
+            .find(|skill| skill.id == "external:managed/github/owner__repo/codex/impeccable")
+            .unwrap();
+
+        assert_eq!(
+            skill.managed_source,
+            Some(ManagedSourceInfo {
+                kind: "github_import".to_string(),
+                import_id: "imp_01".to_string(),
+                repo_url: "git@github.com:owner/repo.git".to_string(),
+                pinned_commit: "abc123".to_string(),
+                agent_key: "codex".to_string(),
+                update_available: true,
+                integrity: None,
+            })
+        );
+    }
+
+    #[test]
+    fn scan_keeps_managed_enrichment_healthy_without_source_snapshot_entry() {
+        use crate::app_runtime::config_lock::acquire_config_lock;
+        use crate::core::external_sources::models::{
+            ExternalSourcesSnapshot, ImportedExternalSkillRecord, ManagedSkillMirrorManifest,
+        };
+
+        let root = tempdir().unwrap();
+        let repo_root = root.path().join("repo");
+        let config_dir = root.path().join("config");
+        let skill_relative_path = "external/managed/github/owner__repo/codex/impeccable";
+        let skill_dir = repo_root.join(skill_relative_path);
+        fs::create_dir_all(&skill_dir).unwrap();
+        fs::write(
+            skill_dir.join("SKILL.md"),
+            "---\nname: impeccable\ndescription: imported\n---\n# Managed\n",
+        )
+        .unwrap();
+        fs::write(
+            skill_dir.join(".skills-manager-source.json"),
+            serde_json::to_string_pretty(&ManagedSkillMirrorManifest {
+                schema_version: 1,
+                managed: true,
+                import_id: "imp_01".to_string(),
+                source_id: "src_01".to_string(),
+                repo_url: "git@github.com:owner/repo.git".to_string(),
+                agent_key: "codex".to_string(),
+                variant_path: "dist/agents/.agents/skills/impeccable".to_string(),
+                mirror_relative_path: skill_relative_path.to_string(),
+                skill_id: "external:managed/github/owner__repo/codex/impeccable".to_string(),
+                pinned_commit: "abc123".to_string(),
+            })
+            .unwrap(),
+        )
+        .unwrap();
+
+        let store = ExternalSourcesStore::new(config_dir.clone());
+        let guard = acquire_config_lock(&config_dir).unwrap();
+        store
+            .save(
+                &guard,
+                &ExternalSourcesSnapshot {
+                    schema_version: 1,
+                    sources: Vec::new(),
+                    imports: vec![ImportedExternalSkillRecord {
+                        import_id: "imp_01".to_string(),
+                        external_source_id: "src_01".to_string(),
+                        agent_key: "codex".to_string(),
+                        upstream_variant_path: "dist/agents/.agents/skills/impeccable"
+                            .to_string(),
+                        pinned_commit: "abc123".to_string(),
+                        pinned_variant_fingerprint: Some("sha256:1234".to_string()),
+                        skill_id: "external:managed/github/owner__repo/codex/impeccable"
+                            .to_string(),
+                        mirror_relative_path: skill_relative_path.to_string(),
+                        last_checked_commit: Some("def456".to_string()),
+                        imported_at: Some("2026-04-29T00:00:00Z".to_string()),
+                        warnings: Vec::new(),
+                        update_available: true,
+                    }],
+                },
+            )
+            .unwrap();
+        drop(guard);
+
+        let response = scan_repo_skills_with_external_sources(&repo_root, &config_dir).unwrap();
+        let skill = response
+            .skills
+            .iter()
+            .find(|skill| skill.id == "external:managed/github/owner__repo/codex/impeccable")
+            .unwrap();
+
+        assert_eq!(
+            skill.managed_source,
+            Some(ManagedSourceInfo {
+                kind: "github_import".to_string(),
+                import_id: "imp_01".to_string(),
+                repo_url: "git@github.com:owner/repo.git".to_string(),
+                pinned_commit: "abc123".to_string(),
+                agent_key: "codex".to_string(),
+                update_available: true,
+                integrity: None,
+            })
+        );
     }
 }

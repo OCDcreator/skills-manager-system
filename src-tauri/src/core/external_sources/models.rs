@@ -90,6 +90,39 @@ impl Default for ImportedExternalSkillRecord {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default, rename_all = "camelCase")]
+pub struct ManagedSkillMirrorManifest {
+    #[serde(default = "default_schema_version")]
+    pub schema_version: u32,
+    pub managed: bool,
+    pub import_id: String,
+    pub source_id: String,
+    pub repo_url: String,
+    pub agent_key: String,
+    pub variant_path: String,
+    pub mirror_relative_path: String,
+    pub skill_id: String,
+    pub pinned_commit: String,
+}
+
+impl Default for ManagedSkillMirrorManifest {
+    fn default() -> Self {
+        Self {
+            schema_version: ExternalSourcesSnapshot::SCHEMA_VERSION,
+            managed: true,
+            import_id: String::new(),
+            source_id: String::new(),
+            repo_url: String::new(),
+            agent_key: String::new(),
+            variant_path: String::new(),
+            mirror_relative_path: String::new(),
+            skill_id: String::new(),
+            pinned_commit: String::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ExternalSourceWarning {
     pub code: String,
