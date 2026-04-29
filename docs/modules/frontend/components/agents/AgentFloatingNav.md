@@ -25,4 +25,4 @@ Receives ordered agent keys and display names plus an `onOpenOrderModal` callbac
 
 ## Interactions
 
-Keep aligned with `src/views/AgentsView.tsx` anchor IDs, `AgentBrandIcon`, and `agents.sideNav.*` i18n keys.
+Keep aligned with `src/views/AgentsView.tsx` anchor IDs, `AgentBrandIcon`, and `agents.sideNav.*` i18n keys. The hidden-scrollbar behavior is supplied by the dedicated `src/styles/agents.css` domain file imported through `src/styles.css`.

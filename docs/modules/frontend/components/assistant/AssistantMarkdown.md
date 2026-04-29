@@ -30,7 +30,7 @@ Markdown string in → `escapeHtml()` → `marked.parse()` → safe HTML string 
 
 ## Interactions
 
-Relies on `github-markdown-css/github-markdown-dark.css` imported in `src/styles.css`.
+Relies on the markdown vendor styles imported through the `src/styles.css` entrypoint. Assistant-specific typography remains local to the component via Tailwind utilities instead of introducing another global CSS file.
 
 ## Configuration
 

@@ -1,0 +1,10 @@
+@layer components {
+  .agent-floating-nav-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .agent-floating-nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}

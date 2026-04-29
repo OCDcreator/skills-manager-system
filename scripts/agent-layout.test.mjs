@@ -74,14 +74,19 @@ test('Agent floating nav hides its own scrollbar while remaining scrollable', ()
     path.resolve('src/components/agents/AgentFloatingNav.tsx'),
     'utf8',
   );
-  const styleSource = fs.readFileSync(
+  const styleEntrySource = fs.readFileSync(
     path.resolve('src/styles.css'),
+    'utf8',
+  );
+  const agentStyleSource = fs.readFileSync(
+    path.resolve('src/styles/agents.css'),
     'utf8',
   );
 
   assert.match(navSource, /agent-floating-nav-scroll/);
-  assert.match(styleSource, /\.agent-floating-nav-scroll\s*\{/);
-  assert.match(styleSource, /scrollbar-width:\s*none/);
-  assert.match(styleSource, /\.agent-floating-nav-scroll::\-webkit-scrollbar\s*\{/);
-  assert.match(styleSource, /display:\s*none/);
+  assert.match(styleEntrySource, /@import "\.\/styles\/agents\.css";/);
+  assert.match(agentStyleSource, /\.agent-floating-nav-scroll\s*\{/);
+  assert.match(agentStyleSource, /scrollbar-width:\s*none/);
+  assert.match(agentStyleSource, /\.agent-floating-nav-scroll::\-webkit-scrollbar\s*\{/);
+  assert.match(agentStyleSource, /display:\s*none/);
 });

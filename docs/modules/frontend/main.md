@@ -5,7 +5,7 @@
 
 ## Overview
 
-Bootstraps the React application into the DOM and loads global i18n and CSS side effects.
+Bootstraps the React application into the DOM and loads global i18n and the CSS entrypoint side effects.
 
 ## Import Relationships
 
@@ -34,7 +34,7 @@ Requires `index.html` to provide an element with `id="root"`.
 
 ## Configuration
 
-Imports global stylesheet and i18n initialization as side effects.
+Imports i18n initialization plus the stylesheet entrypoint. `src/styles.css` now fans out into the modular CSS files under `src/styles/` so the entrypoint stays stable while global style domains remain split by responsibility.
 
 ## Change Notes
 

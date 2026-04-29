@@ -6,6 +6,7 @@
       "sourceRoot": "src",
       "docsRoot": "docs/modules/frontend",
       "include": [
+        "**/*.css",
         "**/*.ts",
         "**/*.tsx"
       ],
