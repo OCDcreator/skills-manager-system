@@ -1,11 +1,32 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
+import ts from "typescript";
 
 function readIfExists(relativePath) {
   const absolutePath = path.resolve(relativePath);
   return fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath, "utf8") : "";
+}
+
+async function loadExternalSourcesModule() {
+  const sourcePath = path.resolve("src/lib/external-sources.ts");
+  const source = fs.readFileSync(sourcePath, "utf8");
+  const transpiled = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2020,
+    },
+    fileName: sourcePath,
+  });
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "external-sources-test-"));
+  const tempFile = path.join(tempDir, "external-sources.mjs");
+  fs.writeFileSync(tempFile, transpiled.outputText, "utf8");
+
+  return import(pathToFileURL(tempFile).href);
 }
 
 test("AppShell exposes the sources view in the top nav", () => {
@@ -84,13 +105,31 @@ test("scan_skills desktop command enriches scan payloads with managed external s
 test("ExternalImportList keeps repair busy state independent from update availability", () => {
   const source = readIfExists("src/components/external-sources/ExternalImportList.tsx");
 
-  assert.match(source, /const \[busyImportAction, setBusyImportAction\] = useState/);
-  assert.match(source, /const isUpdatingImport =/);
-  assert.match(source, /busyImportAction\?\.importId === item\.importId/);
-  assert.match(source, /busyImportAction\.action === "update"/);
-  assert.match(source, /const isRepairingImport =/);
-  assert.match(source, /busyImportAction\.action === "repair"/);
+  assert.match(source, /resolveImportBusyState/);
   assert.match(source, /isRepairingImport\s*\?\s*t\("sources\.imports\.repairing"\)/);
+});
+
+test("external source helpers execute busy-state behavior at runtime", async () => {
+  const module = await loadExternalSourcesModule();
+  const item = {
+    importId: "imp-1",
+    updateAvailable: true,
+  };
+
+  assert.equal(module.shortCommit("abcdef1234567890"), "abcdef12");
+  assert.equal(module.shortCommit(null, "unknown"), "unknown");
+  assert.equal(
+    module.warningSummary(
+      [{ code: "one", severity: "warning", message: "Only warning" }],
+      "2 warnings",
+      "none",
+    ),
+    "Only warning",
+  );
+  assert.deepEqual(
+    module.resolveImportBusyState(item, "imp-1", { action: "repair", importId: "imp-1" }),
+    { isBusyImport: true, isUpdatingImport: false, isRepairingImport: true },
+  );
 });
 
 test("refreshSkills reloads the selected document when the selected skill survives the refresh", () => {

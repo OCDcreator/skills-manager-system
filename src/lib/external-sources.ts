@@ -1,4 +1,4 @@
-import type { ExternalSourceRecord, ExternalSourceWarning } from "./tauri";
+import type { ExternalSourceRecord, ExternalSourceWarning, ImportedExternalSkillRecord } from "./tauri";
 
 export function externalSourceName(record: ExternalSourceRecord) {
   const trimmed = record.repoUrl.trim().replace(/\/+$/, "");
@@ -28,4 +28,33 @@ export function warningSummary(
   if (!warnings.length) return noWarningsLabel;
   if (warnings.length === 1) return warnings[0].message;
   return warningCountLabel;
+}
+
+export interface BusyImportAction {
+  action: "repair" | "update";
+  importId: string;
+}
+
+export function resolveImportBusyState(
+  item: ImportedExternalSkillRecord,
+  updatingImportId: string | null,
+  busyImportAction: BusyImportAction | null,
+) {
+  const isBusyImport = updatingImportId === item.importId;
+  const isUpdatingImport =
+    isBusyImport &&
+    (busyImportAction?.importId === item.importId
+      ? busyImportAction.action === "update"
+      : item.updateAvailable);
+  const isRepairingImport =
+    isBusyImport &&
+    (busyImportAction?.importId === item.importId
+      ? busyImportAction.action === "repair"
+      : !item.updateAvailable);
+
+  return {
+    isBusyImport,
+    isUpdatingImport,
+    isRepairingImport,
+  };
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { shortCommit } from "../../lib/external-sources";
+import { resolveImportBusyState, shortCommit } from "../../lib/external-sources";
 import type { ImportedExternalSkillRecord } from "../../lib/tauri";
 
 interface ExternalImportListProps {
@@ -29,17 +29,11 @@ export function ExternalImportList({
   return (
     <div className="space-y-3">
       {imports.map((item) => {
-        const isBusyImport = updatingImportId === item.importId;
-        const isUpdatingImport =
-          isBusyImport &&
-          (busyImportAction?.importId === item.importId
-            ? busyImportAction.action === "update"
-            : item.updateAvailable);
-        const isRepairingImport =
-          isBusyImport &&
-          (busyImportAction?.importId === item.importId
-            ? busyImportAction.action === "repair"
-            : !item.updateAvailable);
+        const { isBusyImport, isUpdatingImport, isRepairingImport } = resolveImportBusyState(
+          item,
+          updatingImportId,
+          busyImportAction,
+        );
         return (
           <article
             key={item.importId}

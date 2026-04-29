@@ -15,10 +15,11 @@ Provides tiny presentation helpers shared by the external-source and managed-ski
 | `shortCommit` | Truncates commit hashes to eight characters with a fallback label. |
 | `statusClasses` | Maps source status values to Tailwind badge classes. |
 | `warningSummary` | Collapses many warnings into a count label while preserving single-warning text. |
+| `resolveImportBusyState` | Computes whether one imported mirror row is currently updating or repairing. |
 
 ## Core Logic
 
-This file stays presentation-only. It trims trailing slashes before deriving owner/repo labels and intentionally does not normalize or validate repository URLs beyond that display concern.
+This file stays presentation-only. It trims trailing slashes before deriving owner/repo labels, intentionally does not normalize or validate repository URLs beyond that display concern, and centralizes the busy-state logic shared by `ExternalImportList` so repair and update labels stay truthful when a row is disabled mid-action.
 
 ## Interactions
 

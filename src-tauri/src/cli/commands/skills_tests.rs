@@ -6,7 +6,13 @@ use tempfile::tempdir;
 use super::skills::run;
 use crate::app_runtime::{AppRuntimeContext, AppRuntimeOptions, CliStatus};
 use crate::cli::args::SkillsCommand;
+use crate::core::external_sources::models::{
+    ExternalSourceRecord, ExternalSourcesSnapshot, ImportedExternalSkillRecord,
+    ManagedSkillMirrorManifest,
+};
+use crate::core::external_sources::store::ExternalSourcesStore;
 use crate::core::skills::state::SkillStateStore;
+use crate::app_runtime::config_lock::acquire_config_lock;
 
 #[test]
 fn skills_list_joins_scan_and_state() {
@@ -100,6 +106,97 @@ fn skills_doc_accepts_skill_ids() {
     assert_eq!(
         document.get("content").and_then(Value::as_str),
         Some("---\nname: SearXNG\n---\n# Skill document")
+    );
+}
+
+#[test]
+fn skills_list_enriches_managed_external_mirrors() {
+    let config_dir = tempdir().unwrap();
+    let repo_dir = tempdir().unwrap();
+    let skill_relative_path = "external/managed/github/demo__repo/codex/impeccable";
+    let skill_dir = repo_dir.path().join(skill_relative_path);
+
+    std::fs::create_dir_all(&skill_dir).unwrap();
+    std::fs::write(
+        skill_dir.join("SKILL.md"),
+        "---\nname: Impeccable\ndescription: Managed mirror\n---",
+    )
+    .unwrap();
+    std::fs::write(
+        skill_dir.join(".skills-manager-source.json"),
+        serde_json::to_string_pretty(&ManagedSkillMirrorManifest {
+            schema_version: 1,
+            managed: true,
+            import_id: "imp_01".to_string(),
+            source_id: "src_01".to_string(),
+            repo_url: "https://github.com/demo/repo".to_string(),
+            agent_key: "codex".to_string(),
+            variant_path: "dist/agents/.agents/skills/impeccable".to_string(),
+            mirror_relative_path: skill_relative_path.to_string(),
+            skill_id: "external:managed/github/demo__repo/codex/impeccable".to_string(),
+            pinned_commit: "abc123".to_string(),
+        })
+        .unwrap(),
+    )
+    .unwrap();
+
+    let store = ExternalSourcesStore::new(config_dir.path().to_path_buf());
+    let guard = acquire_config_lock(config_dir.path()).unwrap();
+    store
+        .save(
+            &guard,
+            &ExternalSourcesSnapshot {
+                schema_version: 1,
+                sources: vec![ExternalSourceRecord {
+                    id: "src_01".to_string(),
+                    repo_url: "https://github.com/demo/repo".to_string(),
+                    ..ExternalSourceRecord::default()
+                }],
+                imports: vec![ImportedExternalSkillRecord {
+                    import_id: "imp_01".to_string(),
+                    external_source_id: "src_01".to_string(),
+                    agent_key: "codex".to_string(),
+                    upstream_variant_path: "dist/agents/.agents/skills/impeccable".to_string(),
+                    pinned_commit: "abc123".to_string(),
+                    pinned_variant_fingerprint: Some("sha256:demo".to_string()),
+                    skill_id: "external:managed/github/demo__repo/codex/impeccable".to_string(),
+                    mirror_relative_path: skill_relative_path.to_string(),
+                    last_checked_commit: Some("abc123".to_string()),
+                    imported_at: Some("2026-04-29T00:00:00Z".to_string()),
+                    warnings: Vec::new(),
+                    update_available: true,
+                }],
+            },
+        )
+        .unwrap();
+    drop(guard);
+
+    let context = AppRuntimeContext::from_options_with_parts(
+        AppRuntimeOptions {
+            config_dir_override: Some(config_dir.path().to_path_buf()),
+            repo_override: Some(repo_dir.path().to_path_buf()),
+            ..AppRuntimeOptions::default()
+        },
+        PathBuf::from("/unused"),
+        crate::app_runtime::DEVELOPMENT_APP_IDENTIFIER,
+    );
+
+    let result = run(&context, &SkillsCommand::List);
+    let data = result.response.data.unwrap();
+    let skills = data.get("skills").and_then(Value::as_array).unwrap();
+    let managed = skills
+        .iter()
+        .find(|item| item.get("id").and_then(Value::as_str)
+            == Some("external:managed/github/demo__repo/codex/impeccable"))
+        .unwrap();
+
+    assert_eq!(result.response.status, CliStatus::Success);
+    assert_eq!(
+        managed
+            .get("managedSource")
+            .and_then(|value| value.get("importId"))
+            .and_then(Value::as_str),
+        Some("imp_01")
     );
 }
 

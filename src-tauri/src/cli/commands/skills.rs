@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use crate::app_runtime::{AppRuntimeContext, CliCommandError, CliRunResult, CliWarning};
 use crate::cli::args::SkillsCommand;
 use crate::core::skills::documents::read_skill_document;
-use crate::core::skills::scan::{scan_repo_skills, SkillSummary};
+use crate::core::skills::scan::{scan_repo_skills_with_external_sources, ManagedSourceInfo, SkillSummary};
 use crate::core::skills::state::SkillStateStore;
 
 #[derive(Debug, Serialize, PartialEq, Eq)]
@@ -19,6 +19,7 @@ struct SkillListItem {
     relative_path: String,
     directory_path: String,
     skill_document_path: String,
+    managed_source: Option<ManagedSourceInfo>,
     enabled: bool,
 }
 
@@ -43,7 +44,7 @@ fn scan(context: &AppRuntimeContext) -> CliRunResult {
         Err(result) => return result,
     };
 
-    match scan_repo_skills(&repo_path) {
+    match scan_repo_skills_with_external_sources(&repo_path, &context.config_dir) {
         Ok(response) => {
             let warnings = map_scan_warnings(&response.warnings);
             CliRunResult::ok_with_warnings(
@@ -97,7 +98,7 @@ fn list(context: &AppRuntimeContext) -> CliRunResult {
         Err(result) => return result,
     };
 
-    let scan_response = match scan_repo_skills(&repo_path) {
+    let scan_response = match scan_repo_skills_with_external_sources(&repo_path, &context.config_dir) {
         Ok(response) => response,
         Err(error) => {
             return CliRunResult::error(
@@ -153,18 +154,41 @@ fn doc(context: &AppRuntimeContext, target: &str) -> CliRunResult {
         Err(result) => return result,
     };
 
-    let relative_path = match resolve_document_target(&repo_path, target) {
+    let relative_path = match resolve_document_target(&repo_path, &context.config_dir, target) {
         Ok(relative_path) => relative_path,
         Err(result) => return result,
     };
 
+    let scan_response = match scan_repo_skills_with_external_sources(&repo_path, &context.config_dir) {
+        Ok(response) => response,
+        Err(error) => {
+            return CliRunResult::error(
+                "skills doc",
+                CliCommandError::filesystem(
+                    "skill_scan_failed",
+                    format!("Failed to scan skills while resolving '{target}': {error}"),
+                ),
+                context,
+                Some(repo_path.as_path()),
+            );
+        }
+    };
+    let managed_source = scan_response
+        .skills
+        .iter()
+        .find(|skill| skill.relative_path == relative_path)
+        .and_then(|skill| skill.managed_source.clone());
+
     match read_skill_document(&repo_path, &relative_path) {
-        Ok(document) => CliRunResult::success(
+        Ok(mut document) => {
+            document.managed_source = managed_source;
+            CliRunResult::success(
             "skills doc",
             json!({ "document": document }),
             context,
             Some(repo_path.as_path()),
-        ),
+        )
+        }
         Err(error) => CliRunResult::error(
             "skills doc",
             CliCommandError::target_not_found(
@@ -192,12 +216,16 @@ fn require_repo_path(command: &str, context: &AppRuntimeContext) -> Result<PathB
     })
 }
 
-fn resolve_document_target(repo_path: &Path, target: &str) -> Result<String, CliRunResult> {
+fn resolve_document_target(
+    repo_path: &Path,
+    config_dir: &Path,
+    target: &str,
+) -> Result<String, CliRunResult> {
     if !target.contains(':') {
         return Ok(target.to_string());
     }
 
-    let scan_response = scan_repo_skills(repo_path).map_err(|error| {
+    let scan_response = scan_repo_skills_with_external_sources(repo_path, config_dir).map_err(|error| {
         CliRunResult::bootstrap_error(
             "skills doc",
             CliCommandError::filesystem(
@@ -242,6 +270,7 @@ fn build_skill_list_item(
         relative_path: summary.relative_path,
         directory_path: summary.directory_path,
         skill_document_path: summary.skill_document_path,
+        managed_source: summary.managed_source,
         enabled,
     }
 }

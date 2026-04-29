@@ -22,8 +22,8 @@ Downstream: src-tauri/src/cli/commands/skills.rs, src-tauri/src/core/skills/stat
 
 ## Core Logic
 
-The tests create temporary config and repository roots, verify that `skills list` joins scan results with disabled state, verify that `skills doc` can resolve a stable skill id into its `SKILL.md` document, and assert enable/disable writes through `SkillStateStore`.
+The tests create temporary config and repository roots, verify that `skills list` joins scan results with disabled state, verify that managed external mirrors are enriched into CLI list payloads when manifest plus import state exist, verify that `skills doc` can resolve a stable skill id into its `SKILL.md` document, and assert enable/disable writes through `SkillStateStore`.
 
 ## Interactions
 
-Must stay aligned with `SkillsCommand`, `skill_mutations.rs`, the CLI JSON response shape, and the `SkillStateStore` repo-scoped disabled ID format.
+Must stay aligned with `SkillsCommand`, `skill_mutations.rs`, `ExternalSourcesStore`, the CLI JSON response shape, and the `SkillStateStore` repo-scoped disabled ID format.
