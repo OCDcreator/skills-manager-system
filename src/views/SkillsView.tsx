@@ -1,6 +1,5 @@
-import { useMemo, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { SkillDetailPanel } from "../components/skills/SkillDetailPanel";
 import { SkillFilters } from "../components/skills/SkillFilters";
 import { SkillList } from "../components/skills/SkillList";
 import { useAppContext } from "../context/AppContext";
@@ -13,6 +12,20 @@ import {
   type SourceFilter,
   resolveVisibleSources,
 } from "../lib/skills/filters";
+
+const SkillDetailPanel = lazy(() =>
+  import("../components/skills/SkillDetailPanel").then((module) => ({
+    default: module.SkillDetailPanel,
+  })),
+);
+
+function SkillDetailPlaceholder({ message }: { message: string }) {
+  return (
+    <aside className="min-w-0 rounded-2xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-400 min-[1280px]:sticky min-[1280px]:top-8 min-[1280px]:max-h-[calc(100vh-7rem)]">
+      {message}
+    </aside>
+  );
+}
 
 export function SkillsView() {
   const { t } = useTranslation();
@@ -127,11 +140,17 @@ export function SkillsView() {
             </div>
           </div>
 
-          <SkillDetailPanel
-            document={selectedDocument}
-            isEnabled={selectedSkillEnabled}
-            skill={selectedSkill}
-          />
+          {selectedSkill ? (
+            <Suspense fallback={<SkillDetailPlaceholder message={t("skills.detail.loadingDocument")} />}>
+              <SkillDetailPanel
+                document={selectedDocument}
+                isEnabled={selectedSkillEnabled}
+                skill={selectedSkill}
+              />
+            </Suspense>
+          ) : (
+            <SkillDetailPlaceholder message={t("skills.selectPrompt")} />
+          )}
         </div>
       )}
     </>
