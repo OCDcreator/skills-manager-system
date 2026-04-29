@@ -11,7 +11,7 @@ Provides the public desktop-facing orchestration layer for source records, sourc
 
 | Export | Purpose |
 |---|---|
-| `ExternalVariantSnapshot` | Serializable detected variant shape returned to the frontend. |
+| `ExternalVariantSnapshot` | Serializable detected variant shape plus parsed skill metadata returned to the frontend. |
 | `ExternalSourceSnapshotItem` | Source record plus detected variants and imports. |
 | `ExternalSourcesListResponse` | List payload returned by list/add/fetch/remove flows. |
 | `list_external_sources` | Loads current snapshots and injects runtime integrity warnings when a repo root is available. |
@@ -28,7 +28,7 @@ Provides the public desktop-facing orchestration layer for source records, sourc
 
 For destructive source removal, the service now preflights every imported mirror first, then deletes the cache directory before committing the source/import snapshot mutation so a cache-removal failure cannot leave app state already removed.
 
-Runtime integrity warnings are still computed late during listing so the UI can surface broken live mirrors without first mutating `external-sources.json`.
+Runtime integrity warnings are still computed late during listing so the UI can surface broken live mirrors without first mutating `external-sources.json`. Variant snapshots now also include parsed `name` and `description` metadata, but that enrichment still happens read-only during snapshot assembly rather than through persisted source records.
 
 ## Interactions
 

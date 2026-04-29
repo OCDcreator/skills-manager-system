@@ -20,6 +20,7 @@ Downstream: std::fs, serde_yaml
 |---|---|
 | `SkillMetadata` | Optional parsed name and description values. |
 | `parse_skill_metadata` | Reads a `SKILL.md` path and returns parsed metadata or defaults. |
+| `parse_skill_metadata_content` | Parses metadata directly from already-loaded markdown content. |
 
 ## Core Logic
 
@@ -27,7 +28,7 @@ The parser trims leading whitespace, requires an opening `---`, finds the next `
 
 ## Data Flow
 
-Scanner and document reader pass `SKILL.md` paths in; metadata flows into summaries and detail payloads.
+Scanner, external-source snapshot assembly, and document readers pass either `SKILL.md` paths or already-loaded markdown content in; metadata flows into summaries and detail payloads.
 
 ## Interactions
 

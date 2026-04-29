@@ -1,6 +1,7 @@
 pub mod detect;
 mod git_export;
 pub mod git_repo;
+mod git_tree;
 mod hash;
 mod import_paths;
 pub mod imports;

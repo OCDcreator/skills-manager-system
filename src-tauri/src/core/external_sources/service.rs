@@ -25,6 +25,8 @@ pub struct ExternalVariantSnapshot {
     pub variant_path: String,
     pub source_of_truth_path: Option<String>,
     pub metadata_path: Option<String>,
+    pub name: Option<String>,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -17,15 +17,19 @@ struct Frontmatter {
 
 pub fn parse_skill_metadata(skill_md_path: &Path) -> Result<SkillMetadata> {
     let content = fs::read_to_string(skill_md_path)?;
+    Ok(parse_skill_metadata_content(&content))
+}
+
+pub fn parse_skill_metadata_content(content: &str) -> SkillMetadata {
     let trimmed = content.trim_start();
 
     if !trimmed.starts_with("---") {
-        return Ok(SkillMetadata::default());
+        return SkillMetadata::default();
     }
 
     let remainder = &trimmed[3..];
     let Some(end_index) = remainder.find("---") else {
-        return Ok(SkillMetadata::default());
+        return SkillMetadata::default();
     };
 
     let yaml = &remainder[..end_index];
@@ -34,10 +38,10 @@ pub fn parse_skill_metadata(skill_md_path: &Path) -> Result<SkillMetadata> {
         description: None,
     });
 
-    Ok(SkillMetadata {
+    SkillMetadata {
         name: parsed.name,
         description: parsed.description,
-    })
+    }
 }
 
 #[cfg(test)]
@@ -56,6 +60,15 @@ mod tests {
         .unwrap();
 
         let metadata = parse_skill_metadata(&dir.path().join("SKILL.md")).unwrap();
+        assert_eq!(metadata.name.as_deref(), Some("frontend-design"));
+        assert_eq!(metadata.description.as_deref(), Some("polished UI systems"));
+    }
+
+    #[test]
+    fn parse_content_reads_name_and_description() {
+        let metadata = parse_skill_metadata_content(
+            "---\nname: frontend-design\ndescription: polished UI systems\n---\n# body",
+        );
         assert_eq!(metadata.name.as_deref(), Some("frontend-design"));
         assert_eq!(metadata.description.as_deref(), Some("polished UI systems"));
     }

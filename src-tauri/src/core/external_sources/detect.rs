@@ -1,9 +1,13 @@
 use anyhow::{Context, Result};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use walkdir::WalkDir;
 
+use super::git_repo::{read_default_branch, read_head_commit};
+use super::git_tree::{
+    list_direct_child_skill_dirs_at_ref, list_recursive_skill_dirs_at_ref,
+};
 use super::models::ExternalSourceWarning;
 use crate::core::skills::identity::canonicalize_repo_relative_path;
 
@@ -26,95 +30,136 @@ pub struct DetectionResult {
 }
 
 pub fn detect_external_source_variants(repo_dir: &Path, source_id: &str) -> Result<DetectionResult> {
-    let mut variants = Vec::new();
-    let mut warnings = Vec::new();
-    let source_skill_dirs = collect_source_skill_dirs(repo_dir)?;
-
-    for rule in GENERATED_RULES {
-        let target_root = repo_dir.join(rule.built_root);
-        if !target_root.exists() {
-            continue;
-        }
-
-        for entry in fs::read_dir(&target_root)
-            .with_context(|| format!("Failed to read {}", target_root.display()))?
-        {
-            let entry = entry?;
-            if !entry.file_type()?.is_dir() {
-                continue;
-            }
-
-            let skill_dir = entry.path();
-            if !skill_dir.join("SKILL.md").is_file() {
-                continue;
-            }
-
-            let skill_name = entry.file_name().to_string_lossy().to_string();
-            let variant_path = canonicalize_repo_relative_path(
-                path_relative_to(repo_dir, &skill_dir)?.to_string_lossy().as_ref(),
-            )?;
-            let metadata_path = format!("{variant_path}/SKILL.md");
-            let source_of_truth_path = source_skill_dirs
-                .iter()
-                .find(|path| path.file_name().and_then(|name| name.to_str()) == Some(skill_name.as_str()))
-                .map(|path| {
-                    canonicalize_repo_relative_path(
-                        path_relative_to(repo_dir, path).unwrap().to_string_lossy().as_ref(),
-                    )
-                    .unwrap()
-                });
-
-            variants.push(DetectedExternalVariant {
-                agent_key: rule.agent_key.to_string(),
-                variant_path,
-                source_of_truth_path,
-                metadata_path: Some(metadata_path),
-            });
+    if let Ok(default_branch) = read_default_branch(repo_dir) {
+        if let Ok(head_commit) = read_head_commit(repo_dir, &default_branch) {
+            return detect_external_source_variants_at_ref(repo_dir, &head_commit, source_id);
         }
     }
 
-    warnings.extend(detect_unknown_agent_variants(repo_dir, source_id)?);
+    detect_external_source_variants_from_worktree(repo_dir, source_id)
+}
 
-    let kind = if variants.is_empty() {
-        UNSUPPORTED_KIND.to_string()
-    } else {
-        GENERATED_AGENT_BUNDLE_KIND.to_string()
-    };
+pub(crate) fn detect_external_source_variants_at_ref(
+    repo_dir: &Path,
+    git_ref: &str,
+    source_id: &str,
+) -> Result<DetectionResult> {
+    detect_with_listing(
+        source_id,
+        |root| list_direct_child_skill_dirs_at_ref(repo_dir, git_ref, root),
+        |root| list_recursive_skill_dirs_at_ref(repo_dir, git_ref, root),
+    )
+}
+
+fn detect_external_source_variants_from_worktree(
+    repo_dir: &Path,
+    source_id: &str,
+) -> Result<DetectionResult> {
+    detect_with_listing(
+        source_id,
+        |root| collect_direct_skill_dirs_from_worktree(repo_dir, root),
+        |root| collect_recursive_skill_dirs_from_worktree(repo_dir, root),
+    )
+}
+
+fn detect_with_listing<Direct, Recursive>(
+    source_id: &str,
+    list_direct_skill_dirs: Direct,
+    list_recursive_skill_dirs: Recursive,
+) -> Result<DetectionResult>
+where
+    Direct: Fn(&str) -> Result<Vec<String>>,
+    Recursive: Fn(&str) -> Result<Vec<String>>,
+{
+    let source_skill_dirs = list_direct_skill_dirs("source/skills")?;
+    let source_skill_index = build_source_skill_index(&source_skill_dirs);
+    let variants = collect_supported_variants(&list_direct_skill_dirs, &source_skill_index)?;
+    let warnings = detect_unknown_agent_variants(source_id, &list_recursive_skill_dirs)?;
 
     Ok(DetectionResult {
-        kind,
+        kind: if variants.is_empty() {
+            UNSUPPORTED_KIND.to_string()
+        } else {
+            GENERATED_AGENT_BUNDLE_KIND.to_string()
+        },
         variants,
         warnings,
     })
 }
 
-fn collect_source_skill_dirs(repo_dir: &Path) -> Result<Vec<PathBuf>> {
-    let source_root = repo_dir.join("source/skills");
-    if !source_root.is_dir() {
-        return Ok(Vec::new());
-    }
-
-    let mut skill_dirs = Vec::new();
-    for entry in fs::read_dir(&source_root)
-        .with_context(|| format!("Failed to read {}", source_root.display()))?
-    {
-        let entry = entry?;
-        if entry.file_type()?.is_dir() {
-            skill_dirs.push(entry.path());
+fn collect_supported_variants<Direct>(
+    list_direct_skill_dirs: &Direct,
+    source_skill_index: &BTreeMap<String, String>,
+) -> Result<Vec<DetectedExternalVariant>>
+where
+    Direct: Fn(&str) -> Result<Vec<String>>,
+{
+    let mut variants = Vec::new();
+    for rule in GENERATED_RULES {
+        for variant_path in list_direct_skill_dirs(rule.variant_root)? {
+            let skill_name = Path::new(&variant_path)
+                .file_name()
+                .and_then(|name| name.to_str())
+                .ok_or_else(|| anyhow::anyhow!("Invalid variant path: {variant_path}"))?
+                .to_string();
+            variants.push(DetectedExternalVariant {
+                agent_key: rule.agent_key.to_string(),
+                metadata_path: Some(format!("{variant_path}/SKILL.md")),
+                source_of_truth_path: source_skill_index.get(&skill_name).cloned(),
+                variant_path,
+            });
         }
     }
-    Ok(skill_dirs)
+
+    Ok(variants)
 }
 
-fn detect_unknown_agent_variants(repo_dir: &Path, source_id: &str) -> Result<Vec<ExternalSourceWarning>> {
-    let dist_agents_root = repo_dir.join("dist/agents");
-    if !dist_agents_root.is_dir() {
+fn build_source_skill_index(source_skill_dirs: &[String]) -> BTreeMap<String, String> {
+    let mut index = BTreeMap::new();
+    for path in source_skill_dirs {
+        if let Some(name) = Path::new(path).file_name().and_then(|name| name.to_str()) {
+            index.insert(name.to_string(), path.clone());
+        }
+    }
+    index
+}
+
+fn collect_direct_skill_dirs_from_worktree(repo_dir: &Path, root: &str) -> Result<Vec<String>> {
+    let root = canonicalize_repo_relative_path(root)?;
+    let target_root = repo_dir.join(&root);
+    if !target_root.is_dir() {
         return Ok(Vec::new());
     }
 
-    let mut warnings = Vec::new();
-    let mut warned_paths = BTreeSet::new();
-    for skill_file in WalkDir::new(&dist_agents_root)
+    let mut skill_dirs = BTreeSet::new();
+    for entry in fs::read_dir(&target_root)
+        .with_context(|| format!("Failed to read {}", target_root.display()))?
+    {
+        let entry = entry?;
+        if !entry.file_type()?.is_dir() {
+            continue;
+        }
+        let skill_dir = entry.path();
+        if !skill_dir.join("SKILL.md").is_file() {
+            continue;
+        }
+        skill_dirs.insert(canonicalize_repo_relative_path(
+            path_relative_to(repo_dir, &skill_dir)?.to_string_lossy().as_ref(),
+        )?);
+    }
+
+    Ok(skill_dirs.into_iter().collect())
+}
+
+fn collect_recursive_skill_dirs_from_worktree(repo_dir: &Path, root: &str) -> Result<Vec<String>> {
+    let root = canonicalize_repo_relative_path(root)?;
+    let target_root = repo_dir.join(&root);
+    if !target_root.is_dir() {
+        return Ok(Vec::new());
+    }
+
+    let mut skill_dirs = BTreeSet::new();
+    for skill_file in WalkDir::new(&target_root)
         .min_depth(2)
         .into_iter()
         .filter_map(|item| item.ok())
@@ -124,34 +169,59 @@ fn detect_unknown_agent_variants(repo_dir: &Path, source_id: &str) -> Result<Vec
             .path()
             .parent()
             .with_context(|| format!("Missing parent for {}", skill_file.path().display()))?;
-        let relative_skill_dir = canonicalize_repo_relative_path(
+        skill_dirs.insert(canonicalize_repo_relative_path(
             path_relative_to(repo_dir, skill_dir)?.to_string_lossy().as_ref(),
-        )?;
-        if GENERATED_RULES
-            .iter()
-            .any(|rule| is_supported_built_variant_dir(rule, &relative_skill_dir))
-        {
-            continue;
-        }
-        if !warned_paths.insert(relative_skill_dir.clone()) {
-            continue;
-        }
+        )?);
+    }
 
-        warnings.push(ExternalSourceWarning {
-            code: "unsupported_agent_variant".to_string(),
-            severity: "warning".to_string(),
-            message: format!(
-                "External source {source_id} exposes an unsupported generated agent layout at {relative_skill_dir}"
-            ),
-        });
+    Ok(skill_dirs.into_iter().collect())
+}
+
+fn detect_unknown_agent_variants<Recursive>(
+    source_id: &str,
+    list_recursive_skill_dirs: &Recursive,
+) -> Result<Vec<ExternalSourceWarning>>
+where
+    Recursive: Fn(&str) -> Result<Vec<String>>,
+{
+    let mut warnings = Vec::new();
+    let mut warned_paths = BTreeSet::new();
+    for scan_root in generated_scan_roots() {
+        for relative_skill_dir in list_recursive_skill_dirs(scan_root)? {
+            if GENERATED_RULES
+                .iter()
+                .any(|rule| is_supported_variant_dir(rule, &relative_skill_dir))
+            {
+                continue;
+            }
+            if !warned_paths.insert(relative_skill_dir.clone()) {
+                continue;
+            }
+
+            warnings.push(ExternalSourceWarning {
+                code: "unsupported_agent_variant".to_string(),
+                severity: "warning".to_string(),
+                message: format!(
+                    "External source {source_id} exposes an unsupported generated agent layout at {relative_skill_dir}"
+                ),
+            });
+        }
     }
 
     Ok(warnings)
 }
 
-fn is_supported_built_variant_dir(rule: &GeneratedRule, relative_skill_dir: &str) -> bool {
+fn generated_scan_roots() -> Vec<&'static str> {
+    let mut roots = BTreeSet::new();
+    for rule in GENERATED_RULES {
+        roots.insert(rule.scan_root);
+    }
+    roots.into_iter().collect()
+}
+
+fn is_supported_variant_dir(rule: &GeneratedRule, relative_skill_dir: &str) -> bool {
     let Some(remainder) = relative_skill_dir
-        .strip_prefix(&format!("{}/", rule.built_root))
+        .strip_prefix(&format!("{}/", rule.variant_root))
     else {
         return false;
     };
@@ -167,96 +237,85 @@ fn path_relative_to<'a>(repo_dir: &Path, child: &'a Path) -> Result<&'a Path> {
 
 struct GeneratedRule {
     agent_key: &'static str,
-    built_root: &'static str,
+    scan_root: &'static str,
+    variant_root: &'static str,
 }
 
 const GENERATED_RULES: &[GeneratedRule] = &[
     GeneratedRule {
         agent_key: "codex",
-        built_root: "dist/agents/.agents/skills",
+        scan_root: "dist/agents",
+        variant_root: "dist/agents/.agents/skills",
     },
     GeneratedRule {
         agent_key: "claude_code",
-        built_root: "dist/agents/.claude/skills",
+        scan_root: "dist/agents",
+        variant_root: "dist/agents/.claude/skills",
     },
     GeneratedRule {
         agent_key: "opencode",
-        built_root: "dist/agents/.opencode/skills",
+        scan_root: "dist/agents",
+        variant_root: "dist/agents/.opencode/skills",
+    },
+    GeneratedRule {
+        agent_key: "codex",
+        scan_root: ".agents",
+        variant_root: ".agents/skills",
+    },
+    GeneratedRule {
+        agent_key: "cursor",
+        scan_root: "dist/cursor",
+        variant_root: "dist/cursor/.cursor/skills",
+    },
+    GeneratedRule {
+        agent_key: "cursor",
+        scan_root: ".cursor",
+        variant_root: ".cursor/skills",
+    },
+    GeneratedRule {
+        agent_key: "claude_code",
+        scan_root: ".claude",
+        variant_root: ".claude/skills",
+    },
+    GeneratedRule {
+        agent_key: "gemini_cli",
+        scan_root: "dist/gemini",
+        variant_root: "dist/gemini/.gemini/skills",
+    },
+    GeneratedRule {
+        agent_key: "gemini_cli",
+        scan_root: ".gemini",
+        variant_root: ".gemini/skills",
+    },
+    GeneratedRule {
+        agent_key: "github_copilot",
+        scan_root: "dist/github",
+        variant_root: "dist/github/.github/skills",
+    },
+    GeneratedRule {
+        agent_key: "github_copilot",
+        scan_root: ".github",
+        variant_root: ".github/skills",
+    },
+    GeneratedRule {
+        agent_key: "kilo_code",
+        scan_root: "dist/kiro",
+        variant_root: "dist/kiro/.kiro/skills",
+    },
+    // Upstream repositories like impeccable publish Kiro under `.kiro`, while this app
+    // currently exposes the corresponding managed target as `kilo_code`.
+    GeneratedRule {
+        agent_key: "kilo_code",
+        scan_root: ".kiro",
+        variant_root: ".kiro/skills",
+    },
+    GeneratedRule {
+        agent_key: "opencode",
+        scan_root: ".opencode",
+        variant_root: ".opencode/skills",
     },
 ];
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs;
-    use tempfile::tempdir;
-
-    #[test]
-    fn detect_generated_agent_bundle_prefers_built_agent_target() {
-        let temp = tempdir().unwrap();
-        let repo_dir = temp.path();
-
-        create_skill_dir(repo_dir, "source/skills/impeccable");
-        create_skill_dir(repo_dir, "dist/agents/.agents/skills/impeccable");
-
-        let result = detect_external_source_variants(repo_dir, "src_test").unwrap();
-
-        assert_eq!(result.kind, "generated_agent_bundle");
-        assert_eq!(result.variants.len(), 1);
-        assert_eq!(result.variants[0].agent_key, "codex");
-        assert_eq!(
-            result.variants[0].variant_path,
-            "dist/agents/.agents/skills/impeccable"
-        );
-        assert_eq!(
-            result.variants[0].source_of_truth_path.as_deref(),
-            Some("source/skills/impeccable")
-        );
-        assert!(result.warnings.is_empty());
-    }
-
-    #[test]
-    fn detect_unknown_agent_variant_emits_warning() {
-        let temp = tempdir().unwrap();
-        let repo_dir = temp.path();
-
-        create_skill_dir(repo_dir, "source/skills/impeccable");
-        create_skill_dir(repo_dir, "dist/agents/.mystery/skills/impeccable");
-
-        let result = detect_external_source_variants(repo_dir, "src_test").unwrap();
-
-        assert_eq!(result.kind, "unsupported");
-        assert!(result.variants.is_empty());
-        assert!(result
-            .warnings
-            .iter()
-            .any(|warning| warning.code == "unsupported_agent_variant"));
-    }
-
-    #[test]
-    fn detect_unknown_agent_variant_emits_warning_under_known_agent_root() {
-        let temp = tempdir().unwrap();
-        let repo_dir = temp.path();
-
-        create_skill_dir(repo_dir, "source/skills/impeccable");
-        create_skill_dir(repo_dir, "dist/agents/.agents/skills/impeccable");
-        create_skill_dir(repo_dir, "dist/agents/.agents/skills/group/impeccable");
-
-        let result = detect_external_source_variants(repo_dir, "src_test").unwrap();
-
-        assert_eq!(result.kind, "generated_agent_bundle");
-        assert_eq!(result.variants.len(), 1);
-        assert!(result.warnings.iter().any(|warning| {
-            warning.code == "unsupported_agent_variant"
-                && warning
-                    .message
-                    .contains("dist/agents/.agents/skills/group/impeccable")
-        }));
-    }
-
-    fn create_skill_dir(repo_dir: &Path, relative_path: &str) {
-        let skill_dir = repo_dir.join(relative_path);
-        fs::create_dir_all(&skill_dir).unwrap();
-        fs::write(skill_dir.join("SKILL.md"), "# Test skill\n").unwrap();
-    }
-}
+#[path = "detect_tests.rs"]
+mod tests;

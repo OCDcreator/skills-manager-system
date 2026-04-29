@@ -50,6 +50,19 @@ test("ExternalSourcesView renders the add form and list surfaces", () => {
   assert.match(source, /t\("sources\.title"\)/);
 });
 
+test("ExternalSourceCard defaults to a collapsed summary with clickable repo access and guidance tags", () => {
+  const source = readIfExists("src/components/external-sources/ExternalSourceCard.tsx");
+
+  assert.match(source, /useState\(false\)/);
+  assert.match(source, /primaryVariant\?\.description/);
+  assert.match(source, /t\("sources\.actions\.expand"\)/);
+  assert.match(source, /t\("sources\.actions\.collapse"\)/);
+  assert.match(source, /openUrl\(record\.repoUrl\)/);
+  assert.match(source, /t\("sources\.summary\.descriptionFallback"/);
+  assert.match(source, /t\("sources\.tags\./);
+  assert.match(source, /target="_blank"/);
+});
+
 test("AddExternalSourceForm catches submit failures and preserves the draft input", () => {
   const source = readIfExists("src/components/external-sources/AddExternalSourceForm.tsx");
   assert.match(source, /onSubmit=\{async \(event\) =>/);
@@ -78,6 +91,14 @@ test("Sources surface strings are backed by real i18n keys", () => {
     "sources.imports.update",
     "sources.meta.unknown",
     "sources.warnings.count",
+    "sources.actions.expand",
+    "sources.actions.collapse",
+    "sources.actions.openRepo",
+    "sources.summary.descriptionFallback",
+    "sources.summary.supportedVariants",
+    "sources.summary.noSupportedVariants",
+    "sources.tags.generatedBundle",
+    "sources.tags.importedCount",
   ];
 
   for (const key of requiredKeys) {
@@ -87,12 +108,26 @@ test("Sources surface strings are backed by real i18n keys", () => {
 
   assert.match(cardSource, /t\("sources\.actions\.fetch"\)/);
   assert.match(cardSource, /t\("sources\.variants\.title"\)/);
+  assert.match(cardSource, /t\("sources\.actions\.openRepo"\)/);
+  assert.match(cardSource, /primaryVariant\?\.description/);
   assert.match(cardSource, /shortCommit\(record\.lastFetchedCommit, unknownLabel\)/);
   assert.match(cardSource, /t\("sources\.warnings\.count", \{ count: record\.warnings\.length \}\)/);
   assert.match(importListSource, /t\("sources\.imports\.update"\)/);
   assert.match(listSource, /t\("sources\.emptyTitle"\)/);
   assert.doesNotMatch(helperSource, /No warnings/);
   assert.doesNotMatch(helperSource, /`\$\{warnings\.length\} warnings`/);
+});
+
+test("Tauri desktop wiring includes opener plugin support for external repo links", () => {
+  const pkg = JSON.parse(readIfExists("package.json"));
+  const cargo = readIfExists("src-tauri/Cargo.toml");
+  const lib = readIfExists("src-tauri/src/lib.rs");
+  const capability = readIfExists("src-tauri/capabilities/default.json");
+
+  assert.ok(pkg.dependencies["@tauri-apps/plugin-opener"]);
+  assert.match(cargo, /tauri-plugin-opener/);
+  assert.match(lib, /plugin\(tauri_plugin_opener::init\(\)\)/);
+  assert.match(capability, /"opener:default"/);
 });
 
 test("scan_skills desktop command enriches scan payloads with managed external source metadata", () => {

@@ -1,4 +1,9 @@
-import type { ExternalSourceRecord, ExternalSourceWarning, ImportedExternalSkillRecord } from "./tauri";
+import type {
+  ExternalSourceRecord,
+  ExternalSourceWarning,
+  ExternalVariantSnapshot,
+  ImportedExternalSkillRecord,
+} from "./tauri";
 
 export function externalSourceName(record: ExternalSourceRecord) {
   const trimmed = record.repoUrl.trim().replace(/\/+$/, "");
@@ -28,6 +33,25 @@ export function warningSummary(
   if (!warnings.length) return noWarningsLabel;
   if (warnings.length === 1) return warnings[0].message;
   return warningCountLabel;
+}
+
+const AGENT_LABELS: Record<string, string> = {
+  codex: "Codex",
+  claude_code: "Claude Code",
+  opencode: "OpenCode",
+  cursor: "Cursor",
+  amp: "Amp",
+  kilo_code: "Kilo Code",
+  kimi: "Kimi Code",
+  roo_code: "Roo Code",
+  goose: "Goose",
+  gemini_cli: "Gemini CLI",
+  github_copilot: "GitHub Copilot",
+  windsurf: "Windsurf",
+};
+
+export function sourceAgentLabels(variants: ExternalVariantSnapshot[]) {
+  return [...new Set(variants.map((variant) => AGENT_LABELS[variant.agentKey] ?? variant.agentKey))];
 }
 
 export interface BusyImportAction {

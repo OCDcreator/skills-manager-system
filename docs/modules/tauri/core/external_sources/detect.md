@@ -13,12 +13,23 @@ Classifies cached repositories and enumerates generated agent-specific skill var
 |---|---|
 | `DetectedExternalVariant` | One detected generated skill variant plus optional source-of-truth metadata. |
 | `DetectionResult` | Detection kind, variants, and warnings bundle. |
-| `detect_external_source_variants` | Scans a cached repository for supported generated layouts. |
+| `detect_external_source_variants` | Scans a cached repository for supported generated layouts, preferring fetched git refs over the worktree. |
 
 ## Core Logic
 
-Detection currently recognizes generated bundles under `dist/agents/.agents/skills`, `dist/agents/.claude/skills`, and `dist/agents/.opencode/skills`. For supported roots it emits one variant per direct child skill directory that contains `SKILL.md`, canonicalizes repo-relative paths through `core/skills/identity.rs`, and tries to map each generated variant back to `source/skills/<name>` as a source-of-truth hint. It also walks the wider `dist/agents` tree and emits `unsupported_agent_variant` warnings for generated layouts that do not match the supported rule table.
+Detection is now rule-table-driven. It first tries to resolve the fetched upstream `HEAD` through `git_repo.rs`, then reads variant directories from git object data via `git_tree.rs` so cached repos do not need a checked-out worktree. If no fetched ref can be resolved, it falls back to the local filesystem for temp-repo tests and other non-fetched directories.
+
+Supported roots now include both the legacy generated bundle layout under `dist/agents/...` and root-level hidden agent folders such as `.agents/skills`, `.claude/skills`, and `.opencode/skills`. The aligned rule table also recognizes additional upstream layouts that map cleanly onto the app's existing agent catalog:
+
+- `.cursor/skills` and `dist/cursor/.cursor/skills` -> `cursor`
+- `.gemini/skills` and `dist/gemini/.gemini/skills` -> `gemini_cli`
+- `.github/skills` and `dist/github/.github/skills` -> `github_copilot`
+- `.kiro/skills` and `dist/kiro/.kiro/skills` -> `kilo_code`
+
+For each supported root it emits one variant per direct child skill directory that contains `SKILL.md`, canonicalizes repo-relative paths through `core/skills/identity.rs`, and maps each generated variant back to `source/skills/<name>` when that source-of-truth path exists.
+
+Warnings remain strict: the detector scans broader agent-specific roots and emits `unsupported_agent_variant` when it sees a `SKILL.md` layout that does not match one of the supported single-skill directory shapes. Upstream-only tools that do not have a safe app-catalog mapping yet, such as Trae or Qoder in the observed `impeccable` layout, remain warnings rather than being auto-imported under a guessed agent key.
 
 ## Interactions
 
-Used by `service.rs` after fetch and by `list_external_sources()` when cached repos already exist. This module only detects and classifies; it does not fetch git refs or write mirrors.
+Used by `service.rs` after fetch and by `list_external_sources()` when cached repos already exist. This module only detects and classifies; it does not fetch git refs or write mirrors, but it must stay aligned with `git_tree.rs` path parsing and the generated-layout rule table.

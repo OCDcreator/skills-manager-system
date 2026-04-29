@@ -18,8 +18,8 @@ Defines the shared Rust crate surface for both desktop and CLI builds and regist
 
 ## Core Logic
 
-The desktop `run()` function now registers the full external-source command set alongside existing agent, scene, project, git, settings, and skills handlers. This keeps the dedicated source-management surface fully first-class in the desktop build while preserving the CLI-only feature split.
+The desktop `run()` function now registers the full external-source command set alongside existing agent, scene, project, git, settings, and skills handlers, and it also wires both the dialog and opener plugins into the desktop runtime. That keeps the dedicated source-management surface fully first-class while allowing the frontend to jump directly from a source card to the upstream GitHub page.
 
 ## Interactions
 
-Must stay aligned with `src-tauri/src/commands/mod.rs`, the feature declarations in `src-tauri/src/Cargo.toml`, and any new command module added to `tauri::generate_handler!`.
+Must stay aligned with `src-tauri/src/commands/mod.rs`, the feature declarations in `src-tauri/src/Cargo.toml`, the desktop capability permissions, and any new command or plugin added to `tauri::generate_handler!` / `Builder`.

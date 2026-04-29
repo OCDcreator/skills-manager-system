@@ -10,6 +10,7 @@ pub mod core;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             commands::agent_targets::take_over_agent_target_skill,
             commands::agent_targets::delete_agent_target_skill,

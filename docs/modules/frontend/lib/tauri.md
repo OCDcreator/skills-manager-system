@@ -20,7 +20,7 @@ Defines TypeScript DTOs plus thin `invoke()` wrappers for the frontend's Tauri c
 
 ## Core Logic
 
-The file keeps frontend wiring thin while expanding the shared contract for external-source management. `SkillSummary` and `SkillDocument` now carry optional `managedSource` metadata, and `AgentKey` is reused across both sync and external-import flows so source variants can target the same agent catalog as the rest of the app.
+The file keeps frontend wiring thin while expanding the shared contract for external-source management. `SkillSummary` and `SkillDocument` now carry optional `managedSource` metadata, and `AgentKey` is reused across both sync and external-import flows so source variants can target the same agent catalog as the rest of the app. `ExternalVariantSnapshot` now also carries optional `name` and `description` fields parsed from upstream `SKILL.md` metadata so the sources UI can explain what the repository is actually for instead of only listing supported agent outputs.
 
 ## Interactions
 

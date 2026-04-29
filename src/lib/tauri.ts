@@ -148,6 +148,8 @@ export interface ExternalVariantSnapshot {
   variantPath: string;
   sourceOfTruthPath: string | null;
   metadataPath: string | null;
+  name: string | null;
+  description: string | null;
 }
 
 export interface ImportedExternalSkillRecord {
