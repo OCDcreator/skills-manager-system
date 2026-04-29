@@ -24,3 +24,15 @@ test("assistant launcher menu exposes the four approved CLI keys", () => {
   assert.match(source, /claude_code/);
   assert.match(source, /kimi/);
 });
+
+test("assistant terminal session renders stop and restart controls", () => {
+  const source = fs.readFileSync(
+    path.resolve("src/components/assistant/AssistantTerminalSession.tsx"),
+    "utf8",
+  );
+
+  assert.match(source, /stopTerminalSession/);
+  assert.match(source, /assistant\.restart/);
+  assert.match(source, /new Terminal\(/);
+  assert.match(source, /drainTerminalOutput/);
+});
