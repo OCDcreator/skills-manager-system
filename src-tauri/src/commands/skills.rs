@@ -3,7 +3,7 @@ use tauri::Manager;
 
 use crate::core::settings::SettingsStore;
 use crate::core::skills::documents::{read_skill_document, SkillDocument};
-use crate::core::skills::scan::{scan_repo_skills, ScanSkillsResponse};
+use crate::core::skills::scan::{scan_repo_skills_with_external_sources, ScanSkillsResponse};
 use crate::core::skills::state::{SkillStateSnapshot, SkillStateStore};
 
 fn load_repo_path(app: &tauri::AppHandle) -> Result<String, String> {
@@ -23,8 +23,13 @@ fn load_repo_path(app: &tauri::AppHandle) -> Result<String, String> {
 #[tauri::command]
 pub fn scan_skills(app: tauri::AppHandle) -> Result<ScanSkillsResponse, String> {
     let repo_path = load_repo_path(&app)?;
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())?;
 
-    scan_repo_skills(Path::new(&repo_path)).map_err(|error| error.to_string())
+    scan_repo_skills_with_external_sources(Path::new(&repo_path), &config_dir)
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]

@@ -73,3 +73,22 @@ test("Sources surface strings are backed by real i18n keys", () => {
   assert.doesNotMatch(helperSource, /No warnings/);
   assert.doesNotMatch(helperSource, /`\$\{warnings\.length\} warnings`/);
 });
+
+test("scan_skills desktop command enriches scan payloads with managed external source metadata", () => {
+  const source = readIfExists("src-tauri/src/commands/skills.rs");
+
+  assert.match(source, /scan_repo_skills_with_external_sources/);
+  assert.doesNotMatch(source, /scan_repo_skills\(Path::new\(&repo_path\)\)/);
+});
+
+test("ExternalImportList keeps repair busy state independent from update availability", () => {
+  const source = readIfExists("src/components/external-sources/ExternalImportList.tsx");
+
+  assert.match(source, /const \[busyImportAction, setBusyImportAction\] = useState/);
+  assert.match(source, /const isUpdatingImport =/);
+  assert.match(source, /busyImportAction\?\.importId === item\.importId/);
+  assert.match(source, /busyImportAction\.action === "update"/);
+  assert.match(source, /const isRepairingImport =/);
+  assert.match(source, /busyImportAction\.action === "repair"/);
+  assert.match(source, /isRepairingImport\s*\?\s*t\("sources\.imports\.repairing"\)/);
+});

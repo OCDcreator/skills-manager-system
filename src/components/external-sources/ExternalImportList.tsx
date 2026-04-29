@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { shortCommit } from "../../lib/external-sources";
 import type { ImportedExternalSkillRecord } from "../../lib/tauri";
@@ -16,6 +17,10 @@ export function ExternalImportList({
   onRepairImport,
 }: ExternalImportListProps) {
   const { t } = useTranslation();
+  const [busyImportAction, setBusyImportAction] = useState<{
+    action: "repair" | "update";
+    importId: string;
+  } | null>(null);
 
   if (!imports.length) {
     return <p className="text-sm text-slate-400">{t("sources.imports.empty")}</p>;
@@ -24,7 +29,17 @@ export function ExternalImportList({
   return (
     <div className="space-y-3">
       {imports.map((item) => {
-        const isBusy = updatingImportId === item.importId;
+        const isBusyImport = updatingImportId === item.importId;
+        const isUpdatingImport =
+          isBusyImport &&
+          (busyImportAction?.importId === item.importId
+            ? busyImportAction.action === "update"
+            : item.updateAvailable);
+        const isRepairingImport =
+          isBusyImport &&
+          (busyImportAction?.importId === item.importId
+            ? busyImportAction.action === "repair"
+            : !item.updateAvailable);
         return (
           <article
             key={item.importId}
@@ -59,11 +74,18 @@ export function ExternalImportList({
               <div className="flex flex-wrap gap-2">
                 <button
                   className="rounded-lg bg-slate-800 px-3 py-2 text-xs text-slate-100 transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-900 disabled:text-slate-500"
-                  disabled={isBusy || !item.updateAvailable}
-                  onClick={() => void onUpdateImport(item.importId)}
+                  disabled={isBusyImport || !item.updateAvailable}
+                  onClick={() => {
+                    setBusyImportAction({ action: "update", importId: item.importId });
+                    void onUpdateImport(item.importId).finally(() => {
+                      setBusyImportAction((current) =>
+                        current?.importId === item.importId ? null : current,
+                      );
+                    });
+                  }}
                   type="button"
                 >
-                  {isBusy && item.updateAvailable
+                  {isUpdatingImport
                     ? t("sources.imports.updating")
                     : item.updateAvailable
                       ? t("sources.imports.update")
@@ -71,13 +93,18 @@ export function ExternalImportList({
                 </button>
                 <button
                   className="rounded-lg border border-amber-700/60 bg-amber-950/50 px-3 py-2 text-xs text-amber-100 transition hover:bg-amber-900/60 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={isBusy}
-                  onClick={() => void onRepairImport(item.importId)}
+                  disabled={isBusyImport}
+                  onClick={() => {
+                    setBusyImportAction({ action: "repair", importId: item.importId });
+                    void onRepairImport(item.importId).finally(() => {
+                      setBusyImportAction((current) =>
+                        current?.importId === item.importId ? null : current,
+                      );
+                    });
+                  }}
                   type="button"
                 >
-                  {isBusy && !item.updateAvailable
-                    ? t("sources.imports.repairing")
-                    : t("sources.imports.repair")}
+                  {isRepairingImport ? t("sources.imports.repairing") : t("sources.imports.repair")}
                 </button>
               </div>
             </div>

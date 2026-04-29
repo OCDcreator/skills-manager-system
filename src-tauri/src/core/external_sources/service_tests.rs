@@ -74,6 +74,44 @@ fn remove_external_source_preflight_blocks_partial_import_deletion() {
         .any(|item| item.skill_id == blocked.skill_id));
 }
 
+#[test]
+fn remove_external_source_keeps_snapshot_when_cache_removal_fails() {
+    let temp = tempdir().unwrap();
+    let config_dir = temp.path().join("config");
+    let source_id = "src_example";
+    let cache_root = config_dir.join("external-sources").join(source_id);
+    fs::create_dir_all(cache_root.parent().unwrap()).unwrap();
+    fs::write(&cache_root, "not-a-directory").unwrap();
+
+    let store = ExternalSourcesStore::new(config_dir.clone());
+    let guard = acquire_config_lock(&config_dir).unwrap();
+    store
+        .save(
+            &guard,
+            &ExternalSourcesSnapshot {
+                schema_version: 1,
+                sources: vec![ExternalSourceRecord {
+                    id: source_id.to_string(),
+                    repo_url: "https://github.com/example/repo".to_string(),
+                    ..ExternalSourceRecord::default()
+                }],
+                imports: Vec::new(),
+            },
+        )
+        .unwrap();
+    drop(guard);
+
+    let error = remove_external_source(&config_dir, None, source_id, false).unwrap_err();
+
+    assert!(!error.to_string().trim().is_empty());
+    assert!(cache_root.exists());
+
+    let persisted = store.load().unwrap();
+    assert_eq!(persisted.sources.len(), 1);
+    assert_eq!(persisted.sources[0].id, source_id);
+    assert!(persisted.imports.is_empty());
+}
+
 fn build_import_fixture(
     repo_root: &Path,
     import_id: &str,

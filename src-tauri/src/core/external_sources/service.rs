@@ -198,17 +198,17 @@ pub fn remove_external_source(
 
     let guard = acquire_config_lock(config_dir)?;
     let store = ExternalSourcesStore::new(config_dir.to_path_buf());
+    let cache_root = config_dir.join("external-sources").join(source_id);
+    if cache_root.exists() {
+        fs::remove_dir_all(&cache_root)?;
+    }
+
     let mut snapshot = store.load()?;
     snapshot.sources.retain(|item| item.id != source_id);
     snapshot
         .imports
         .retain(|item| item.external_source_id != source_id);
     store.save(&guard, &snapshot)?;
-
-    let cache_root = config_dir.join("external-sources").join(source_id);
-    if cache_root.exists() {
-        fs::remove_dir_all(&cache_root)?;
-    }
 
     list_external_sources(config_dir, repo_root)
 }
