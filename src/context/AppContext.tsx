@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { PropsWithChildren } from "react";
 import * as api from "../lib/tauri";
 import type {
@@ -27,6 +27,7 @@ export function AppProvider({ children }: PropsWithChildren) {
   const [scanResult, setScanResult] = useState<ScanSkillsResponse>({ skills: [], warnings: [] });
   const [selectedSkill, setSelectedSkill] = useState<SkillSummary | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<SkillDocument | null>(null);
+  const selectedSkillIdRef = useRef<string | null>(null);
   const [disabledSkillIds, setDisabledSkillIds] = useState<string[]>([]);
   const [agentInventory, setAgentInventory] = useState<AgentInventoryItem[]>([]);
   const [lastAgentApplyResult, setLastAgentApplyResult] = useState<ApplyAgentSyncResponse | null>(null);
@@ -49,6 +50,10 @@ export function AppProvider({ children }: PropsWithChildren) {
     setErrorMessage,
   });
 
+  useEffect(() => {
+    selectedSkillIdRef.current = selectedSkill?.id ?? null;
+  }, [selectedSkill]);
+
   const refreshSkills = useCallback(async () => {
     if (!repoPath) {
       setScanResult({ skills: [], warnings: [] });
@@ -64,7 +69,7 @@ export function AppProvider({ children }: PropsWithChildren) {
       const response = await api.scanSkills();
       setScanResult(response);
       let nextError: string | null = null;
-      const currentSelectedSkillId = selectedSkill?.id ?? null;
+      const currentSelectedSkillId = selectedSkillIdRef.current;
       try {
         const state = await api.getSkillState();
         setDisabledSkillIds(state.disabledSkillIds);
@@ -96,7 +101,7 @@ export function AppProvider({ children }: PropsWithChildren) {
     } finally {
       setIsLoading(false);
     }
-  }, [repoPath, selectedSkill?.id]);
+  }, [repoPath]);
 
   const refreshAgents = useCallback(async () => {
     setIsLoadingAgents(true);
