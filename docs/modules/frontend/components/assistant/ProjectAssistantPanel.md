@@ -5,38 +5,39 @@
 
 ## Overview
 
-Wide floating chat panel with a main chat area and right context rail. Wider (up to 860px) and taller than the initial prototype, with a responsive fixed height. Assistant messages render Markdown; user messages stay plain text. Manages local message state, ask lifecycle, loading, and error handling.
+Wide floating assistant panel that now acts as a mode switch between the
+version-one CLI launcher menu and the active embedded terminal session.
 
 ## Import Relationships
 
 ```text
 Upstream: src/components/assistant/ProjectAssistantLauncher.tsx
-Downstream: src/lib/assistant.ts, src/components/assistant/AssistantMarkdown.tsx, src/components/assistant/ProjectAssistantSourceRail.tsx
+Downstream: src/lib/terminal.ts, src/components/assistant/AssistantLauncherMenu.tsx, src/components/assistant/AssistantTerminalSession.tsx
 ```
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `ProjectAssistantPanel` | Chat panel with message flow and context rail. |
+| `ProjectAssistantPanel` | Floating terminal-launcher panel orchestrator. |
 
 ## Core Logic
 
-Maintains local `messages`, `sources`, `draft`, `isAsking`, and `askError` state. Enter sends the message (Shift+Enter inserts newline). On submit, calls `askProjectAssistant()`, appends user and assistant messages, and updates sources. Errors are shown inline without clearing prior messages. Welcome message is sourced from i18n (`assistant.welcomeMessage`).
+Maintains the selected CLI key, chosen working directory, launch input, launch
+error, and the active terminal session snapshot. On mount, asks the backend for
+an already-running session so reopening the panel can reattach to the single
+session. When no session exists, renders `AssistantLauncherMenu`; once a
+session starts, renders `AssistantTerminalSession`.
 
 ## Data Flow
 
-- Receives `status`, `statusError`, `isLoadingStatus` from launcher
-- Calls `askProjectAssistant(question)` from `src/lib/assistant.ts`
-- Passes status and sources into `ProjectAssistantSourceRail`
+Calls `getTerminalSession()` and `startTerminalSession()` from
+`src/lib/terminal.ts`, and passes launch/session state into the two dedicated
+assistant subcomponents.
 
 ## Interactions
 
-i18n keys: `assistant.title`, `assistant.subtitle`, `assistant.welcomeMessage`, `assistant.closePanel`, `assistant.inputPlaceholder`, `assistant.inputHint`, `assistant.answerLoading`, `assistant.send`
-
-## Change Notes
-
-Panel uses `items-start` on the grid so the right rail uses its natural height, while the left chat column uses `self-stretch` and `h-full` to fill the panel down to the bottom.
+i18n keys: `assistant.title`, `assistant.subtitle`, `assistant.closePanel`
 
 ## Configuration
 

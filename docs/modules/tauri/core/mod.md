@@ -19,10 +19,13 @@ Declares backend core domains used by Tauri command modules.
 | `scenes` | Scene configuration domain. |
 | `settings` | Settings persistence domain. |
 | `skills` | Skill scanning, identity, document reading, and state domain. |
+| `terminal` | Embedded assistant terminal launch and PTY session domain. |
 
 ## Core Logic
 
-This file stays declarative. Task 7 adds `external_sources` as a first-class core domain rather than threading the feature through existing skills or agents modules.
+This file stays declarative. It now exposes `terminal` as a first-class core
+domain so the embedded assistant PTY runtime stays separate from the older
+retrieval-oriented assistant code.
 
 ## Interactions
 

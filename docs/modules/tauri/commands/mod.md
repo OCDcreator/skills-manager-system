@@ -20,10 +20,13 @@ Declares the Rust command submodules exposed to the Tauri desktop layer.
 | `scenes` | Scene configuration commands. |
 | `settings` | Settings commands. |
 | `skills` | Skill browse and enable-state commands. |
+| `terminal` | Project Assistant terminal runtime commands. |
 
 ## Core Logic
 
-This file remains aggregation-only. The only Task 7 change is that external-source commands are now first-class peers rather than being folded into an existing module.
+This file remains aggregation-only. It now also exposes the dedicated terminal
+command module alongside the earlier assistant, git, skills, scene, project,
+and external-source surfaces.
 
 ## Interactions
 

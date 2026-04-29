@@ -18,7 +18,12 @@ Defines the shared Rust crate surface for both desktop and CLI builds and regist
 
 ## Core Logic
 
-The desktop `run()` function now registers the full external-source command set alongside existing agent, scene, project, git, settings, and skills handlers, and it also wires both the dialog and opener plugins into the desktop runtime. That keeps the dedicated source-management surface fully first-class while allowing the frontend to jump directly from a source card to the upstream GitHub page.
+The desktop `run()` function registers the full command set for agents, scenes,
+projects, git, settings, skills, external sources, and the assistant terminal
+runtime. It also wires both the dialog and opener plugins into the desktop
+runtime and manages a shared `core::terminal::session::TerminalState` so the
+floating assistant can launch, drain, resize, and stop a single PTY-backed
+session.
 
 ## Interactions
 
