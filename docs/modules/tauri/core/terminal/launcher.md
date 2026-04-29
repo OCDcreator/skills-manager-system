@@ -14,3 +14,6 @@ local executable candidates.
 - reject zero-sized terminal dimensions
 - map `codex`, `opencode`, `claude_code`, and `kimi` onto candidate binary
   names without coupling that logic to the frontend
+- prefer Windows-native launch targets such as `.cmd` and `.exe` before a bare
+  npm shim name so PTY startup does not hand `CreateProcessW` a non-launchable
+  script file

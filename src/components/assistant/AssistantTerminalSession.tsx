@@ -19,13 +19,47 @@ interface AssistantTerminalSessionProps {
   onSessionChange: (session: TerminalSessionSnapshot | null) => void;
 }
 
-export function AssistantTerminalSession(props: AssistantTerminalSessionProps) {
+function sameSessionSnapshot(
+  left: TerminalSessionSnapshot | null,
+  right: TerminalSessionSnapshot | null,
+) {
+  if (left === right) {
+    return true;
+  }
+  if (!left || !right) {
+    return false;
+  }
+
+  return (
+    left.cliKey === right.cliKey &&
+    left.workingDirectory === right.workingDirectory &&
+    left.cols === right.cols &&
+    left.rows === right.rows &&
+    left.status === right.status &&
+    left.message === right.message
+  );
+}
+
+export function AssistantTerminalSession({
+  launchInput,
+  onRestart,
+  onSessionChange,
+  session,
+}: AssistantTerminalSessionProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const terminalRef = useRef<Terminal | null>(null);
-  const fitAddonRef = useRef<FitAddon | null>(null);
+  const latestSessionRef = useRef<TerminalSessionSnapshot | null>(session);
 
   useEffect(() => {
+    latestSessionRef.current = session;
+  }, [session]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
     const terminal = new Terminal({
       cursorBlink: true,
       fontSize: 13,
@@ -33,40 +67,46 @@ export function AssistantTerminalSession(props: AssistantTerminalSessionProps) {
     });
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
-    terminal.open(containerRef.current!);
+    terminal.open(container);
     fitAddon.fit();
-    terminalRef.current = terminal;
-    fitAddonRef.current = fitAddon;
 
     const dataDisposable = terminal.onData((data: string) => {
       void writeTerminalInput(data);
     });
 
+    let disposed = false;
     const pollId = window.setInterval(async () => {
       const drained = await drainTerminalOutput();
+      if (disposed) {
+        return;
+      }
       if (drained.output) {
         terminal.write(drained.output);
       }
-      props.onSessionChange(drained.session);
+      if (!sameSessionSnapshot(latestSessionRef.current, drained.session)) {
+        latestSessionRef.current = drained.session;
+        onSessionChange(drained.session);
+      }
     }, 80);
 
     const resizeObserver = new ResizeObserver(() => {
       fitAddon.fit();
       void resizeTerminalSession(terminal.cols, terminal.rows);
     });
-    resizeObserver.observe(containerRef.current!);
+    resizeObserver.observe(container);
 
     return () => {
+      disposed = true;
       window.clearInterval(pollId);
       resizeObserver.disconnect();
       dataDisposable.dispose();
       terminal.dispose();
     };
-  }, [props]);
+  }, [launchInput, onSessionChange]);
 
   async function handleStop() {
     const stopped = await stopTerminalSession();
-    props.onSessionChange(stopped);
+    onSessionChange(stopped);
   }
 
   return (
@@ -76,7 +116,7 @@ export function AssistantTerminalSession(props: AssistantTerminalSessionProps) {
           <h3 className="text-lg font-semibold text-slate-100">
             {t("assistant.activeSessionTitle")}
           </h3>
-          <p className="text-sm text-slate-400">{props.session.workingDirectory}</p>
+          <p className="text-sm text-slate-400">{session.workingDirectory}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -89,7 +129,7 @@ export function AssistantTerminalSession(props: AssistantTerminalSessionProps) {
           </button>
           <button
             className="rounded-full bg-sky-400 px-4 py-2 text-sm font-medium text-slate-950"
-            onClick={props.onRestart}
+            onClick={onRestart}
             type="button"
           >
             <RotateCcw className="mr-2 inline h-4 w-4" />
@@ -98,8 +138,8 @@ export function AssistantTerminalSession(props: AssistantTerminalSessionProps) {
         </div>
       </div>
 
-      {props.session.message ? (
-        <p className="text-sm text-slate-400">{props.session.message}</p>
+      {session.message ? (
+        <p className="text-sm text-slate-400">{session.message}</p>
       ) : null}
 
       <div className="min-h-0 overflow-hidden rounded-[1.5rem] border border-slate-800 bg-slate-950/95 p-3">

@@ -36,3 +36,14 @@ test("assistant terminal session renders stop and restart controls", () => {
   assert.match(source, /new Terminal\(/);
   assert.match(source, /drainTerminalOutput/);
 });
+
+test("assistant terminal session does not remount xterm for every session poll", () => {
+  const source = fs.readFileSync(
+    path.resolve("src/components/assistant/AssistantTerminalSession.tsx"),
+    "utf8",
+  );
+
+  assert.match(source, /sameSessionSnapshot/);
+  assert.doesNotMatch(source, /\},\s*\[props\]\)/);
+  assert.match(source, /\},\s*\[launchInput,\s*onSessionChange\]\)/);
+});

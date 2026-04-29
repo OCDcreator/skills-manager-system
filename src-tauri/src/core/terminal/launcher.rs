@@ -13,12 +13,26 @@ pub struct TerminalLaunchSpec {
     pub program_candidates: Vec<String>,
 }
 
+fn command_candidates(base_names: &[&str]) -> Vec<String> {
+    if cfg!(windows) {
+        let mut candidates = Vec::with_capacity(base_names.len() * 3);
+        for name in base_names {
+            candidates.push(format!("{name}.cmd"));
+            candidates.push(format!("{name}.exe"));
+            candidates.push((*name).to_string());
+        }
+        return candidates;
+    }
+
+    base_names.iter().map(|name| (*name).to_string()).collect()
+}
+
 fn program_candidates_for(cli_key: CliKey) -> Vec<String> {
     match cli_key {
-        CliKey::Codex => vec!["codex".into()],
-        CliKey::Opencode => vec!["opencode".into()],
-        CliKey::ClaudeCode => vec!["claude".into(), "claude-code".into()],
-        CliKey::Kimi => vec!["kimi".into(), "kimi-code".into()],
+        CliKey::Codex => command_candidates(&["codex"]),
+        CliKey::Opencode => command_candidates(&["opencode"]),
+        CliKey::ClaudeCode => command_candidates(&["claude", "claude-code"]),
+        CliKey::Kimi => command_candidates(&["kimi", "kimi-code"]),
     }
 }
 
@@ -71,8 +85,42 @@ mod tests {
         .unwrap();
 
         assert_eq!(spec.cli_key, CliKey::Opencode);
+        #[cfg(windows)]
+        assert_eq!(
+            spec.program_candidates,
+            vec![
+                "opencode.cmd".to_string(),
+                "opencode.exe".to_string(),
+                "opencode".to_string()
+            ]
+        );
+        #[cfg(not(windows))]
         assert_eq!(spec.program_candidates, vec!["opencode".to_string()]);
         assert_eq!(spec.cols, 100);
         assert_eq!(spec.rows, 28);
+    }
+
+    #[test]
+    fn codex_prefers_windows_launchers_before_bare_shim() {
+        let temp = tempdir().unwrap();
+        let spec = build_launch_spec(TerminalLaunchInput {
+            cli_key: CliKey::Codex,
+            working_directory: temp.path().to_string_lossy().to_string(),
+            cols: 120,
+            rows: 32,
+        })
+        .unwrap();
+
+        #[cfg(windows)]
+        assert_eq!(
+            spec.program_candidates,
+            vec![
+                "codex.cmd".to_string(),
+                "codex.exe".to_string(),
+                "codex".to_string()
+            ]
+        );
+        #[cfg(not(windows))]
+        assert_eq!(spec.program_candidates, vec!["codex".to_string()]);
     }
 }
