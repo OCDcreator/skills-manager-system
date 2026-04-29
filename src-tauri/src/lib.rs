@@ -11,6 +11,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .manage(crate::core::terminal::session::TerminalState::default())
         .invoke_handler(tauri::generate_handler![
             commands::agent_targets::take_over_agent_target_skill,
             commands::agent_targets::delete_agent_target_skill,
@@ -62,7 +63,13 @@ pub fn run() {
             commands::skills::scan_skills,
             commands::skills::get_skill_document,
             commands::skills::get_skill_state,
-            commands::skills::set_skill_enabled
+            commands::skills::set_skill_enabled,
+            commands::terminal::get_terminal_session,
+            commands::terminal::start_terminal_session,
+            commands::terminal::drain_terminal_output,
+            commands::terminal::write_terminal_input,
+            commands::terminal::resize_terminal_session,
+            commands::terminal::stop_terminal_session
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
