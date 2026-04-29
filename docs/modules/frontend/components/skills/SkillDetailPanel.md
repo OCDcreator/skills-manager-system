@@ -17,6 +17,8 @@ Displays the selected skill's metadata and markdown document, including additive
 
 The panel still owns markdown preview, syntax highlighting, and the frontmatter wrap toggle, but it now also consults `AppContext.externalSources` to resolve the live import record for `skill.managedSource.importId`. Managed external skills render repo URL, pinned commit, agent key, optional upstream variant path, update-available badge, and deduplicated warnings derived from both persisted import warnings and runtime integrity mismatches.
 
+For bundle control, this module now uses `highlight.js/lib/common` instead of the full `highlight.js` entry. The Skills page lazy-loads the entire panel only after a skill is selected, so markdown parsing and highlighting stay out of the default first render.
+
 ## Interactions
 
 This panel treats managed GitHub imports as enriched `external` skills; it does not mutate them. Update and repair actions remain on the sources and agents surfaces. It must stay aligned with `ManagedSourceInfo`, `ExternalSourceWarning`, and the warning-code semantics from Rust. Its markdown preview and frontmatter wrapping also depend on the shared selectors defined under the `src/styles.css` entrypoint, especially the `shared-markdown.css` domain file.

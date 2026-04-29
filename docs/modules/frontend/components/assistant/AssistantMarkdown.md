@@ -5,13 +5,13 @@
 
 ## Overview
 
-Renders markdown content as sanitized HTML inside assistant message bubbles. Uses `marked` with `highlight.js` for code syntax highlighting. Raw HTML in content is escaped via `escapeHtml` before passing to `marked.parse`, preventing any user-provided HTML from becoming active DOM.
+Renders markdown content as sanitized HTML inside assistant message bubbles. Uses `marked` with `highlight.js/lib/common` for code syntax highlighting so the assistant keeps syntax color without pulling in the full highlight language bundle. Raw HTML in content is escaped via `escapeHtml` before passing to `marked.parse`, preventing any user-provided HTML from becoming active DOM.
 
 ## Import Relationships
 
 ```text
 Upstream: src/components/assistant/ProjectAssistantPanel.tsx
-Downstream: marked, highlight.js
+Downstream: marked, highlight.js/lib/common
 ```
 
 ## Public Surface
@@ -22,7 +22,7 @@ Downstream: marked, highlight.js
 
 ## Core Logic
 
-Escapes `&<>"` in the raw content before passing to `marked.parse()`, so no raw HTML from the backend response can render as active DOM. Creates a shared `Marked` instance with GFM support and a custom code renderer that applies `highlight.js`. Uses `dangerouslySetInnerHTML` with Tailwind utility overrides for dark-theme typography inside the `markdown-body` class.
+Escapes `&<>"` in the raw content before passing to `marked.parse()`, so no raw HTML from the backend response can render as active DOM. Creates a shared `Marked` instance with GFM support and a custom code renderer that applies `highlight.js/lib/common`. Uses `dangerouslySetInnerHTML` with Tailwind utility overrides for dark-theme typography inside the `markdown-body` class.
 
 ## Data Flow
 

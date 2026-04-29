@@ -1,4 +1,4 @@
-import hljs from "highlight.js";
+import hljs from "highlight.js/lib/common";
 import { Marked, type Tokens } from "marked";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
