@@ -1,10 +1,6 @@
 import { Bot, MessageSquarePlus, X } from "lucide-react";
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  getAssistantContextStatus,
-  type AssistantContextStatus,
-} from "../../lib/assistant";
 
 const ProjectAssistantPanel = lazy(() =>
   import("./ProjectAssistantPanel").then((module) => ({
@@ -12,61 +8,9 @@ const ProjectAssistantPanel = lazy(() =>
   })),
 );
 
-function AssistantPanelFallback({
-  onClose,
-  title,
-  subtitle,
-}: {
-  onClose: () => void;
-  subtitle: string;
-  title: string;
-}) {
-  return (
-    <section className="fixed bottom-24 right-6 z-50 flex h-[min(760px,calc(100vh-8rem))] w-[min(860px,calc(100vw-3rem))] flex-col overflow-hidden rounded-[28px] border border-sky-400/30 bg-slate-950/95 shadow-2xl shadow-slate-950/60 backdrop-blur">
-      <header className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
-        <div>
-          <h2 className="text-base font-semibold text-slate-100">{title}</h2>
-          <p className="text-sm text-slate-400">{subtitle}</p>
-        </div>
-        <button
-          aria-label={title}
-          className="rounded-full p-2 text-slate-400 hover:bg-slate-900 hover:text-slate-100"
-          onClick={onClose}
-          type="button"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </header>
-      <div className="grid flex-1 place-items-center px-5 py-6 text-sm text-slate-400">
-        Loading assistant...
-      </div>
-    </section>
-  );
-}
-
 export function ProjectAssistantLauncher() {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [status, setStatus] = useState<AssistantContextStatus | null>(null);
-  const [statusError, setStatusError] = useState<string | null>(null);
-  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen || status || isLoadingStatus) {
-      return;
-    }
-
-    setIsLoadingStatus(true);
-    void getAssistantContextStatus()
-      .then((nextStatus) => {
-        setStatus(nextStatus);
-        setStatusError(null);
-      })
-      .catch((error: unknown) => {
-        setStatusError(error instanceof Error ? error.message : String(error));
-      })
-      .finally(() => setIsLoadingStatus(false));
-  }, [isLoadingStatus, isOpen, status]);
 
   return (
     <>
@@ -89,21 +33,8 @@ export function ProjectAssistantLauncher() {
       </div>
 
       {isOpen ? (
-        <Suspense
-          fallback={(
-            <AssistantPanelFallback
-              onClose={() => setIsOpen(false)}
-              subtitle={t("assistant.subtitle")}
-              title={t("assistant.title")}
-            />
-          )}
-        >
-          <ProjectAssistantPanel
-            isLoadingStatus={isLoadingStatus}
-            onClose={() => setIsOpen(false)}
-            status={status}
-            statusError={statusError}
-          />
+        <Suspense fallback={null}>
+          <ProjectAssistantPanel onClose={() => setIsOpen(false)} />
         </Suspense>
       ) : null}
     </>
