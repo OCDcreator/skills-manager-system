@@ -5,12 +5,16 @@
 
 ## Overview
 
-Exercises the explicit adopt/delete/import flows for entries found in a global agent skills directory.
+Exercises the explicit adopt/delete/import flows for entries already present in a global agent skills directory.
 
-## Covered Behaviors
+## Test Coverage
 
 | Test | Purpose |
 |---|---|
-| `taking_over_unmanaged_entry_keeps_existing_contents_when_sync_would_conflict` | Confirms preserved take-over entries block later repo-backed sync overwrites and keep their original files intact. |
-| `deleting_requested_entry_preserves_other_target_entries` | Confirms delete only removes the named target entry and leaves other managed or unmanaged entries alone. |
-| `importing_unmanaged_entry_copies_into_repo_and_only_deletes_when_requested` | Confirms imports land under `custom/` and preserve the original target entry unless deletion is explicitly requested. |
+| `taking_over_unmanaged_entry_keeps_existing_contents_when_sync_would_conflict` | Confirms take-over preserves manual contents even when later sync logic would otherwise collide. |
+| `deleting_requested_entry_preserves_other_target_entries` | Confirms delete only removes the named entry. |
+| `importing_unmanaged_entry_copies_into_repo_and_only_deletes_when_requested` | Confirms unmanaged imports land under `custom/` and only delete the source entry when requested. |
+
+## Interactions
+
+These tests stay focused on unmanaged global target entries, but they complement the external-source import rules by proving that explicit management actions do not broaden into destructive cleanup.

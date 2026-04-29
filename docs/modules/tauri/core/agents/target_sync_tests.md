@@ -5,12 +5,14 @@
 
 ## Overview
 
-Holds focused Rust tests for the low-level target reconciliation safety rules.
+Holds focused Rust tests for low-level target reconciliation safety rules.
 
-## Public Surface
+## Test Coverage
 
-This is a test-only module and exports no runtime API.
+| Test | Purpose |
+|---|---|
+| `unmanaged_entries_are_not_deleted_when_managed_entries_are_removed` | Confirms target sync removes only app-managed entries and preserves manual content. |
 
-## Core Logic
+## Interactions
 
-Exercises `apply_desired_entries` directly to prove that removing managed entries never deletes unrelated manual content already present in the target directory.
+This safety rule matters for both traditional sync outputs and any future agent-visible directories that also contain imported external mirrors.

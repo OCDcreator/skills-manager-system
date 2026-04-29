@@ -5,15 +5,15 @@
 
 ## Overview
 
-Verifies target inventory scanning for app-managed and unmanaged agent global skills.
+Verifies agent target-directory inventory classification for managed and unmanaged entries.
 
 ## Test Coverage
 
 | Test | Purpose |
 |---|---|
-| `target_inventory_classifies_managed_and_unmanaged_entries` | Confirms manifest-owned entries are marked managed and existing target skills remain unmanaged. |
-| `target_inventory_ignores_manifest_and_keeps_unmanaged_after_cleanup` | Confirms the manifest file is hidden from inventory and unmanaged directories survive managed cleanup. |
+| `target_inventory_classifies_managed_and_unmanaged_entries` | Confirms sync-created entries remain marked managed while manual folders stay unmanaged and keep metadata-derived display names. |
+| `target_inventory_ignores_manifest_and_keeps_unmanaged_after_cleanup` | Confirms managed cleanup does not surface the manifest file and does not erase unrelated manual entries. |
 
 ## Interactions
 
-Keep aligned with `target_sync_tests.rs` safety behavior and the serialized `AgentTargetSkillEntry` contract used by the frontend.
+These tests cover the same managed-vs-unmanaged boundary that external GitHub mirrors rely on when they later appear in agent target inventories.

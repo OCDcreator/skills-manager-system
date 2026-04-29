@@ -1,0 +1,33 @@
+# External Source Service
+
+> **Source**: `src-tauri/src/core/external_sources/service.rs`
+> **Status**: [REVIEW]
+
+## Overview
+
+Provides the public desktop-facing orchestration layer for source records, source snapshots, and managed import operations.
+
+## Public Surface
+
+| Export | Purpose |
+|---|---|
+| `ExternalVariantSnapshot` | Serializable detected variant shape returned to the frontend. |
+| `ExternalSourceSnapshotItem` | Source record plus detected variants and imports. |
+| `ExternalSourcesListResponse` | List payload returned by list/add/fetch/remove flows. |
+| `list_external_sources` | Loads current snapshots and injects runtime integrity warnings when a repo root is available. |
+| `add_external_source` | Upserts a source record and attempts an immediate fetch. |
+| `fetch_external_source` | Refreshes one source from GitHub into the cache. |
+| `import_external_variant` | Imports one detected variant into the managed mirror tree. |
+| `update_external_import` | Re-imports an existing managed mirror at the fetched upstream head. |
+| `remove_external_source` | Removes a source, optionally cascading import deletion and cache cleanup. |
+| `repair_external_import` | Rebuilds a managed mirror while preserving a backup for rollback. |
+
+## Core Logic
+
+`service.rs` now focuses on use-case orchestration. Snapshot assembly is delegated to `source_snapshot.rs`, while source add/fetch/failure persistence lives in `source_sync.rs`. The service stitches those helpers together for the command layer: list current source snapshots, add and optionally fetch a source, fetch one source, import/update/repair a managed mirror, and remove a source with import preflight when destructive cleanup is requested.
+
+Runtime integrity warnings are still computed late during listing so the UI can surface broken live mirrors without first mutating `external-sources.json`.
+
+## Interactions
+
+Commands should call this module, not the lower-level helpers directly. The service also feeds the skill scanner indirectly by keeping `ImportedExternalSkillRecord` state current and by preserving the managed mirror layout that `managed_scan.rs` later enriches.

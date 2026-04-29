@@ -5,37 +5,18 @@
 
 ## Overview
 
-Displays a selectable card grid of skill summaries for one source group, including enable/disable state.
-
-## Import Relationships
-
-```text
-Upstream: src/views/SkillsView.tsx
-Downstream: src/lib/skills/filters.ts, src/lib/tauri.ts, src/i18n/index.ts
-```
+Displays a selectable grid of skill summaries for one source group, including enable/disable state and external-source badges.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `SkillList` | List component for a titled skill group. |
+| `SkillList` | List component for one titled skill group. |
 
 ## Core Logic
 
-The component renders the group title, count, an empty state, and a responsive card grid for skills. The grid uses an auto-fit minmax template so card count per row follows the available section width. Selected skills receive highlighted styling, disabled skills receive subdued styling plus a status badge, and each card exposes a toggle button while descriptions are truncated before display.
-
-## Data Flow
-
-`SkillsView` passes grouped skills, the disabled-ID set, selection state, and the row-level toggle callback. Selecting an item calls the parent `onSelect` callback with the clicked `SkillSummary`, while toggles call the parent persistence action.
+The component renders a responsive card grid, highlights the selected skill, dims disabled skills, and forwards toggle/select actions to the parent. External skills now get additive badge treatment: unmanaged external entries show a manual-external badge, while managed GitHub mirrors show a separate managed-source badge derived from `skill.managedSource`.
 
 ## Interactions
 
-Uses `truncateDescription` from `src/lib/skills/filters.ts` plus source, status, toggle, and no-description i18n keys.
-
-## Configuration
-
-Description truncation uses the helper default limit unless that helper changes.
-
-## Change Notes
-
-Do not fetch skill documents or persist state here; selection and mutation side effects belong to `AppContext`.
+The list still does not fetch documents or persist state. Badge semantics must stay aligned with `scan_repo_skills_with_external_sources()` and the `ManagedSourceInfo` payload in `src/lib/tauri.ts`.

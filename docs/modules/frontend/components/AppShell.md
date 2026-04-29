@@ -5,18 +5,18 @@
 
 ## Overview
 
-Provides the shared page chrome for the desktop app, including the header, guarded navigation buttons, global error banner, main content container, unsaved-changes modal host, and the floating project assistant launcher.
+Provides the shared desktop chrome: header, top-level navigation, global error banner, main content frame, project-assistant launcher, and pending-navigation dialog host.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `AppShell` | Layout component accepting `children` and an optional content-width class override. |
+| `AppShell` | Layout wrapper that accepts page children plus an optional width override. |
 
 ## Core Logic
 
-The shell reads `activeView`, `errorMessage`, guarded `setActiveView`, and pending-navigation actions from context. It renders the translated app title/subtitle, six view buttons, an error strip, and the unsaved-changes dialog whenever the Agents page blocks a route change. The header and main wrappers expose stable `data-*` anchors so floating overlays such as the Agent Sync icon rail can measure the real usable viewport space instead of assuming the whole window is free.
+The shell reads `activeView`, guarded navigation actions, and `pendingNavigation` from `AppContext`. It renders seven nav buttons now that `sources` is a first-class view, forwards all route changes through guarded `setActiveView`, and mounts `UnsavedChangesDialog` whenever the current view registered dirty-state protection.
 
 ## Interactions
 
-User clicks on navigation buttons call guarded `setActiveView`, which may immediately change the current route or open the unsaved-changes dialog first. Navigation choices must stay aligned with the `AppView` union.
+Must stay aligned with `AppView` in `src/context/navigation-guard.ts`, the active-view switch in `src/App.tsx`, and i18n keys under `nav.*` and `tooltip.nav.*`.

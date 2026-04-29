@@ -5,27 +5,23 @@
 
 ## Overview
 
-Defines TypeScript shapes and thin wrappers for the Tauri commands used by the frontend.
+Defines TypeScript DTOs plus thin `invoke()` wrappers for the frontend's Tauri commands.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `AgentKey` | Union of all supported global/project agent keys. |
-| `AgentSyncMode` | Frontend union for `copy` vs `symlink`. |
-| `AgentInventoryItem.skillsDirRule` / `detectDirRule` | Static catalog rules for project-local target and marker previews. |
-| `AgentConfigurationInput` | Save payload for one persisted agent configuration. |
-| `getAgentSyncMode` / `setAgentSyncMode` | Persist the preferred global sync mode. |
-| `getAgentOrder` / `setAgentOrder` | Load or update the persisted global agent ordering keys. |
-| `setAgentConfiguration` | Persists a full agent draft payload and returns refreshed inventory. |
-| `applyAgentSync` | Runs manual agent sync, optionally scoped to one agent and/or an explicit mode override. |
-| `takeOverAgentTargetSkill` / `deleteAgentTargetSkill` / `importAgentTargetSkill` | Thin wrappers for explicit unmanaged-skill management actions in an agent target directory. |
-| other exports | Existing repo/skill/agent DTOs and invoke wrappers. |
+| `ManagedSourceInfo` | Skill-level metadata for managed GitHub mirrors shown in skills UI. |
+| `ExternalSourceRecord` / `ExternalSourceSnapshotItem` | Source-page and agent-page snapshot shapes. |
+| `ImportedExternalSkillRecord` / `ExternalImportResult` | Managed import state and mutation result DTOs. |
+| `listExternalSources` / `addExternalSource` / `fetchExternalSource` | Source-record command wrappers. |
+| `importExternalVariant` / `updateExternalImport` / `removeExternalSource` / `repairExternalImport` | Managed-import command wrappers. |
+| other exports | Existing repo, skill, scene, settings, and agent DTOs plus wrappers. |
 
 ## Core Logic
 
-Each function delegates directly to `invoke` with the command name and payload, keeping frontend command wiring thin while exposing enough type information for draft editing, explicit target-entry management, global ordering, scoped sync, project-local preview, and page-level orchestration. `AgentKey` must stay aligned with the Rust catalog, including Kimi Code CLI's `kimi` key.
+The file keeps frontend wiring thin while expanding the shared contract for external-source management. `SkillSummary` and `SkillDocument` now carry optional `managedSource` metadata, and `AgentKey` is reused across both sync and external-import flows so source variants can target the same agent catalog as the rest of the app.
 
 ## Interactions
 
-Must stay aligned with `src-tauri/src/commands/settings.rs`, `src-tauri/src/commands/agents.rs`, `src-tauri/src/commands/agent_targets.rs`, and the `tauri::generate_handler!` registration in `src-tauri/src/lib.rs`.
+Must stay aligned with `src-tauri/src/commands/external_sources.rs`, `src-tauri/src/core/external_sources/service.rs`, the skill scanner payloads in `src-tauri/src/core/skills/scan.rs`, and the command registrations in `src-tauri/src/lib.rs`.

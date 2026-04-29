@@ -5,40 +5,22 @@
 
 ## Overview
 
-Scans the configured `my-skills` repository and builds sorted summaries for custom and external skills.
-
-## Import Relationships
-
-```text
-Upstream: src-tauri/src/commands/skills.rs, src-tauri/src/core/agents/sync.rs
-Downstream: src-tauri/src/core/skills/metadata.rs, walkdir
-```
+Scans the configured `my-skills` repository and builds sorted skill summaries, including managed-source enrichment for imported GitHub mirrors.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
+| `ManagedSourceInfo` | Serializable managed-mirror metadata attached to externally imported skills. |
 | `SkillSummary` | Serializable summary shown in skill lists. |
-| `ScanSkillsResponse` | Serializable scan result with skills and warnings. |
-| `scan_repo_skills` | Scans `custom/` and `external/` for valid `SKILL.md` directories. |
-| `build_skill_id` | Produces stable ids as `{source_type}:{source_relative}`. |
+| `ScanSkillsResponse` | Skill list plus non-fatal warnings. |
+| `scan_repo_skills` | Base repo scan over `custom/` and `external/`. |
+| `scan_repo_skills_with_external_sources` | Base scan plus managed-mirror enrichment from `external-sources.json`. |
 
 ## Core Logic
 
-The scanner requires the configured repo root to exist. It reads only first-level directories under `custom/`, recursively walks `external/`, ignores known noise directories, parses metadata, normalizes repo-relative paths with forward slashes, normalizes emitted absolute path strings to forward slashes as well, and sorts summaries by id.
-
-## Data Flow
-
-Filesystem directories become `SkillSummary` values. Missing `custom/` or `external/` roots become warnings instead of hard failures.
+The base scan still reads only first-level custom skills, recursively walks `external/`, ignores noise directories, canonicalizes relative paths, and sorts by skill id. The new enrichment pass looks for `.skills-manager-source.json` inside external skill directories, parses that manifest, matches it against persisted import records, and attaches `managed_source` metadata when the mirror is healthy. If manifest and import records drift, the skill still scans as external but carries `integrity: mismatch`.
 
 ## Interactions
 
-Source type values and path fields must stay aligned with frontend filters, document-reader validation, and the CLI JSON path-normalization rules.
-
-## Configuration
-
-Ignored directory names are defined by `IGNORED_DIRS`: `.git`, `node_modules`, `dist`, `target`, and `.tmp-skills`.
-
-## Change Notes
-
-If custom skill layout becomes nested, update the custom scan behavior and tests that currently require first-level-only custom scanning.
+This module is the bridge that lets `SkillList` and `SkillDetailPanel` treat managed GitHub mirrors as normal external skills with additive metadata. Keep it aligned with `core/external_sources/models.rs`, `documents.rs`, and the TypeScript DTOs in `src/lib/tauri.ts`.

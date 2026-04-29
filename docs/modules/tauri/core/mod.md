@@ -7,40 +7,23 @@
 
 Declares backend core domains used by Tauri command modules.
 
-## Import Relationships
-
-```text
-Upstream: src-tauri/src/commands/*
-Downstream: src-tauri/src/core/agents/mod.rs, src-tauri/src/core/assistant/mod.rs, src-tauri/src/core/git/mod.rs, src-tauri/src/core/scenes/mod.rs, src-tauri/src/core/settings.rs, src-tauri/src/core/skills/mod.rs
-```
-
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `agents` | Agent inventory and manual sync domain. |
-| `assistant` | Project assistant context scan, retrieval, and answer domain. |
-| `git` | Git CLI operations and status/diff/log domain. |
-| `scenes` | Scene configuration and application domain. |
+| `agents` | Agent inventory and sync domain. |
+| `assistant` | Project assistant domain. |
+| `external_sources` | External GitHub source detection, caching, imports, and persistence. |
+| `git` | Git operations domain. |
+| `projects` | Project assignment domain. |
+| `scenes` | Scene configuration domain. |
 | `settings` | Settings persistence domain. |
-| `skills` | Skill scanning and document-reading domain. |
+| `skills` | Skill scanning, identity, document reading, and state domain. |
 
 ## Core Logic
 
-This is an aggregation module only; it exposes core domain modules to the command layer.
-
-## Data Flow
-
-Not applicable.
+This file stays declarative. Task 7 adds `external_sources` as a first-class core domain rather than threading the feature through existing skills or agents modules.
 
 ## Interactions
 
-Must include new core domains before command modules can import them.
-
-## Configuration
-
-None.
-
-## Change Notes
-
-Avoid turning this file into a business-logic host; create domain modules under `core/` instead.
+Must expose any new core domain before the command layer can depend on it.

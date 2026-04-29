@@ -5,19 +5,19 @@
 
 ## Overview
 
-Owns the frontend global state for active view, configured repository path, skill scan results, selected skill document, repo-scoped disabled skill IDs, persisted global agent order, sorted agent inventory, manual apply results, loading flags, shared error messages, and guarded-navigation actions.
+Owns the frontend global state for top-level view selection, repo path, skills, agents, guarded navigation, and the external GitHub source workflow.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `AppProvider` | Context provider that initializes settings and shared state. |
+| `AppProvider` | Context provider that initializes and mutates shared app state. |
 | `useAppContext` | Consumer hook that enforces provider presence. |
 
 ## Core Logic
 
-The provider loads repo path on mount, defers agent, agent-order, and skill refresh calls through microtasks, persists skill toggles, saved agent draft payloads, and the global `agentOrder`, derives `sortedAgentInventory` through `src/lib/agent-order.ts`, exposes scoped or global `applyAgentSync(syncMode?, agentKey?)`, and delegates unsaved-navigation state to `navigation-guard.ts`.
+The provider loads the saved repo path, refreshes agents, skills, agent order, and external sources, and centralizes all async mutation flags and error handling. For the external-sources slice it exposes source-list refresh, source add/fetch/remove mutations, and variant import plus import update/repair mutations. Import-changing operations deliberately refresh both external-source snapshots and skill summaries so managed-source badges and detail metadata stay current.
 
 ## Interactions
 
-Must stay aligned with command names and TypeScript response types in `src/lib/tauri.ts`, plus consumers in `src/views/SkillsView.tsx`, `src/views/AgentsView.tsx`, `src/views/ScenesView.tsx`, and `src/components/AppShell.tsx`.
+Must stay aligned with `src/lib/tauri.ts`, `src/context/app-context-types.ts`, and `src/context/navigation-guard.ts`. `refreshSkills()` intentionally uses the managed-source-aware scanner so GitHub mirror metadata becomes visible after import/update/repair operations.

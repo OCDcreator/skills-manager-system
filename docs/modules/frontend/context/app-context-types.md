@@ -5,15 +5,19 @@
 
 ## Overview
 
-Defines the frontend context contract separately from the provider implementation so `AppContext.tsx` can stay within the repo's size guardrails.
+Defines the consumer-facing `AppContext` contract separately from the provider implementation.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `AppView` / `NavigationGuard` / `PendingNavigation` | Re-exported shared navigation types. |
-| `AppContextValue` | Full consumer-facing shape exposed through `useAppContext()`. |
+| `AppView` / `NavigationGuard` / `PendingNavigation` | Re-exported top-level navigation types. |
+| `AppContextValue` | Full shared frontend state and action surface exposed by `useAppContext()`. |
 
 ## Core Logic
 
-Bundles app-wide view state, repo path, skill scan state, persisted agent ordering, sorted agent inventory, sync actions, and navigation-guard actions into one typed interface used by the provider and all consumers.
+`AppContextValue` now includes `externalSources`, loading and mutation flags for source/import actions, plus CRUD-style methods for add/fetch/import/update/remove/repair flows. The interface remains the source of truth for cross-view state shared by `SkillsView`, `AgentsView`, `ExternalSourcesView`, and the shell.
+
+## Interactions
+
+Must stay aligned with `src/context/AppContext.tsx`, the Tauri DTOs in `src/lib/tauri.ts`, and any top-level page that consumes the new external-source actions.

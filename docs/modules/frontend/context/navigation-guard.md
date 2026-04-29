@@ -5,17 +5,21 @@
 
 ## Overview
 
-Owns guarded top-level navigation for unsaved view-local draft state.
+Owns guarded top-level navigation for views with unsaved local drafts.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `AppView` | Shared union for top-level navigation destinations. |
-| `NavigationGuard` | View-local contract for dirty-check, save, and discard hooks. |
-| `PendingNavigation` | Pending source/target view pair for the shell dialog. |
-| `useNavigationGuardState` | Hook that intercepts view changes and exposes confirm/discard/cancel actions. |
+| `AppView` | Shared union of top-level desktop routes. |
+| `NavigationGuard` | View-local dirty/save/discard contract. |
+| `PendingNavigation` | Pending route transition captured for the shell dialog. |
+| `useNavigationGuardState` | Hook that intercepts route changes and exposes confirm/discard/cancel actions. |
 
 ## Core Logic
 
-Stores the active guard registration, blocks `setActiveView` when the current guarded view is dirty, records a pending target view, and only changes views after save or discard succeeds.
+`AppView` now includes the dedicated `sources` page. The hook only blocks navigation when the currently active view registered itself as guard owner and reports dirty state; otherwise it forwards the change immediately.
+
+## Interactions
+
+Used by `AppContext` and rendered by `AppShell`. Keep the route union synchronized with the view switch in `src/App.tsx`.

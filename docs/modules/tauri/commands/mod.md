@@ -5,44 +5,26 @@
 
 ## Overview
 
-Declares the Rust command submodules exposed to the Tauri application layer.
-
-## Import Relationships
-
-```text
-Upstream: src-tauri/src/lib.rs
-Downstream: src-tauri/src/commands/agent_targets.rs, src-tauri/src/commands/agents.rs, src-tauri/src/commands/assistant.rs, src-tauri/src/commands/git.rs, src-tauri/src/commands/projects.rs, src-tauri/src/commands/scenes.rs, src-tauri/src/commands/settings.rs, src-tauri/src/commands/skills.rs
-```
+Declares the Rust command submodules exposed to the Tauri desktop layer.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
 | `agent_targets` | Explicit per-entry management commands for global agent skill directories. |
-| `agents` | Agent inventory/config/apply command module. |
-| `assistant` | Project assistant context status and ask command module. |
-| `git` | Git status/diff/log/pull/push/commit/fetch/sync command module. |
-| `projects` | Project assignment CRUD and apply command module. |
-| `scenes` | Scene CRUD and apply command module. |
-| `settings` | Settings command module. |
-| `skills` | Skill browsing command module. |
+| `agents` | Agent inventory, config, and sync commands. |
+| `assistant` | Project assistant commands. |
+| `external_sources` | External GitHub source and managed-import commands. |
+| `git` | Git status and mutation commands. |
+| `projects` | Project assignment commands. |
+| `scenes` | Scene configuration commands. |
+| `settings` | Settings commands. |
+| `skills` | Skill browse and enable-state commands. |
 
 ## Core Logic
 
-This is an aggregation module only; it has no runtime branching or data transformation.
-
-## Data Flow
-
-Not applicable.
+This file remains aggregation-only. The only Task 7 change is that external-source commands are now first-class peers rather than being folded into an existing module.
 
 ## Interactions
 
-Must include any new command module that is registered in `tauri::generate_handler!`.
-
-## Configuration
-
-None.
-
-## Change Notes
-
-Keep command modules thin; business rules belong under `src-tauri/src/core/`.
+Must include any module referenced by `tauri::generate_handler!` in `src-tauri/src/lib.rs`.

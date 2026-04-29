@@ -5,19 +5,21 @@
 
 ## Overview
 
-Defines the shared Rust crate surface for both desktop and CLI builds, while keeping the Tauri startup path gated behind the `desktop` Cargo feature.
+Defines the shared Rust crate surface for both desktop and CLI builds and registers all desktop Tauri commands when the `desktop` feature is enabled.
 
-## Import Relationships
+## Public Surface
 
-```text
-Upstream: src-tauri/src/main.rs, src-tauri/src/cli/main.rs
-Downstream: src-tauri/src/app_runtime/*, src-tauri/src/cli/*, src-tauri/src/core/*, src-tauri/src/commands/*
-```
+| Export | Purpose |
+|---|---|
+| `app_runtime` | Shared runtime helpers for CLI and desktop code. |
+| `cli` | CLI surface behind the `cli` feature. |
+| `core` | Shared backend business domains. |
+| `run` | Desktop Tauri startup entrypoint behind the `desktop` feature. |
 
 ## Core Logic
 
-`app_runtime` is always exposed so both build targets can share config/output helpers. The CLI module is only compiled when the `cli` feature is enabled. The Tauri command layer and `run()` function are compiled only with the `desktop` feature, preserving a CLI-only build that no longer pulls Tauri runtime wiring into headless checks.
+The desktop `run()` function now registers the full external-source command set alongside existing agent, scene, project, git, settings, and skills handlers. This keeps the dedicated source-management surface fully first-class in the desktop build while preserving the CLI-only feature split.
 
 ## Interactions
 
-Must stay aligned with every `#[tauri::command]` wrapper under `src-tauri/src/commands/`, including the assistant context and ask commands, the dedicated agent-target management commands, the settings commands for repo path, sync mode, and global agent ordering, the project-path inspection command for the Projects workbench, the full agent-configuration save/apply flows, the feature declarations in `src-tauri/Cargo.toml`, and the CLI modules under `src-tauri/src/cli/`.
+Must stay aligned with `src-tauri/src/commands/mod.rs`, the feature declarations in `src-tauri/src/Cargo.toml`, and any new command module added to `tauri::generate_handler!`.

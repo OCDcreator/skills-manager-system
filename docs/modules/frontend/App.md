@@ -5,37 +5,18 @@
 
 ## Overview
 
-Owns the top-level React application composition. It wires the global app provider around the shell and chooses the active page view.
-
-## Import Relationships
-
-```text
-Upstream: src/main.tsx
-Downstream: src/components/AppShell.tsx, src/context/AppContext.tsx, src/views/AgentsView.tsx, src/views/GitView.tsx, src/views/ScenesView.tsx, src/views/SettingsView.tsx, src/views/SkillsView.tsx
-```
+Owns the top-level React composition for the desktop shell and routes the active top-level view.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `App` | Default React component mounted by `src/main.tsx`. |
+| `App` | Default application component mounted from `src/main.tsx`. |
 
 ## Core Logic
 
-`AppBody` reads `activeView` from context, chooses the current page view, and passes a view-specific content-width policy into `AppShell`. The skills browser, Agent Sync view, and Projects workbench share the wider responsive container so their multi-column layouts have enough room. `App` wraps that body in `AppProvider`.
-
-## Data Flow
-
-View selection flows from `AppContext` into `AppBody`; rendered views then read the same context for their own state.
+`AppBody` reads `activeView` from `AppContext`, selects the matching page component, and passes a width policy into `AppShell`. `skills`, `agents`, `projects`, and the new `sources` page use the wider `max-w-[min(96vw,1800px)]` container so their multi-column layouts do not collapse early.
 
 ## Interactions
 
-Must stay in sync with `AppView` values in `src/context/AppContext.tsx` and navigation labels in `src/components/AppShell.tsx`.
-
-## Configuration
-
-The skills browser, Agent Sync view, and Projects workbench widen the shared shell to `max-w-[min(96vw,1800px)]`; other views keep the default `max-w-7xl`.
-
-## Change Notes
-
-When adding a new top-level view, update `AppView`, `AppShell` navigation, and this branch selection together.
+Must stay aligned with the `AppView` union in `src/context/navigation-guard.ts`, the nav buttons in `src/components/AppShell.tsx`, and the page exports under `src/views/`.
