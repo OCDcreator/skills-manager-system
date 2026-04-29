@@ -186,28 +186,10 @@ pub fn remove_imported_variant_from_repo(
     repo_root: &Path,
     skill_id: &str,
 ) -> Result<ImportRemovalResult> {
+    let (import_record, target_dir) = preflight_remove_imported_variant(config_dir, repo_root, skill_id)?;
     let guard = acquire_config_lock(config_dir)?;
     let store = ExternalSourcesStore::new(config_dir.to_path_buf());
     let snapshot = store.load()?;
-    let import_record = snapshot
-        .imports
-        .iter()
-        .find(|record| record.skill_id == skill_id)
-        .cloned()
-        .ok_or_else(|| anyhow!("Imported skill '{}' was not found", skill_id))?;
-    let references = find_skill_references(config_dir, skill_id)?;
-    if references.has_any() {
-        bail!(
-            "Imported skill '{}' is referenced by scenes={:?}, agents={:?}, projects={:?}",
-            skill_id,
-            references.scenes,
-            references.agents,
-            references.projects
-        );
-    }
-
-    let target_dir = repo_root.join(&import_record.mirror_relative_path);
-    validate_live_mirror_for_removal(&target_dir, &import_record)?;
 
     let backup_dir = create_sibling_path(&target_dir, "remove");
     fs::rename(&target_dir, &backup_dir).with_context(|| {
@@ -237,6 +219,35 @@ pub fn remove_imported_variant_from_repo(
         skill_id: import_record.skill_id,
         mirror_relative_path: import_record.mirror_relative_path,
     })
+}
+
+pub fn preflight_remove_imported_variant(
+    config_dir: &Path,
+    repo_root: &Path,
+    skill_id: &str,
+) -> Result<(ImportedExternalSkillRecord, PathBuf)> {
+    let store = ExternalSourcesStore::new(config_dir.to_path_buf());
+    let snapshot = store.load()?;
+    let import_record = snapshot
+        .imports
+        .iter()
+        .find(|record| record.skill_id == skill_id)
+        .cloned()
+        .ok_or_else(|| anyhow!("Imported skill '{}' was not found", skill_id))?;
+    let references = find_skill_references(config_dir, skill_id)?;
+    if references.has_any() {
+        bail!(
+            "Imported skill '{}' is referenced by scenes={:?}, agents={:?}, projects={:?}",
+            skill_id,
+            references.scenes,
+            references.agents,
+            references.projects
+        );
+    }
+
+    let target_dir = repo_root.join(&import_record.mirror_relative_path);
+    validate_live_mirror_for_removal(&target_dir, &import_record)?;
+    Ok((import_record, target_dir))
 }
 
 fn determine_mirror_relative_path(
