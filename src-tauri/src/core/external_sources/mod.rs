@@ -1,10 +1,15 @@
 pub mod detect;
+mod git_export;
 pub mod git_repo;
 mod hash;
+mod import_paths;
 pub mod imports;
+mod mirror_fs;
 pub mod models;
 pub mod reference_check;
 pub mod service;
+mod source_snapshot;
+mod source_sync;
 pub mod store;
 
 pub use detect::{DetectedExternalVariant, DetectionResult, detect_external_source_variants};
