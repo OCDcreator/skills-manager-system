@@ -64,6 +64,7 @@ export function AppProvider({ children }: PropsWithChildren) {
       const response = await api.scanSkills();
       setScanResult(response);
       let nextError: string | null = null;
+      const currentSelectedSkillId = selectedSkill?.id ?? null;
       try {
         const state = await api.getSkillState();
         setDisabledSkillIds(state.disabledSkillIds);
@@ -72,14 +73,22 @@ export function AppProvider({ children }: PropsWithChildren) {
         nextError = errorMessageFrom(error);
       }
 
-      setSelectedSkill((currentSkill) => {
-        if (!currentSkill) return null;
-        const refreshedSkill = response.skills.find((skill) => skill.id === currentSkill.id) ?? null;
-        if (!refreshedSkill) {
+      const refreshedSkill = currentSelectedSkillId
+        ? response.skills.find((skill) => skill.id === currentSelectedSkillId) ?? null
+        : null;
+      setSelectedSkill(refreshedSkill);
+
+      if (!refreshedSkill) {
+        setSelectedDocument(null);
+      } else {
+        try {
+          const refreshedDocument = await api.getSkillDocument(refreshedSkill.relativePath);
+          setSelectedDocument(refreshedDocument);
+        } catch (error) {
           setSelectedDocument(null);
+          nextError ??= errorMessageFrom(error);
         }
-        return refreshedSkill;
-      });
+      }
 
       setErrorMessage(nextError);
     } catch (error) {
@@ -87,7 +96,7 @@ export function AppProvider({ children }: PropsWithChildren) {
     } finally {
       setIsLoading(false);
     }
-  }, [repoPath]);
+  }, [repoPath, selectedSkill?.id]);
 
   const refreshAgents = useCallback(async () => {
     setIsLoadingAgents(true);

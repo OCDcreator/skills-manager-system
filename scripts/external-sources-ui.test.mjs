@@ -92,3 +92,12 @@ test("ExternalImportList keeps repair busy state independent from update availab
   assert.match(source, /busyImportAction\.action === "repair"/);
   assert.match(source, /isRepairingImport\s*\?\s*t\("sources\.imports\.repairing"\)/);
 });
+
+test("refreshSkills reloads the selected document when the selected skill survives the refresh", () => {
+  const source = readIfExists("src/context/AppContext.tsx");
+
+  assert.match(source, /const currentSelectedSkillId = selectedSkill\?\.id \?\? null/);
+  assert.match(source, /const refreshedSkill = currentSelectedSkillId/);
+  assert.match(source, /await api\.getSkillDocument\(refreshedSkill\.relativePath\)/);
+  assert.match(source, /setSelectedDocument\(refreshedDocument\)/);
+});
