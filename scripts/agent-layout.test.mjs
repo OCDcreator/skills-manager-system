@@ -55,6 +55,22 @@ test('Agent order modal caps its height and keeps the reorder list scrollable', 
   assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-5 overflow-y-auto/);
 });
 
+test('Agent selection summary can deselect direct skills from the sync set', () => {
+  const summarySource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSelectionSummary.tsx'),
+    'utf8',
+  );
+  const i18nEn = fs.readFileSync(path.resolve('src/i18n/en.json'), 'utf8');
+  const i18nZh = fs.readFileSync(path.resolve('src/i18n/zh.json'), 'utf8');
+
+  assert.match(summarySource, /removeId/);
+  assert.match(summarySource, /item\.isDirect/);
+  assert.match(summarySource, /selectedSkillIds: removeId\(draft\.selectedSkillIds, item\.skill\.id\)/);
+  assert.match(summarySource, /agents\.card\.deselectDirect/);
+  assert.match(i18nEn, /"agents\.card\.deselectDirect"/);
+  assert.match(i18nZh, /"agents\.card\.deselectDirect"/);
+});
+
 test('Agent floating nav stays centered in the viewport and caps its own scroll height', () => {
   const navSource = fs.readFileSync(
     path.resolve('src/components/agents/AgentFloatingNav.tsx'),

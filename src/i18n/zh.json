@@ -51,6 +51,7 @@
   "agents.card.willSync": "将同步",
   "agents.card.excluded": "已排除",
   "agents.card.exclude": "排除",
+  "agents.card.deselectDirect": "取消选择",
   "agents.card.restore": "恢复",
   "agents.card.unsaved": "未保存",
   "agents.card.saveAgent": "保存并同步",

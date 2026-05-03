@@ -60,8 +60,12 @@ export function isAgentDraftDirty(
 
 export function toggleId(ids: string[], id: string) {
   return ids.includes(id)
-    ? ids.filter((candidate) => candidate !== id)
+    ? removeId(ids, id)
     : normalizeIds([...ids, id]);
+}
+
+export function removeId(ids: string[], id: string) {
+  return ids.filter((candidate) => candidate !== id);
 }
 
 export function resolveAgentSelectionPreview(

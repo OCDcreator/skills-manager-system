@@ -1,5 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { toggleId, type AgentConfigDraft, type AgentSelectionPreview } from "../../lib/agent-selection";
+import {
+  removeId,
+  toggleId,
+  type AgentConfigDraft,
+  type AgentSelectionPreview,
+} from "../../lib/agent-selection";
 
 interface AgentSelectionSummaryProps {
   draft: AgentConfigDraft;
@@ -13,6 +18,20 @@ export function AgentSelectionSummary({
   onDraftChange,
 }: AgentSelectionSummaryProps) {
   const { t } = useTranslation();
+  const deselectDirectSkill = (item: AgentSelectionPreview["items"][number]) => {
+    const hasSceneSource = item.sceneNames.length > 0;
+    const nextExcludedSkillIds = hasSceneSource
+      ? draft.excludedSkillIds.includes(item.skill.id)
+        ? draft.excludedSkillIds
+        : [...draft.excludedSkillIds, item.skill.id]
+      : removeId(draft.excludedSkillIds, item.skill.id);
+
+    onDraftChange({
+      ...draft,
+      excludedSkillIds: nextExcludedSkillIds,
+      selectedSkillIds: removeId(draft.selectedSkillIds, item.skill.id),
+    });
+  };
 
   return (
     <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
@@ -65,20 +84,31 @@ export function AgentSelectionSummary({
                       ? t("agents.card.globalDisabled")
                       : t("agents.card.excluded")}
                 </span>
-                {!item.isGloballyDisabled ? (
-                  <button
-                    className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-200 hover:bg-slate-800"
-                    onClick={() =>
-                      onDraftChange({
-                        ...draft,
-                        excludedSkillIds: toggleId(draft.excludedSkillIds, item.skill.id),
-                      })
-                    }
-                    type="button"
-                  >
-                    {item.isExcluded ? t("agents.card.restore") : t("agents.card.exclude")}
-                  </button>
-                ) : null}
+                <span className="flex shrink-0 flex-wrap justify-end gap-1">
+                  {item.isDirect ? (
+                    <button
+                      className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-200 hover:bg-slate-800"
+                      onClick={() => deselectDirectSkill(item)}
+                      type="button"
+                    >
+                      {t("agents.card.deselectDirect")}
+                    </button>
+                  ) : null}
+                  {!item.isGloballyDisabled ? (
+                    <button
+                      className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-200 hover:bg-slate-800"
+                      onClick={() =>
+                        onDraftChange({
+                          ...draft,
+                          excludedSkillIds: toggleId(draft.excludedSkillIds, item.skill.id),
+                        })
+                      }
+                      type="button"
+                    >
+                      {item.isExcluded ? t("agents.card.restore") : t("agents.card.exclude")}
+                    </button>
+                  ) : null}
+                </span>
               </div>
             );
           })

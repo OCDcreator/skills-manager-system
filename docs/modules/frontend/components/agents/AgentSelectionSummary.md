@@ -11,8 +11,8 @@ Displays the deduped effective skill preview for one agent draft.
 
 | Export | Purpose |
 |---|---|
-| `AgentSelectionSummary` | Final sync/exclude/global-ignore preview and exclusion toggles. |
+| `AgentSelectionSummary` | Final sync/exclude/global-ignore preview, exclusion toggles, and direct-skill deselection actions. |
 
 ## Core Logic
 
-Renders per-skill source labels, sync/excluded/global-disabled badges, summary counts, and exclusion/restore actions backed by the shared draft toggle helper. The preview list reuses the skill reading pane scrollbar styling.
+Renders per-skill source labels, sync/excluded/global-disabled badges, summary counts, exclusion/restore actions backed by the shared draft toggle helper, and a deselect action for skills selected directly on the agent. Deselecting a direct skill updates `selectedSkillIds` instead of only mutating exclusions, so a deleted target entry is not recreated by the next sync unless another source still selects it. The preview list reuses the skill reading pane scrollbar styling.

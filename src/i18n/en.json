@@ -51,6 +51,7 @@
   "agents.card.willSync": "Will sync",
   "agents.card.excluded": "Excluded",
   "agents.card.exclude": "Exclude",
+  "agents.card.deselectDirect": "Deselect",
   "agents.card.restore": "Restore",
   "agents.card.unsaved": "Unsaved",
   "agents.card.saveAgent": "Save and sync",

@@ -16,6 +16,7 @@ Provides frontend-only helpers for editable agent drafts, dirty checking, and ef
 | `draftFromAgent` / `draftToConfig` | Convert between inventory DTOs and save payloads. |
 | `isAgentDraftDirty` | Compares a draft against the persisted inventory baseline. |
 | `toggleId` | Shared sorted toggle helper for IDs. |
+| `removeId` | Shared deselection helper for dropping an ID without toggling it back on. |
 | `resolveAgentSelectionPreview` | Computes deduped direct+scene skill preview with exclusions and global hard-disable flags. |
 
 ## Core Logic
