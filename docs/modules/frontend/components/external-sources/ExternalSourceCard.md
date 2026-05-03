@@ -15,7 +15,7 @@ Displays one external source record together with its detected variants and impo
 
 ## Core Logic
 
-The card now defaults to a collapsed summary-first layout so long source lists stay scan-friendly. The always-visible header derives its purpose line from the first detected variant that exposes parsed `SKILL.md` description metadata; only when no metadata is available does it fall back to the older generated-bundle wording. It also shows generated-bundle and imported-count tags, agent badges, and a clickable repository URL that opens through Tauri's opener plugin with a browser fallback.
+The card now defaults to a collapsed summary-first layout so long source lists stay scan-friendly. The always-visible header derives its purpose line from the first detected variant that exposes parsed `SKILL.md` description metadata; only when no metadata is available does it fall back to the older generated-bundle wording. The header gives the summary column all remaining space while the source-level controls keep their natural width on wide screens, then lets those controls reflow into an auto-fitting grid below the summary on narrower screens so long descriptions and repo URLs cannot squeeze the buttons. It also shows generated-bundle and imported-count tags, agent badges, and a clickable repository URL that opens through Tauri's opener plugin with a browser fallback.
 
 Expanded content still keeps source-level actions separate from import-level actions: fetch/remove work on `record.id`, variant import works on detected upstream variants, and imported mirrors delegate update/repair rendering to `ExternalImportList`. Removal confirmation remains the only inline destructive UX handled here.
 

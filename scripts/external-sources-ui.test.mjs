@@ -55,6 +55,10 @@ test("ExternalSourceCard defaults to a collapsed summary with clickable repo acc
 
   assert.match(source, /useState\(false\)/);
   assert.match(source, /primaryVariant\?\.description/);
+  assert.match(source, /xl:grid-cols-\[minmax\(0,1fr\)_max-content\]/);
+  assert.match(source, /min-w-0 space-y-2/);
+  assert.match(source, /grid-cols-\[repeat\(auto-fit,minmax\(8rem,1fr\)\)\] gap-2 xl:min-w-max xl:grid-cols-1/);
+  assert.match(source, /whitespace-nowrap/);
   assert.match(source, /t\("sources\.actions\.expand"\)/);
   assert.match(source, /t\("sources\.actions\.collapse"\)/);
   assert.match(source, /openUrl\(record\.repoUrl\)/);

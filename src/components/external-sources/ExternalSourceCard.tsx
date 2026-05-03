@@ -54,8 +54,8 @@ export function ExternalSourceCard({
 
   return (
     <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div className="space-y-2">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_max-content] xl:items-start">
+        <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-3">
             <h3 className="text-lg font-semibold text-slate-100">{externalSourceName(record)}</h3>
             <span className={`rounded-full border px-3 py-1 text-xs font-medium ${statusClasses(record.status)}`}>
@@ -89,15 +89,15 @@ export function ExternalSourceCard({
             ) : null}
           </div>
           <a
-            className="inline-flex items-center gap-2 text-sm text-sky-300 underline decoration-sky-500/40 underline-offset-4 transition hover:text-sky-200"
+            className="inline-flex max-w-full min-w-0 items-center gap-2 text-sm text-sky-300 underline decoration-sky-500/40 underline-offset-4 transition hover:text-sky-200"
             href={record.repoUrl}
             onClick={(event) => void handleOpenRepo(event)}
             rel="noreferrer"
             target="_blank"
           >
-            <span>{record.repoUrl}</span>
-            <ExternalLink className="h-4 w-4" />
-            <span className="text-xs text-slate-500">{t("sources.actions.openRepo")}</span>
+            <span className="min-w-0 break-all">{record.repoUrl}</span>
+            <ExternalLink className="h-4 w-4 shrink-0" />
+            <span className="shrink-0 text-xs text-slate-500">{t("sources.actions.openRepo")}</span>
           </a>
           <div className="flex flex-wrap gap-3 text-xs text-slate-500">
             <span>{t("sources.meta.branch", { branch: record.defaultBranch ?? unknownLabel })}</span>
@@ -106,9 +106,9 @@ export function ExternalSourceCard({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-2 xl:min-w-max xl:grid-cols-1">
           <button
-            className="rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-100 transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-900 disabled:text-slate-500"
+            className="w-full whitespace-nowrap rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-100 transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-900 disabled:text-slate-500"
             disabled={isBusy}
             onClick={() => void onFetchSource(record.id)}
             type="button"
@@ -116,7 +116,7 @@ export function ExternalSourceCard({
             {isBusy ? t("sources.actions.fetching") : t("sources.actions.fetch")}
           </button>
           <button
-            className="rounded-lg border border-rose-700/60 bg-rose-950/50 px-4 py-2 text-sm text-rose-100 transition hover:bg-rose-900/60 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full whitespace-nowrap rounded-lg border border-rose-700/60 bg-rose-950/50 px-4 py-2 text-sm text-rose-100 transition hover:bg-rose-900/60 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isBusy}
             onClick={() => {
               const removeImports = imports.length > 0;
@@ -136,7 +136,7 @@ export function ExternalSourceCard({
           <button
             aria-controls={detailsId}
             aria-expanded={isExpanded}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/70 px-4 py-2 text-sm text-slate-200 transition hover:border-slate-600 hover:bg-slate-800"
+            className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-950/70 px-4 py-2 text-sm text-slate-200 transition hover:border-slate-600 hover:bg-slate-800"
             onClick={() => setIsExpanded((value) => !value)}
             type="button"
           >
