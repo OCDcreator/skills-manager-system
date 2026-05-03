@@ -11,15 +11,17 @@ Renders the sidecar inventory and explicit management actions for skills already
 
 | Export | Purpose |
 |---|---|
-| `AgentGlobalSkillList` | Displays app-managed and existing unmanaged target skill entries for one agent and exposes explicit take-over / delete / import actions. |
+| `AgentGlobalSkillList` | Displays app-managed and existing unmanaged target skill entries for one agent and exposes single-entry plus batch take-over / delete / import actions. |
 
 ## Core Logic
 
-Counts managed versus unmanaged entries, reports target scan errors, highlights taken-over entries separately from synced ones, and lists per-entry actions. The sidecar shell is a full-height flex column with hidden overflow, and the scrollable list uses `flex-1` instead of a fixed max-height so it fills the wrapper height without stretching the surrounding grid row. The component never mutates files directly: it forwards explicit button clicks back to `AgentsView`, which owns confirmation dialogs and Tauri command calls.
+Counts managed versus unmanaged entries, reports target scan errors, highlights taken-over entries separately from synced ones, and lists per-entry actions. A multi-select mode adds checkboxes to target entries and exposes batch delete, take-over, import, and import-delete commands alongside the managed/unmanaged count chips. Batch take-over and import actions only use selected unmanaged/importable entries, while delete can apply to any selected visible entry.
+
+The sidecar shell is a full-height flex column with hidden overflow, and the scrollable list uses `flex-1` instead of a fixed max-height so it fills the wrapper height without stretching the surrounding grid row. The component never mutates files directly: it forwards explicit button clicks back to `AgentsView`, which owns confirmation dialogs and Tauri command calls.
 
 ## Data Flow
 
-Receives `AgentInventoryItem.targetSkillEntries`, the current in-flight action key, and action callbacks directly from `AgentsView`.
+Receives `AgentInventoryItem.targetSkillEntries`, the current in-flight action key, and single-entry/batch action callbacks directly from `AgentsView`.
 
 ## Interactions
 

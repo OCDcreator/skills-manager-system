@@ -7,7 +7,7 @@ use tempfile::tempdir;
 use crate::core::skills::scan::SkillSummary;
 
 use super::target_sync::{
-    apply_desired_entries, build_desired_skill_entries, managed_entry_name, SyncMode,
+    apply_desired_entries, build_desired_skill_entries, managed_entry_name, remove_target, SyncMode,
 };
 
 fn create_skill(repo_root: &Path, relative_path: &str) -> SkillSummary {
@@ -126,6 +126,25 @@ fn symlink_mode_links_the_skill_directory_entry_instead_of_each_document() {
         fs::read_link(target_entry).unwrap(),
         repo_dir.path().join("custom/alpha")
     );
+}
+
+#[test]
+#[cfg(windows)]
+fn remove_target_deletes_windows_directory_symlink_without_deleting_source() {
+    let root = tempdir().unwrap();
+    let source_dir = root.path().join("source-skill");
+    let target_link = root.path().join("target-skill");
+    fs::create_dir_all(&source_dir).unwrap();
+    fs::write(source_dir.join("SKILL.md"), "# source").unwrap();
+
+    if std::os::windows::fs::symlink_dir(&source_dir, &target_link).is_err() {
+        return;
+    }
+
+    remove_target(&target_link).unwrap();
+
+    assert!(!target_link.exists());
+    assert!(source_dir.join("SKILL.md").exists());
 }
 
 #[test]

@@ -240,17 +240,39 @@ fn copy_dir_recursive(source_dir: &Path, target_dir: &Path) -> Result<()> {
 }
 
 pub(crate) fn remove_target(target: &Path) -> Result<()> {
-    if !target.exists() {
-        return Ok(());
-    }
-
-    let metadata = fs::symlink_metadata(target)?;
+    let metadata = match fs::symlink_metadata(target) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error).with_context(|| format!("Failed to inspect {:?}", target)),
+    };
     if metadata.file_type().is_symlink() || metadata.is_file() {
-        fs::remove_file(target).with_context(|| format!("Failed to remove {:?}", target))?;
+        remove_file_or_symlink(target, &metadata)
+            .with_context(|| format!("Failed to remove {:?}", target))?;
     } else if metadata.is_dir() {
         fs::remove_dir_all(target).with_context(|| format!("Failed to remove {:?}", target))?;
     }
 
+    Ok(())
+}
+
+#[cfg(windows)]
+fn remove_file_or_symlink(target: &Path, metadata: &fs::Metadata) -> Result<()> {
+    let is_directory_symlink = metadata.is_dir()
+        || fs::metadata(target)
+            .map(|target_metadata| target_metadata.is_dir())
+            .unwrap_or(false);
+
+    if is_directory_symlink {
+        fs::remove_dir(target)?;
+    } else {
+        fs::remove_file(target)?;
+    }
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn remove_file_or_symlink(target: &Path, _metadata: &fs::Metadata) -> Result<()> {
+    fs::remove_file(target)?;
     Ok(())
 }
 

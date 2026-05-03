@@ -13,6 +13,22 @@ interface AgentTargetsSectionProps {
   actionKey: string | null;
   agents: AgentInventoryItem[];
   canImport: boolean;
+  batchDeleteTargetSkills: (
+    agentKey: string,
+    agentDisplayName: string,
+    entries: AgentInventoryItem["targetSkillEntries"],
+  ) => Promise<void>;
+  batchImportTargetSkills: (
+    agentKey: string,
+    agentDisplayName: string,
+    entries: AgentInventoryItem["targetSkillEntries"],
+    deleteSourceAfterImport: boolean,
+  ) => Promise<void>;
+  batchTakeOverTargetSkills: (
+    agentKey: string,
+    agentDisplayName: string,
+    entries: AgentInventoryItem["targetSkillEntries"],
+  ) => Promise<void>;
   deleteTargetSkill: (
     agentKey: string,
     agentDisplayName: string,
@@ -45,6 +61,9 @@ export function AgentTargetsSection({
   actionKey,
   agents,
   canImport,
+  batchDeleteTargetSkills,
+  batchImportTargetSkills,
+  batchTakeOverTargetSkills,
   deleteTargetSkill,
   disabledSkillIds,
   drafts,
@@ -95,6 +114,20 @@ export function AgentTargetsSection({
                     actionKey={actionKey}
                     agent={agent}
                     canImport={canImport}
+                    onBatchDelete={(entries) =>
+                      void batchDeleteTargetSkills(agent.key, agent.displayName, entries)
+                    }
+                    onBatchImport={(entries, deleteSourceAfterImport) =>
+                      void batchImportTargetSkills(
+                        agent.key,
+                        agent.displayName,
+                        entries,
+                        deleteSourceAfterImport,
+                      )
+                    }
+                    onBatchTakeOver={(entries) =>
+                      void batchTakeOverTargetSkills(agent.key, agent.displayName, entries)
+                    }
                     onDelete={(entry) =>
                       void deleteTargetSkill(agent.key, agent.displayName, entry)
                     }

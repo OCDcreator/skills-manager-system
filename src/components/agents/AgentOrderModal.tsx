@@ -1,5 +1,5 @@
 import { ArrowDownUp, GripVertical, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
   applyDraggedAgentOrder,
@@ -30,6 +30,8 @@ export function AgentOrderModal({
   );
   const [draggedKey, setDraggedKey] = useState<AgentKey | null>(null);
   const [dropTargetKey, setDropTargetKey] = useState<AgentKey | null>(null);
+  const draggedKeyRef = useRef<AgentKey | null>(null);
+  const dragPointerIdRef = useRef<number | null>(null);
 
   const orderedAgents = useMemo(
     () => resolveSortedAgentInventory(agents, draftOrder),
@@ -52,16 +54,63 @@ export function AgentOrderModal({
     [orderedAgents, t],
   );
 
-  const handleDrop = (targetKey: AgentKey) => {
-    if (!draggedKey || draggedKey === targetKey) {
-      setDraggedKey(null);
-      setDropTargetKey(null);
+  const resetDragState = () => {
+    draggedKeyRef.current = null;
+    dragPointerIdRef.current = null;
+    setDraggedKey(null);
+    setDropTargetKey(null);
+  };
+
+  const moveDraggedAgentTo = (targetKey: AgentKey) => {
+    const activeDraggedKey = draggedKeyRef.current;
+    if (!activeDraggedKey || activeDraggedKey === targetKey) {
+      setDropTargetKey(targetKey);
       return;
     }
 
-    setDraftOrder((current) => applyDraggedAgentOrder(current, draggedKey, targetKey));
-    setDraggedKey(null);
-    setDropTargetKey(null);
+    setDraftOrder((current) =>
+      applyDraggedAgentOrder(current, activeDraggedKey, targetKey),
+    );
+    setDropTargetKey(targetKey);
+  };
+
+  const resolvePointerTargetKey = (event: PointerEvent<HTMLElement>) => {
+    const element = document.elementFromPoint(event.clientX, event.clientY);
+    const row = element?.closest<HTMLElement>("[data-agent-order-key]");
+    return row?.dataset.agentOrderKey as AgentKey | undefined;
+  };
+
+  const handlePointerDragStart = (
+    event: PointerEvent<HTMLButtonElement>,
+    agentKey: AgentKey,
+  ) => {
+    if (event.button !== 0) return;
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    draggedKeyRef.current = agentKey;
+    dragPointerIdRef.current = event.pointerId;
+    setDraggedKey(agentKey);
+    setDropTargetKey(agentKey);
+  };
+
+  const handlePointerDragMove = (event: PointerEvent<HTMLButtonElement>) => {
+    if (dragPointerIdRef.current !== event.pointerId) return;
+
+    event.preventDefault();
+    const targetKey = resolvePointerTargetKey(event);
+    if (targetKey) {
+      moveDraggedAgentTo(targetKey);
+    }
+  };
+
+  const handlePointerDragEnd = (event: PointerEvent<HTMLButtonElement>) => {
+    if (dragPointerIdRef.current !== event.pointerId) return;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    resetDragState();
   };
 
   return (
@@ -112,27 +161,23 @@ export function AgentOrderModal({
                           ? "border-sky-600 bg-sky-950/30 text-slate-100"
                           : "border-slate-800 bg-slate-950/60 text-slate-200"
                       } ${draggedKey === agent.key ? "opacity-60" : ""}`}
-                      draggable
+                      data-agent-order-key={agent.key}
                       key={agent.key}
-                      onDragEnd={() => {
-                        setDraggedKey(null);
-                        setDropTargetKey(null);
-                      }}
-                      onDragEnter={() => setDropTargetKey(agent.key)}
-                      onDragOver={(event) => {
-                        event.preventDefault();
-                        setDropTargetKey(agent.key);
-                      }}
-                      onDragStart={() => {
-                        setDraggedKey(agent.key);
-                        setDropTargetKey(agent.key);
-                      }}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        handleDrop(agent.key);
-                      }}
                     >
-                      <GripVertical className="h-4 w-4 cursor-grab text-slate-500 active:cursor-grabbing" />
+                      <button
+                        aria-label={`${t("agents.orderModal.dragHint")}: ${agent.displayName}`}
+                        className="touch-none rounded p-1 text-slate-500 hover:bg-slate-800 hover:text-sky-300 active:cursor-grabbing"
+                        onPointerCancel={handlePointerDragEnd}
+                        onPointerDown={(event) =>
+                          handlePointerDragStart(event, agent.key)
+                        }
+                        onPointerMove={handlePointerDragMove}
+                        onPointerUp={handlePointerDragEnd}
+                        title={`${t("agents.orderModal.dragHint")}: ${agent.displayName}`}
+                        type="button"
+                      >
+                        <GripVertical className="h-4 w-4 cursor-grab" />
+                      </button>
                       <div className="grid h-9 w-9 place-items-center rounded-full border border-slate-700 bg-slate-900">
                         <AgentBrandIcon agentKey={agent.key} className="size-[65%]" />
                       </div>

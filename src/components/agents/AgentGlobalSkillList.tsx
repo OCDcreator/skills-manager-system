@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AgentInventoryItem, AgentTargetSkillEntry } from "../../lib/tauri";
 
@@ -6,6 +6,12 @@ interface AgentGlobalSkillListProps {
   agent: AgentInventoryItem;
   actionKey: string | null;
   canImport: boolean;
+  onBatchDelete: (entries: AgentTargetSkillEntry[]) => void;
+  onBatchImport: (
+    entries: AgentTargetSkillEntry[],
+    deleteSourceAfterImport: boolean,
+  ) => void;
+  onBatchTakeOver: (entries: AgentTargetSkillEntry[]) => void;
   onDelete: (entry: AgentTargetSkillEntry) => void;
   onImport: (entry: AgentTargetSkillEntry, deleteSourceAfterImport: boolean) => void;
   onTakeOver: (entry: AgentTargetSkillEntry) => void;
@@ -15,18 +21,66 @@ export function AgentGlobalSkillList({
   agent,
   actionKey,
   canImport,
+  onBatchDelete,
+  onBatchImport,
+  onBatchTakeOver,
   onDelete,
   onImport,
   onTakeOver,
 }: AgentGlobalSkillListProps) {
   const { t } = useTranslation();
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedEntryNames, setSelectedEntryNames] = useState<string[]>([]);
   const managedCount = useMemo(
     () => agent.targetSkillEntries.filter((entry) => entry.managed).length,
     [agent.targetSkillEntries],
   );
   const unmanagedCount = agent.targetSkillEntries.length - managedCount;
+  const selectedEntryNameSet = useMemo(
+    () => new Set(selectedEntryNames),
+    [selectedEntryNames],
+  );
+  const selectedEntries = agent.targetSkillEntries.filter((entry) =>
+    selectedEntryNameSet.has(entry.entryName),
+  );
+  const selectedUnmanagedEntries = selectedEntries.filter((entry) => !entry.managed);
+  const selectedImportableEntries = selectedUnmanagedEntries.filter(
+    (entry) => entry.hasSkillDocument && canImport,
+  );
+  const isBatchWorking = actionKey?.startsWith(`${agent.key}:batch:`) ?? false;
   const entryActionKey = (entry: AgentTargetSkillEntry, action: string) =>
     `${agent.key}:${entry.entryName}:${action}`;
+  const toggleSelectionMode = () => {
+    setIsSelectionMode((current) => !current);
+    setSelectedEntryNames([]);
+  };
+  const toggleEntrySelection = (entryName: string) => {
+    setSelectedEntryNames((current) =>
+      current.includes(entryName)
+        ? current.filter((candidate) => candidate !== entryName)
+        : [...current, entryName],
+    );
+  };
+  const runBatchAction = (
+    action: "delete" | "take-over" | "import" | "import-delete",
+  ) => {
+    if (action === "delete") {
+      onBatchDelete(selectedEntries);
+    } else if (action === "take-over") {
+      onBatchTakeOver(selectedUnmanagedEntries);
+    } else {
+      onBatchImport(selectedImportableEntries, action === "import-delete");
+    }
+    setSelectedEntryNames([]);
+  };
+
+  useEffect(() => {
+    const availableNames = new Set(agent.targetSkillEntries.map((entry) => entry.entryName));
+    setSelectedEntryNames((current) => {
+      const next = current.filter((entryName) => availableNames.has(entryName));
+      return next.length === current.length ? current : next;
+    });
+  }, [agent.targetSkillEntries]);
 
   return (
     <section className="flex h-full min-h-0 overflow-hidden flex-col rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
@@ -46,6 +100,56 @@ export function AgentGlobalSkillList({
           <span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-200">
             {t("agents.globalSkills.unmanagedCount", { count: unmanagedCount })}
           </span>
+          <button
+            className="rounded-full border border-slate-700 px-2 py-1 text-slate-200 hover:bg-slate-800"
+            onClick={toggleSelectionMode}
+            type="button"
+          >
+            {isSelectionMode
+              ? t("agents.globalSkills.cancelMultiSelect")
+              : t("agents.globalSkills.multiSelect")}
+          </button>
+          {isSelectionMode ? (
+            <>
+              <span className="rounded-full bg-slate-800 px-2 py-1 text-slate-300">
+                {t("agents.globalSkills.batchSelectedCount", {
+                  count: selectedEntryNames.length,
+                })}
+              </span>
+              <button
+                className="rounded-full border border-rose-800/70 px-2 py-1 text-rose-200 disabled:opacity-50"
+                disabled={selectedEntries.length === 0 || isBatchWorking}
+                onClick={() => runBatchAction("delete")}
+                type="button"
+              >
+                {t("agents.globalSkills.batchDelete")}
+              </button>
+              <button
+                className="rounded-full border border-violet-700/70 px-2 py-1 text-violet-200 disabled:opacity-50"
+                disabled={selectedUnmanagedEntries.length === 0 || isBatchWorking}
+                onClick={() => runBatchAction("take-over")}
+                type="button"
+              >
+                {t("agents.globalSkills.batchTakeOver")}
+              </button>
+              <button
+                className="rounded-full border border-sky-700/70 px-2 py-1 text-sky-200 disabled:opacity-50"
+                disabled={selectedImportableEntries.length === 0 || isBatchWorking}
+                onClick={() => runBatchAction("import")}
+                type="button"
+              >
+                {t("agents.globalSkills.batchImport")}
+              </button>
+              <button
+                className="rounded-full border border-sky-700/70 px-2 py-1 text-sky-200 disabled:opacity-50"
+                disabled={selectedImportableEntries.length === 0 || isBatchWorking}
+                onClick={() => runBatchAction("import-delete")}
+                type="button"
+              >
+                {t("agents.globalSkills.batchImportDelete")}
+              </button>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -65,6 +169,15 @@ export function AgentGlobalSkillList({
               key={entry.entryName}
             >
               <div className="flex items-start gap-2">
+                {isSelectionMode ? (
+                  <input
+                    aria-label={entry.displayName}
+                    checked={selectedEntryNameSet.has(entry.entryName)}
+                    className="mt-0.5 h-3.5 w-3.5 rounded border-slate-700 bg-slate-950"
+                    onChange={() => toggleEntrySelection(entry.entryName)}
+                    type="checkbox"
+                  />
+                ) : null}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium text-slate-200">
                     {entry.displayName}

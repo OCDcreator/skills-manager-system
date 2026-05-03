@@ -20,6 +20,10 @@ function buildTargetActionId(agentKey: string, entryName: string, action: string
   return `${agentKey}:${entryName}:${action}`;
 }
 
+function buildBatchActionId(agentKey: string, action: string) {
+  return `${agentKey}:batch:${action}`;
+}
+
 export function useAgentTargetActions({
   repoPath,
   refreshAgents,
@@ -99,6 +103,88 @@ export function useAgentTargetActions({
     [refreshAgents, setError, t],
   );
 
+  const executeBatchTargetAction = useCallback(
+    async (
+      agentKey: string,
+      agentName: string,
+      entries: AgentTargetSkillEntry[],
+      action: "delete" | "take-over" | "import" | "import-delete",
+      runEntryAction: (entry: AgentTargetSkillEntry) => Promise<void>,
+    ) => {
+      if (entries.length === 0) return;
+
+      const accepted = await confirm(
+        t(`agents.globalSkills.confirmBatch.${action}.body`, {
+          agent: agentName,
+          count: entries.length,
+        }),
+        {
+          title: t(`agents.globalSkills.confirmBatch.${action}.title`),
+          kind: "warning",
+        },
+      );
+      if (!accepted) return;
+
+      setActionId(buildBatchActionId(agentKey, action));
+      setActionNotice(null);
+      try {
+        for (const entry of entries) {
+          await runEntryAction(entry);
+        }
+        await Promise.all([refreshAgents(), action.startsWith("import") ? refreshSkills() : undefined]);
+        setError(null);
+        setActionNotice(
+          t(`agents.globalSkills.noticeBatch.${action}`, {
+            count: entries.length,
+          }),
+        );
+      } catch (error) {
+        setError(messageFrom(error));
+      } finally {
+        setActionId(null);
+      }
+    },
+    [refreshAgents, refreshSkills, setError, t],
+  );
+
+  const batchDeleteTargetSkills = useCallback(
+    async (agentKey: string, agentName: string, entries: AgentTargetSkillEntry[]) =>
+      executeBatchTargetAction(agentKey, agentName, entries, "delete", (entry) =>
+        api.deleteAgentTargetSkill(agentKey, entry.entryName),
+      ),
+    [executeBatchTargetAction],
+  );
+
+  const batchTakeOverTargetSkills = useCallback(
+    async (agentKey: string, agentName: string, entries: AgentTargetSkillEntry[]) =>
+      executeBatchTargetAction(agentKey, agentName, entries, "take-over", (entry) =>
+        api.takeOverAgentTargetSkill(agentKey, entry.entryName),
+      ),
+    [executeBatchTargetAction],
+  );
+
+  const batchImportTargetSkills = useCallback(
+    async (
+      agentKey: string,
+      agentName: string,
+      entries: AgentTargetSkillEntry[],
+      deleteSourceAfterImport: boolean,
+    ) => {
+      if (!repoPath) return;
+      return executeBatchTargetAction(
+        agentKey,
+        agentName,
+        entries,
+        deleteSourceAfterImport ? "import-delete" : "import",
+        (entry) =>
+          api
+            .importAgentTargetSkill(agentKey, entry.entryName, deleteSourceAfterImport)
+            .then(() => undefined),
+      );
+    },
+    [executeBatchTargetAction, repoPath],
+  );
+
   const importTargetSkill = useCallback(
     async (
       agentKey: string,
@@ -169,6 +255,9 @@ export function useAgentTargetActions({
   return {
     actionId,
     actionNotice,
+    batchDeleteTargetSkills,
+    batchImportTargetSkills,
+    batchTakeOverTargetSkills,
     clearActionNotice,
     deleteTargetSkill,
     importTargetSkill,

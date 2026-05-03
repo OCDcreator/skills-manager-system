@@ -15,7 +15,7 @@ Assembles the per-agent sync editor, explicit target management, and the new age
 
 ## Core Logic
 
-The view still owns sync mode, scene loading, editable drafts, save/apply flows, and order persistence. After the external GitHub source work it also reads `externalSources` from context and renders one `AgentExternalVariantPanel` per sorted agent below the target-management section. That panel is intentionally agent-scoped: `AgentsView` passes repo-path awareness and import/update/repair callbacks, but source creation, fetch, and deletion remain on the dedicated `ExternalSourcesView`.
+The view still owns sync mode, scene loading, editable drafts, save/apply flows, order persistence, and target-management action wiring. It passes single-entry and batch target actions into `AgentTargetsSection`, while the sidecar components keep local checkbox selection state. After the external GitHub source work it also reads `externalSources` from context and renders one `AgentExternalVariantPanel` per sorted agent below the target-management section. That panel is intentionally agent-scoped: `AgentsView` passes repo-path awareness and import/update/repair callbacks, but source creation, fetch, and deletion remain on the dedicated `ExternalSourcesView`.
 
 ## Interactions
 

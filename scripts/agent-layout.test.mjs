@@ -55,6 +55,21 @@ test('Agent order modal caps its height and keeps the reorder list scrollable', 
   assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-5 overflow-y-auto/);
 });
 
+test('Agent order modal uses pointer drag handles instead of native draggable rows', () => {
+  const source = fs.readFileSync(
+    path.resolve('src/components/agents/AgentOrderModal.tsx'),
+    'utf8',
+  );
+
+  assert.match(source, /data-agent-order-key=\{agent\.key\}/);
+  assert.match(source, /onPointerDown=\{\(event\) =>/);
+  assert.match(source, /onPointerMove=\{handlePointerDragMove\}/);
+  assert.match(source, /onPointerUp=\{handlePointerDragEnd\}/);
+  assert.match(source, /setPointerCapture\(event\.pointerId\)/);
+  assert.match(source, /document\.elementFromPoint\(event\.clientX, event\.clientY\)/);
+  assert.doesNotMatch(source, /\sdraggable\s/);
+});
+
 test('Agent selection summary can deselect direct skills from the sync set', () => {
   const summarySource = fs.readFileSync(
     path.resolve('src/components/agents/AgentSelectionSummary.tsx'),
@@ -69,6 +84,50 @@ test('Agent selection summary can deselect direct skills from the sync set', () 
   assert.match(summarySource, /agents\.card\.deselectDirect/);
   assert.match(i18nEn, /"agents\.card\.deselectDirect"/);
   assert.match(i18nZh, /"agents\.card\.deselectDirect"/);
+});
+
+test('Agent selection summary exposes batch exclude and deselect controls', () => {
+  const summarySource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSelectionSummary.tsx'),
+    'utf8',
+  );
+  const i18nEn = fs.readFileSync(path.resolve('src/i18n/en.json'), 'utf8');
+  const i18nZh = fs.readFileSync(path.resolve('src/i18n/zh.json'), 'utf8');
+
+  assert.match(summarySource, /selectedPreviewSkillIds/);
+  assert.match(summarySource, /togglePreviewSkillSelection/);
+  assert.match(summarySource, /batchExcludeSelected/);
+  assert.match(summarySource, /batchDeselectDirectSelected/);
+  assert.match(summarySource, /agents\.card\.batchExclude/);
+  assert.match(summarySource, /agents\.card\.batchDeselectDirect/);
+  assert.match(i18nEn, /"agents\.card\.batchExclude"/);
+  assert.match(i18nZh, /"agents\.card\.batchDeselectDirect"/);
+});
+
+test('Agent global skill list exposes batch target actions in selection mode', () => {
+  const listSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentGlobalSkillList.tsx'),
+    'utf8',
+  );
+  const sectionSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentTargetsSection.tsx'),
+    'utf8',
+  );
+  const hookSource = fs.readFileSync(path.resolve('src/lib/agent-target-actions.ts'), 'utf8');
+  const i18nEn = fs.readFileSync(path.resolve('src/i18n/en.json'), 'utf8');
+  const i18nZh = fs.readFileSync(path.resolve('src/i18n/zh.json'), 'utf8');
+
+  assert.match(listSource, /isSelectionMode/);
+  assert.match(listSource, /selectedEntryNames/);
+  assert.match(listSource, /agents\.globalSkills\.multiSelect/);
+  assert.match(listSource, /agents\.globalSkills\.batchDelete/);
+  assert.match(listSource, /agents\.globalSkills\.batchTakeOver/);
+  assert.match(listSource, /agents\.globalSkills\.batchImportDelete/);
+  assert.match(sectionSource, /batchDeleteTargetSkills/);
+  assert.match(hookSource, /batchDeleteTargetSkills/);
+  assert.match(hookSource, /executeBatchTargetAction/);
+  assert.match(i18nEn, /"agents\.globalSkills\.batchDelete"/);
+  assert.match(i18nZh, /"agents\.globalSkills\.batchImportDelete"/);
 });
 
 test('Agent floating nav stays centered in the viewport and caps its own scroll height', () => {

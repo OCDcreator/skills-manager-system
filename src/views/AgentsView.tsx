@@ -125,6 +125,9 @@ export function AgentsView() {
   const {
     actionId: targetActionId,
     actionNotice,
+    batchDeleteTargetSkills,
+    batchImportTargetSkills,
+    batchTakeOverTargetSkills,
     clearActionNotice,
     deleteTargetSkill,
     importTargetSkill,
@@ -275,7 +278,6 @@ export function AgentsView() {
           {actionNotice}
         </div>
       ) : null}
-
       <section id="agent-sync-targets" className="scroll-mt-8 space-y-4">
         <div><h2 className="text-lg font-semibold text-slate-100">{t("agents.targets.title")}</h2><p className="mt-1 text-sm text-slate-500">{t("agents.targets.description")}</p></div>
 
@@ -287,6 +289,9 @@ export function AgentsView() {
           <AgentTargetsSection
             actionKey={targetActionId}
             agents={sortedAgentInventory}
+            batchDeleteTargetSkills={batchDeleteTargetSkills}
+            batchImportTargetSkills={batchImportTargetSkills}
+            batchTakeOverTargetSkills={batchTakeOverTargetSkills}
             canImport={Boolean(repoPath)}
             deleteTargetSkill={deleteTargetSkill}
             disabledSkillIds={disabledSkillIds}
@@ -306,7 +311,6 @@ export function AgentsView() {
           />
         )}
       </section>
-
       <section className="space-y-4">
         {isLoadingExternalSources ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-400">{t("sources.loading")}</div>
@@ -326,7 +330,6 @@ export function AgentsView() {
           ))
         )}
       </section>
-
       <div id="agent-sync-results" className="scroll-mt-8">
         <AgentApplyResults result={lastAgentApplyResult} />
       </div>
