@@ -72,8 +72,10 @@ test("project identity panel moves helper chips inline until a display name is t
 
   assert.match(identityPanelSource, /const showDisplayInlineHint = !props\.displayName\.trim\(\)/);
   assert.match(identityPanelSource, /showDisplayInlineHint \? \(/);
+  assert.match(identityPanelSource, /justify-start/);
   assert.match(identityPanelSource, /t\("projects\.identity\.suggested"\)/);
   assert.match(identityPanelSource, /readOnlyPath \? \(/);
+  assert.doesNotMatch(identityPanelSource, /justify-end/);
   assert.doesNotMatch(identityPanelSource, /rounded-full border border-slate-700 px-3 py-1">\s*\{t\("projects\.identity\.suggested"\)/);
   assert.doesNotMatch(identityPanelSource, /rounded-full border border-slate-700 px-3 py-1">\s*\{t\("projects\.identity\.readOnlyPath"\)/);
 });

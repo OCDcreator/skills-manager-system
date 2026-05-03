@@ -14,6 +14,6 @@ Path-first identity editor for the Projects workbench. Lets the user confirm pro
 - renders the secondary `displayName` input on its own compact row with the same 3rem-tall dark input treatment as the path field
 - hosts the primary save button to the right of the display-name field so saving stays near the draft identity inputs
 - shows a secondary cancel-edit action in edit mode so users can return to a new assignment draft without saving local edits
-- shows inferred-name and edit-mode read-only hints inline inside the empty display-name field, then hides them once the user types
+- shows inferred-name and edit-mode read-only hints as left-aligned inline guidance inside the empty display-name field, then hides them once the user types
 - shows duplicate-path and inspection-status hints below the identity inputs
 - keeps the path field read-only while editing an existing saved assignment

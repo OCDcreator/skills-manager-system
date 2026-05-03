@@ -77,7 +77,7 @@ export function ProjectIdentityPanel(props: ProjectIdentityPanelProps) {
                 value={props.displayName}
               />
               {showDisplayInlineHint ? (
-                <div className="pointer-events-none absolute inset-y-1 left-4 right-3 flex items-center justify-end gap-2 overflow-hidden text-xs text-slate-500">
+                <div className="pointer-events-none absolute inset-y-1 left-4 right-3 flex items-center justify-start gap-2 overflow-hidden text-xs text-slate-500">
                   <span className="min-w-0 truncate">
                     {t("projects.identity.suggested")}: {props.inferredName || "—"}
                   </span>
