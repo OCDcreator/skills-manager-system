@@ -11,10 +11,12 @@ const CLI_OPTIONS: { key: CliKey; label: string }[] = [
 ];
 
 interface AssistantLauncherMenuProps {
+  defaultWorkingDirectory: string;
   launchError: string | null;
   selectedCliKey: CliKey | null;
   workingDirectory: string;
   onCliSelect: (key: CliKey) => void;
+  onDefaultPathSelect: () => void;
   onLaunch: () => void;
   onWorkingDirectoryChange: (value: string) => void;
 }
@@ -70,6 +72,15 @@ export function AssistantLauncherMenu(props: AssistantLauncherMenuProps) {
           placeholder={t("assistant.cwdPlaceholder")}
           value={props.workingDirectory}
         />
+        <button
+          className="rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-100 hover:border-sky-400/50 disabled:cursor-not-allowed disabled:text-slate-500"
+          disabled={!props.defaultWorkingDirectory}
+          onClick={props.onDefaultPathSelect}
+          title={props.defaultWorkingDirectory || t("assistant.defaultPath")}
+          type="button"
+        >
+          {t("assistant.defaultPath")}
+        </button>
         <button
           className="rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-100 hover:border-sky-400/50"
           onClick={() => void handleBrowse()}

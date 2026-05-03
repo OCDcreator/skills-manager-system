@@ -4,10 +4,13 @@ import { useTranslation } from "react-i18next";
 import { AssistantLauncherMenu } from "./AssistantLauncherMenu";
 import { AssistantTerminalSession } from "./AssistantTerminalSession";
 import {
+  getTerminalLauncherPreferences,
   getTerminalSession,
+  setTerminalWorkingDirectoryPreference,
   startTerminalSession,
   type CliKey,
   type TerminalLaunchInput,
+  type TerminalLauncherPreferences,
   type TerminalSessionSnapshot,
 } from "../../lib/terminal";
 
@@ -18,27 +21,73 @@ interface ProjectAssistantPanelProps {
 export function ProjectAssistantPanel({ onClose }: ProjectAssistantPanelProps) {
   const { t } = useTranslation();
   const [selectedCliKey, setSelectedCliKey] = useState<CliKey | null>(null);
+  const [defaultWorkingDirectory, setDefaultWorkingDirectory] = useState("");
   const [workingDirectory, setWorkingDirectory] = useState("");
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [launchInput, setLaunchInput] = useState<TerminalLaunchInput | null>(null);
   const [session, setSession] = useState<TerminalSessionSnapshot | null>(null);
 
   useEffect(() => {
-    void getTerminalSession().then((activeSession) => {
-      if (!activeSession) {
-        return;
+    let isCancelled = false;
+
+    async function loadTerminalState() {
+      try {
+        const [activeSession, launcherPreferences] = await Promise.all([
+          getTerminalSession(),
+          getTerminalLauncherPreferences(),
+        ]);
+
+        if (isCancelled) {
+          return;
+        }
+
+        applyLauncherPreferences(launcherPreferences);
+
+        if (!activeSession) {
+          return;
+        }
+
+        setSelectedCliKey(activeSession.cliKey);
+        setWorkingDirectory(activeSession.workingDirectory);
+        setLaunchInput({
+          cliKey: activeSession.cliKey,
+          workingDirectory: activeSession.workingDirectory,
+          cols: activeSession.cols,
+          rows: activeSession.rows,
+        });
+        setSession(activeSession);
+      } catch (error: unknown) {
+        if (!isCancelled) {
+          setLaunchError(error instanceof Error ? error.message : String(error));
+        }
       }
-      setSelectedCliKey(activeSession.cliKey);
-      setWorkingDirectory(activeSession.workingDirectory);
-      setLaunchInput({
-        cliKey: activeSession.cliKey,
-        workingDirectory: activeSession.workingDirectory,
-        cols: activeSession.cols,
-        rows: activeSession.rows,
-      });
-      setSession(activeSession);
-    });
+    }
+
+    void loadTerminalState();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
+
+  function applyLauncherPreferences(preferences: TerminalLauncherPreferences) {
+    setDefaultWorkingDirectory(preferences.defaultWorkingDirectory);
+    setWorkingDirectory((current) =>
+      current.trim() ? current : preferences.workingDirectory,
+    );
+  }
+
+  async function persistWorkingDirectoryPreference() {
+    await setTerminalWorkingDirectoryPreference(workingDirectory);
+  }
+
+  async function handleClose() {
+    try {
+      await persistWorkingDirectoryPreference();
+    } finally {
+      onClose();
+    }
+  }
 
   async function handleLaunch() {
     if (!selectedCliKey || !workingDirectory.trim()) {
@@ -53,6 +102,7 @@ export function ProjectAssistantPanel({ onClose }: ProjectAssistantPanelProps) {
     } satisfies TerminalLaunchInput;
 
     try {
+      await persistWorkingDirectoryPreference();
       const nextSession = await startTerminalSession(nextLaunchInput);
       setLaunchInput(nextLaunchInput);
       setSession(nextSession);
@@ -72,7 +122,7 @@ export function ProjectAssistantPanel({ onClose }: ProjectAssistantPanelProps) {
         <button
           aria-label={t("assistant.closePanel")}
           className="rounded-full p-2 text-slate-400 hover:bg-slate-900 hover:text-slate-100"
-          onClick={onClose}
+          onClick={() => void handleClose()}
           title={t("assistant.closePanel")}
           type="button"
         >
@@ -88,8 +138,10 @@ export function ProjectAssistantPanel({ onClose }: ProjectAssistantPanelProps) {
         />
       ) : (
         <AssistantLauncherMenu
+          defaultWorkingDirectory={defaultWorkingDirectory}
           launchError={launchError}
           onCliSelect={setSelectedCliKey}
+          onDefaultPathSelect={() => setWorkingDirectory(defaultWorkingDirectory)}
           onLaunch={() => void handleLaunch()}
           onWorkingDirectoryChange={setWorkingDirectory}
           selectedCliKey={selectedCliKey}

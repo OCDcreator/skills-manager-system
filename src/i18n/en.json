@@ -409,6 +409,7 @@
   "assistant.launcherTitle": "Choose a local CLI",
   "assistant.launcherBody": "Pick one approved terminal assistant and a working directory before launch.",
   "assistant.cwdPlaceholder": "C:/Users/you/Desktop/Write/custom-project/skills-manager-system",
+  "assistant.defaultPath": "Default path",
   "assistant.launchCta": "Launch terminal",
   "assistant.activeSessionTitle": "Active terminal session",
   "assistant.stop": "Stop",

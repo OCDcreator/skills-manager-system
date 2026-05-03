@@ -6,8 +6,8 @@
 ## Overview
 
 Renders the version-one Project Assistant launcher surface: four approved CLI
-choices, a working-directory picker, launch validation feedback, and the single
-launch action.
+choices, a working-directory picker, a one-click reset to the default config
+workspace path, launch validation feedback, and the single launch action.
 
 ## Public Surface
 
@@ -20,9 +20,11 @@ launch action.
 Keeps the set of supported CLI keys explicit in one local constant:
 `codex`, `opencode`, `claude_code`, and `kimi`. The browse action uses the
 Tauri dialog plugin to pick a directory, normalizes the returned path to
-forward slashes, and leaves launch orchestration to the parent panel.
+forward slashes, exposes a dedicated default-path button for the app config
+workspace, and leaves launch orchestration plus preference persistence to the
+parent panel.
 
 ## Interactions
 
 i18n keys: `assistant.launcherTitle`, `assistant.launcherBody`,
-`assistant.cwdPlaceholder`, `assistant.launchCta`
+`assistant.cwdPlaceholder`, `assistant.defaultPath`, `assistant.launchCta`

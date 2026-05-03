@@ -25,6 +25,26 @@ test("assistant launcher menu exposes the four approved CLI keys", () => {
   assert.match(source, /kimi/);
 });
 
+test("assistant launcher menu exposes a default-path control", () => {
+  const source = fs.readFileSync(
+    path.resolve("src/components/assistant/AssistantLauncherMenu.tsx"),
+    "utf8",
+  );
+
+  assert.match(source, /defaultWorkingDirectory/);
+  assert.match(source, /assistant\.defaultPath/);
+});
+
+test("assistant panel loads and saves terminal launcher preferences", () => {
+  const source = fs.readFileSync(
+    path.resolve("src/components/assistant/ProjectAssistantPanel.tsx"),
+    "utf8",
+  );
+
+  assert.match(source, /getTerminalLauncherPreferences/);
+  assert.match(source, /setTerminalWorkingDirectoryPreference/);
+});
+
 test("assistant terminal session renders stop and restart controls", () => {
   const source = fs.readFileSync(
     path.resolve("src/components/assistant/AssistantTerminalSession.tsx"),

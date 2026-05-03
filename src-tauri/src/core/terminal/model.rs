@@ -45,3 +45,10 @@ pub struct TerminalDrainResponse {
     pub output: String,
     pub session: Option<TerminalSessionSnapshot>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct TerminalLauncherPreferences {
+    pub default_working_directory: String,
+    pub working_directory: String,
+}

@@ -409,6 +409,7 @@
   "assistant.launcherTitle": "选择本地 CLI",
   "assistant.launcherBody": "先选择一个受支持的终端助手和工作目录，再启动会话。",
   "assistant.cwdPlaceholder": "C:/Users/lt/Desktop/Write/custom-project/skills-manager-system",
+  "assistant.defaultPath": "默认路径",
   "assistant.launchCta": "启动终端",
   "assistant.activeSessionTitle": "当前终端会话",
   "assistant.stop": "停止",

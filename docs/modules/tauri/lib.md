@@ -21,9 +21,9 @@ Defines the shared Rust crate surface for both desktop and CLI builds and regist
 The desktop `run()` function registers the full command set for agents, scenes,
 projects, git, settings, skills, external sources, and the assistant terminal
 runtime. It also wires both the dialog and opener plugins into the desktop
-runtime and manages a shared `core::terminal::session::TerminalState` so the
-floating assistant can launch, drain, resize, and stop a single PTY-backed
-session.
+runtime, bootstraps the assistant terminal config workspace on startup, and
+manages a shared `core::terminal::session::TerminalState` so the floating
+assistant can launch, drain, resize, and stop a single PTY-backed session.
 
 ## Interactions
 

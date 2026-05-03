@@ -29,6 +29,17 @@ export interface TerminalDrainResponse {
   session: TerminalSessionSnapshot | null;
 }
 
+export interface TerminalLauncherPreferences {
+  defaultWorkingDirectory: string;
+  workingDirectory: string;
+}
+
+export const getTerminalLauncherPreferences = () =>
+  invoke<TerminalLauncherPreferences>("get_terminal_launcher_preferences");
+
+export const setTerminalWorkingDirectoryPreference = (path: string) =>
+  invoke<string | null>("set_terminal_working_directory_preference", { path });
+
 export const getTerminalSession = () =>
   invoke<TerminalSessionSnapshot | null>("get_terminal_session");
 

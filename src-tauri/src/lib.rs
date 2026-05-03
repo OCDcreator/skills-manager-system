@@ -1,3 +1,5 @@
+use tauri::Manager;
+
 pub mod app_runtime;
 #[cfg(feature = "cli")]
 pub mod cli;
@@ -11,6 +13,11 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            let config_dir = app.path().app_config_dir()?;
+            crate::core::terminal::ensure_terminal_workspace(&config_dir)?;
+            Ok(())
+        })
         .manage(crate::core::terminal::session::TerminalState::default())
         .invoke_handler(tauri::generate_handler![
             commands::agent_targets::take_over_agent_target_skill,
@@ -64,6 +71,8 @@ pub fn run() {
             commands::skills::get_skill_document,
             commands::skills::get_skill_state,
             commands::skills::set_skill_enabled,
+            commands::terminal::get_terminal_launcher_preferences,
+            commands::terminal::set_terminal_working_directory_preference,
             commands::terminal::get_terminal_session,
             commands::terminal::start_terminal_session,
             commands::terminal::drain_terminal_output,
