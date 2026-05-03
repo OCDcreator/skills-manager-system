@@ -72,16 +72,16 @@ export function SkillList(props: SkillListProps) {
   return (
     <section className="flex max-h-[clamp(34rem,calc(100vh-6rem),64rem)] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4">
       <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{title}</h3>
             <span className="text-xs text-slate-500">{skills.length}</span>
+            {isSelectionMode ? (
+              <span className="text-xs text-slate-500">
+                {t("skills.bulk.selectedCount", { count: selectedSkillIds.length })}
+              </span>
+            ) : null}
           </div>
-          {isSelectionMode ? (
-            <p className="mt-1 text-xs text-slate-500">
-              {t("skills.bulk.selectedCount", { count: selectedSkillIds.length })}
-            </p>
-          ) : null}
         </div>
         {skills.length > 0 ? (
           <div className="flex flex-wrap justify-end gap-2">
@@ -197,7 +197,7 @@ export function SkillList(props: SkillListProps) {
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-2 min-h-0 flex-1 overflow-hidden text-sm text-slate-400 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                    <p className="mt-2 overflow-hidden text-sm text-slate-400 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
                       {skill.description
                         ? truncateDescription(skill.description)
                         : t("skills.noDescription")}

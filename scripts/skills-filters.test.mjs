@@ -127,6 +127,15 @@ test("SkillList keeps custom and external cards the same size with corner checkb
   assert.doesNotMatch(source, /<label className="mb-3/);
 });
 
+test("SkillList selection mode preserves header and path positions", () => {
+  const source = fs.readFileSync(path.resolve("src/components/skills/SkillList.tsx"), "utf8");
+
+  assert.match(source, /skills\.bulk\.selectedCount/);
+  assert.doesNotMatch(source, /<p className="mt-1 text-xs text-slate-500">/);
+  assert.doesNotMatch(source, /<p className="mt-2 min-h-0 flex-1/);
+  assert.match(source, /<p className="mt-2 overflow-hidden text-sm text-slate-400/);
+});
+
 test("SkillsView batches source-window enablement through the existing setSkillEnabled action", () => {
   const source = fs.readFileSync(path.resolve("src/views/SkillsView.tsx"), "utf8");
 
