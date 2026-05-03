@@ -101,7 +101,39 @@ test("SkillList caps source windows and scrolls cards with the shared scrollbar 
   assert.match(source, /max-h-\[clamp\(34rem,calc\(100vh-6rem\),64rem\)\]/);
   assert.match(source, /flex max-h-\[clamp\(34rem,calc\(100vh-6rem\),64rem\)\] flex-col overflow-hidden/);
   assert.match(source, /skill-markdown-scroll min-h-0 overflow-y-auto pr-1/);
-  assert.match(source, /grid gap-3 \[grid-template-columns:repeat\(auto-fit,minmax\(18rem,1fr\)\)\]/);
+  assert.match(source, /grid auto-rows-\[13\.5rem\] gap-3 \[grid-template-columns:repeat\(auto-fit,minmax\(18rem,1fr\)\)\]/);
+});
+
+test("SkillList exposes source-scoped bulk actions and a checkbox selection mode", () => {
+  const source = fs.readFileSync(path.resolve("src/components/skills/SkillList.tsx"), "utf8");
+
+  assert.match(source, /onSetManyEnabled/);
+  assert.match(source, /skills\.bulk\.enableAll/);
+  assert.match(source, /skills\.bulk\.disableAll/);
+  assert.match(source, /skills\.bulk\.select/);
+  assert.match(source, /skills\.bulk\.enableSelected/);
+  assert.match(source, /skills\.bulk\.disableSelected/);
+  assert.match(source, /type="checkbox"/);
+  assert.match(source, /selectedSkillIdSet/);
+});
+
+test("SkillList keeps custom and external cards the same size with corner checkboxes", () => {
+  const source = fs.readFileSync(path.resolve("src/components/skills/SkillList.tsx"), "utf8");
+
+  assert.match(source, /auto-rows-\[13\.5rem\]/);
+  assert.match(source, /relative flex h-full min-h-0 flex-col overflow-hidden/);
+  assert.match(source, /absolute right-4 top-4/);
+  assert.match(source, /\[display:-webkit-box\] \[-webkit-box-orient:vertical\] \[-webkit-line-clamp:2\]/);
+  assert.doesNotMatch(source, /<label className="mb-3/);
+});
+
+test("SkillsView batches source-window enablement through the existing setSkillEnabled action", () => {
+  const source = fs.readFileSync(path.resolve("src/views/SkillsView.tsx"), "utf8");
+
+  assert.match(source, /handleSetManySkillsEnabled/);
+  assert.match(source, /for \(const skillId of skillIds\)/);
+  assert.match(source, /setSkillEnabled\(skillId, enabled\)/);
+  assert.match(source, /onSetManyEnabled=\{handleSetManySkillsEnabled\}/);
 });
 
 test('SkillList renders managed/manual badges without introducing a third source bucket', () => {
@@ -175,6 +207,15 @@ test("Managed source i18n keys exist in both locales", () => {
     "skills.detail.managedSource.updateAvailable",
     "skills.detail.managedSource.integrityMismatch",
     "skills.warnings.variantDisappeared",
+    "skills.bulk.enableAll",
+    "skills.bulk.disableAll",
+    "skills.bulk.select",
+    "skills.bulk.cancelSelect",
+    "skills.bulk.enableSelected",
+    "skills.bulk.disableSelected",
+    "skills.bulk.selectedCount",
+    "skills.bulk.selectCard",
+    "tooltip.skills.selectForBulk",
   ];
 
   for (const key of requiredKeys) {

@@ -22,7 +22,7 @@ Downstream: src/components/skills/*, src/context/AppContext.tsx, src/lib/skills/
 
 ## Core Logic
 
-The view reads app state from context, owns local search/source/status filter state, memoizes the disabled-ID set plus filtered/grouped skills, visible source sections, and filter summaries, renders setup prompts when no repo path exists, and passes selection, refresh, and row-toggle callbacks to child components. Its responsive layout keeps the detail panel docked on the right for wide windows, shows both source sections side by side only for the `all` source filter, and lets a single selected source section expand to the full list rail width.
+The view reads app state from context, owns local search/source/status filter state, memoizes the disabled-ID set plus filtered/grouped skills, visible source sections, and filter summaries, renders setup prompts when no repo path exists, and passes selection, refresh, row-toggle, and source-window bulk enablement callbacks to child components. Its responsive layout keeps the detail panel docked on the right for wide windows, shows both source sections side by side only for the `all` source filter, and lets a single selected source section expand to the full list rail width.
 
 The selected-skill detail rail is now split into two paths:
 
@@ -33,7 +33,7 @@ That keeps markdown rendering and syntax highlighting out of the initial bundle 
 
 ## Data Flow
 
-Context supplies scan results, disabled IDs, and selected document state. Local filter state transforms the joined scan-plus-status view model before it is displayed in the currently visible source sections. The selected-skill branch then decides whether to keep the placeholder rail or mount the lazy detail panel.
+Context supplies scan results, disabled IDs, and selected document state. Local filter state transforms the joined scan-plus-status view model before it is displayed in the currently visible source sections. Source-window bulk actions call the existing `setSkillEnabled` action sequentially for each requested skill so persistent disabled-state writes do not race each other. The selected-skill branch then decides whether to keep the placeholder rail or mount the lazy detail panel.
 
 ## Interactions
 

@@ -79,6 +79,12 @@ export function SkillsView() {
     ? !disabledSkillIdSet.has(selectedSkill.id)
     : true;
 
+  async function handleSetManySkillsEnabled(skillIds: string[], enabled: boolean) {
+    for (const skillId of skillIds) {
+      await setSkillEnabled(skillId, enabled);
+    }
+  }
+
   return (
     <>
       {!repoPath ? (
@@ -126,6 +132,7 @@ export function SkillsView() {
                   key={source}
                   disabledSkillIds={disabledSkillIdSet}
                   onSelect={(skill) => void selectSkill(skill)}
+                  onSetManyEnabled={handleSetManySkillsEnabled}
                   onToggleEnabled={setSkillEnabled}
                   selectedSkillId={selectedSkill?.id ?? null}
                   skills={grouped[source]}
