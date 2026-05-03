@@ -100,8 +100,15 @@ test("SkillList caps source windows and scrolls cards with the shared scrollbar 
 
   assert.match(source, /max-h-\[clamp\(34rem,calc\(100vh-6rem\),64rem\)\]/);
   assert.match(source, /flex max-h-\[clamp\(34rem,calc\(100vh-6rem\),64rem\)\] flex-col overflow-hidden/);
-  assert.match(source, /skill-markdown-scroll min-h-0 overflow-y-auto pr-1/);
+  assert.match(source, /skill-markdown-scroll -mr-3 mt-3 min-h-0 overflow-y-auto pr-3/);
   assert.match(source, /grid auto-rows-\[13\.5rem\] gap-3 \[grid-template-columns:repeat\(auto-fit,minmax\(18rem,1fr\)\)\]/);
+});
+
+test("SkillList offsets the scrollbar outside the card gutter", () => {
+  const source = fs.readFileSync(path.resolve("src/components/skills/SkillList.tsx"), "utf8");
+
+  assert.match(source, /skill-markdown-scroll -mr-3 mt-3 min-h-0 overflow-y-auto pr-3/);
+  assert.doesNotMatch(source, /skill-markdown-scroll min-h-0 overflow-y-auto pr-1 mt-3/);
 });
 
 test("SkillList exposes source-scoped bulk actions and a checkbox selection mode", () => {

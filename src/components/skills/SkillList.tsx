@@ -121,7 +121,7 @@ export function SkillList(props: SkillListProps) {
         </div>
       ) : null}
       {skills.length > 0 ? (
-        <div className="skill-markdown-scroll min-h-0 overflow-y-auto pr-1 mt-3">
+        <div className="skill-markdown-scroll -mr-3 mt-3 min-h-0 overflow-y-auto pr-3">
           <div className="grid auto-rows-[13.5rem] gap-3 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
             {skills.map((skill) => {
               const isDisabled = disabledSkillIds.has(skill.id);
