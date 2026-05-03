@@ -25,94 +25,96 @@ export function SkillList(props: SkillListProps) {
   const { t } = useTranslation();
 
   return (
-    <section className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+    <section className="flex max-h-[clamp(18rem,calc(100vh-18rem),34rem)] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4">
       <header className="flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{title}</h3>
         <span className="text-xs text-slate-500">{skills.length}</span>
       </header>
       {skills.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-700 px-4 py-6 text-sm text-slate-500">
+        <div className="mt-3 rounded-xl border border-dashed border-slate-700 px-4 py-6 text-sm text-slate-500">
           {t("skills.empty")}
         </div>
       ) : null}
       {skills.length > 0 ? (
-        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
-          {skills.map((skill) => {
-            const isDisabled = disabledSkillIds.has(skill.id);
-            const isUpdating = updatingSkillId === skill.id;
-            const externalBadge = skill.sourceType === "external"
-              ? skill.managedSource
-                ? {
-                    className: "bg-sky-500/15 text-sky-100",
-                    label: t("skills.badges.managedGithubMirror"),
-                  }
-                : {
-                    className: "bg-amber-500/15 text-amber-200",
-                    label: t("skills.badges.manualExternal"),
-                  }
-              : null;
+        <div className="skill-markdown-scroll min-h-0 overflow-y-auto pr-1 mt-3">
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
+            {skills.map((skill) => {
+              const isDisabled = disabledSkillIds.has(skill.id);
+              const isUpdating = updatingSkillId === skill.id;
+              const externalBadge = skill.sourceType === "external"
+                ? skill.managedSource
+                  ? {
+                      className: "bg-sky-500/15 text-sky-100",
+                      label: t("skills.badges.managedGithubMirror"),
+                    }
+                  : {
+                      className: "bg-amber-500/15 text-amber-200",
+                      label: t("skills.badges.manualExternal"),
+                    }
+                : null;
 
-            return (
-              <article
-                key={skill.id}
-                className={`flex h-full flex-col rounded-xl border p-4 transition ${
-                  selectedSkillId === skill.id
-                    ? "border-sky-400 bg-sky-400/10"
-                    : "border-slate-800 bg-slate-950"
-                } ${isDisabled ? "opacity-70" : ""}`}
-              >
-                <button
-                  className="flex min-w-0 flex-1 flex-col text-left"
-                  onClick={() => onSelect(skill)}
-                  title={t("tooltip.skills.select")}
-                  type="button"
+              return (
+                <article
+                  key={skill.id}
+                  className={`flex h-full flex-col rounded-xl border p-4 transition ${
+                    selectedSkillId === skill.id
+                      ? "border-sky-400 bg-sky-400/10"
+                      : "border-slate-800 bg-slate-950"
+                  } ${isDisabled ? "opacity-70" : ""}`}
                 >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <strong className="text-sm font-semibold text-slate-100">{skill.name}</strong>
-                    <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
-                      {skill.sourceType === "custom"
-                        ? t("skills.source.custom")
-                        : t("skills.source.external")}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs ${
-                        isDisabled
-                          ? "bg-amber-500/15 text-amber-200"
-                          : "bg-emerald-500/15 text-emerald-200"
-                      }`}
-                    >
-                      {isDisabled
-                        ? t("skills.status.disabled")
-                        : t("skills.status.enabled")}
-                    </span>
-                    {externalBadge ? (
-                      <span className={`rounded-full px-2 py-1 text-xs ${externalBadge.className}`}>
-                        {externalBadge.label}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-2 flex-1 text-sm text-slate-400">
-                    {skill.description
-                      ? truncateDescription(skill.description)
-                      : t("skills.noDescription")}
-                  </p>
-                  <p className="mt-3 text-xs text-slate-500">{skill.relativePath}</p>
-                </button>
-
-                <div className="mt-4 flex justify-end">
                   <button
-                    className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 disabled:opacity-60"
-                    disabled={isUpdating}
-                    onClick={() => void onToggleEnabled(skill.id, isDisabled)}
-                    title={isDisabled ? t("tooltip.skills.toggle.enable") : t("tooltip.skills.toggle.disable")}
+                    className="flex min-w-0 flex-1 flex-col text-left"
+                    onClick={() => onSelect(skill)}
+                    title={t("tooltip.skills.select")}
                     type="button"
                   >
-                    {isDisabled ? t("skills.toggle.enable") : t("skills.toggle.disable")}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <strong className="text-sm font-semibold text-slate-100">{skill.name}</strong>
+                      <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
+                        {skill.sourceType === "custom"
+                          ? t("skills.source.custom")
+                          : t("skills.source.external")}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs ${
+                          isDisabled
+                            ? "bg-amber-500/15 text-amber-200"
+                            : "bg-emerald-500/15 text-emerald-200"
+                        }`}
+                      >
+                        {isDisabled
+                          ? t("skills.status.disabled")
+                          : t("skills.status.enabled")}
+                      </span>
+                      {externalBadge ? (
+                        <span className={`rounded-full px-2 py-1 text-xs ${externalBadge.className}`}>
+                          {externalBadge.label}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 flex-1 text-sm text-slate-400">
+                      {skill.description
+                        ? truncateDescription(skill.description)
+                        : t("skills.noDescription")}
+                    </p>
+                    <p className="mt-3 text-xs text-slate-500">{skill.relativePath}</p>
                   </button>
-                </div>
-              </article>
-            );
-          })}
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 disabled:opacity-60"
+                      disabled={isUpdating}
+                      onClick={() => void onToggleEnabled(skill.id, isDisabled)}
+                      title={isDisabled ? t("tooltip.skills.toggle.enable") : t("tooltip.skills.toggle.disable")}
+                      type="button"
+                    >
+                      {isDisabled ? t("skills.toggle.enable") : t("skills.toggle.disable")}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       ) : null}
     </section>

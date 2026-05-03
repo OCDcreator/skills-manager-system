@@ -86,6 +86,15 @@ test('SkillList uses an auto-fit card grid so cards respond to container width',
   assert.match(source, /repeat\(auto-fit,\s*minmax\(/);
 });
 
+test("SkillList caps source windows and scrolls cards with the shared scrollbar skin", () => {
+  const source = fs.readFileSync(path.resolve("src/components/skills/SkillList.tsx"), "utf8");
+
+  assert.match(source, /max-h-\[clamp\([^,]+,calc\(100vh-[^,]+,[^\]]+\)\]/);
+  assert.match(source, /flex max-h-\[clamp\([^,]+,calc\(100vh-[^,]+,[^\]]+\)\] flex-col overflow-hidden/);
+  assert.match(source, /skill-markdown-scroll min-h-0 overflow-y-auto pr-1/);
+  assert.match(source, /grid gap-3 \[grid-template-columns:repeat\(auto-fit,minmax\(18rem,1fr\)\)\]/);
+});
+
 test('SkillList renders managed/manual badges without introducing a third source bucket', () => {
   const source = fs.readFileSync(path.resolve('src/components/skills/SkillList.tsx'), 'utf8');
 
