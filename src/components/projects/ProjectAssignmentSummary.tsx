@@ -4,6 +4,16 @@ interface ProjectAssignmentSummaryProps {
   title: string;
   selectedSkillCount: number;
   selectedAgentCount: number;
+  selectedSkills: Array<{
+    id: string;
+    name: string;
+    description: string;
+  }>;
+  selectedAgents: Array<{
+    key: string;
+    displayName: string;
+    skillsDirRule: string;
+  }>;
   duplicatePath: boolean;
   unsupportedAgentKeys: string[];
   disabledSelectedSkillIds: string[];
@@ -14,17 +24,15 @@ interface ProjectAssignmentSummaryProps {
     targetExists: boolean;
   }>;
   isInspecting: boolean;
-  canSave: boolean;
-  isSaving: boolean;
-  saveLabel: string;
-  onSave: () => void;
 }
 
 export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
   const { t } = useTranslation();
+  const chipClassName =
+    "rounded-full border border-slate-700/80 bg-slate-950/70 px-3 py-1 text-xs text-slate-200";
 
   return (
-    <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80">
+    <aside className="flex max-h-[clamp(22rem,calc(100vh-13rem),34rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80">
       <div className="border-b border-slate-800 px-4 py-4">
         <h3 className="text-base font-semibold text-slate-100">{props.title}</h3>
         <p className="mt-2 text-sm text-slate-400">
@@ -32,6 +40,50 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
         </p>
       </div>
       <div className="skill-markdown-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 text-sm">
+        <section>
+          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            {t("projects.summary.selectedSkillsTitle")}
+          </div>
+          {props.selectedSkills.length ? (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {props.selectedSkills.map((skill) => (
+                <span className={chipClassName} key={skill.id} title={skill.description}>
+                  {skill.name}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-slate-500">
+              {t("projects.summary.noSelectedSkills")}
+            </p>
+          )}
+        </section>
+
+        <section>
+          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            {t("projects.summary.selectedAgentsTitle")}
+          </div>
+          {props.selectedAgents.length ? (
+            <div className="mt-2 space-y-2">
+              {props.selectedAgents.map((agent) => (
+                <div
+                  className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2"
+                  key={agent.key}
+                >
+                  <div className="font-medium text-slate-100">{agent.displayName}</div>
+                  <div className="mt-0.5 truncate text-xs text-slate-500">
+                    {agent.skillsDirRule}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-slate-500">
+              {t("projects.summary.noSelectedAgents")}
+            </p>
+          )}
+        </section>
+
         {props.unsupportedAgentKeys.length ? (
           <section>
             <div className="text-xs font-medium uppercase tracking-wide text-amber-400">
@@ -88,16 +140,6 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
         {props.isInspecting ? (
           <div className="text-xs text-sky-300">{t("projects.summary.inspecting")}</div>
         ) : null}
-      </div>
-      <div className="border-t border-slate-800 px-4 py-4">
-        <button
-          className="w-full rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-60"
-          disabled={!props.canSave || props.isSaving}
-          onClick={props.onSave}
-          type="button"
-        >
-          {props.isSaving ? t("projects.summary.saving") : props.saveLabel}
-        </button>
       </div>
     </aside>
   );

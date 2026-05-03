@@ -82,20 +82,25 @@ export function applyProjectDisplayNameToDraft(
 export function buildProjectSummary(
   draft: ProjectDraft,
   inspection: ProjectPathInspection | null,
+  skills: SkillSummary[],
   agents: AgentInventoryItem[],
   disabledSkillIds: string[],
 ) {
+  const selectedSkillIdSet = new Set(draft.selectedSkillIds);
+  const selectedAgentKeySet = new Set(draft.selectedAgentKeys);
+  const selectedSkills = skills.filter((skill) => selectedSkillIdSet.has(skill.id));
   const selectedAgents = agents.filter((agent) =>
-    draft.selectedAgentKeys.includes(agent.key),
+    selectedAgentKeySet.has(agent.key),
   );
 
   return {
     selectedSkillCount: draft.selectedSkillIds.length,
     selectedAgentCount: draft.selectedAgentKeys.length,
+    selectedSkills,
+    selectedAgents,
     disabledSelectedSkillIds: draft.selectedSkillIds.filter((skillId) =>
       disabledSkillIds.includes(skillId),
     ),
-    selectedAgents,
     inspectionAgents: inspection?.agents ?? [],
     unsupportedAgentKeys: draft.unsupportedAgentKeys,
     warnings: inspection?.warnings ?? [],

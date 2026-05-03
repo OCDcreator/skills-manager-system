@@ -186,10 +186,15 @@
   "projects.identity.suggested": "建议名称",
   "projects.identity.duplicate": "该路径已存在于已保存项目中",
   "projects.identity.readOnlyPath": "编辑已有项目分配时，项目路径不可修改。",
+  "projects.identity.cancelEdit": "取消编辑",
   "projects.editor.skillsTitle": "技能",
   "projects.editor.agentsTitle": "Agent",
   "projects.summary.inspecting": "正在检查项目路径…",
   "projects.summary.disabledSkills": "本阶段中，全局禁用的技能在项目同步里仍会按已选中处理。",
+  "projects.summary.selectedSkillsTitle": "已选技能",
+  "projects.summary.noSelectedSkills": "还没有选择技能。",
+  "projects.summary.selectedAgentsTitle": "已选 Agent",
+  "projects.summary.noSelectedAgents": "还没有选择 Agent。",
   "projects.summary.unsupportedAgents": "不受支持的已保存 Agent",
   "projects.summary.targetsTitle": "预计写入目标",
   "projects.summary.markerStatus": "标记目录",
@@ -389,6 +394,7 @@
 
   "tooltip.projects.delete": "永久移除此项目分配",
   "tooltip.projects.browsePath": "打开文件夹选择器以选择项目目录",
+  "tooltip.projects.cancelEdit": "退出编辑模式，不保存当前草稿修改",
   "tooltip.projects.dismiss": "关闭此通知",
 
   "tooltip.settings.browse": "打开文件夹选择器以选择仓库目录",

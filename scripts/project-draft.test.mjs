@@ -18,6 +18,8 @@ test("project draft helper exports the expected pure helpers", () => {
   assert.match(source, /export function applyProjectPathToDraft/);
   assert.match(source, /export function applyProjectDisplayNameToDraft/);
   assert.match(source, /export function buildProjectSummary/);
+  assert.match(source, /selectedSkills/);
+  assert.match(source, /selectedAgents/);
 });
 
 test("project draft helper tracks sourceProjectPath and unsupportedAgentKeys", () => {
@@ -41,15 +43,39 @@ test("project creation flow exposes a folder picker for project paths", () => {
   assert.match(projectsViewSource, /onBrowseProjectPath=\{\(\) => void handleBrowseProjectPath\(\)\}/);
 });
 
+test("project edit flow exposes a cancel action that resets the draft", () => {
+  const identityPanelSource = fs.readFileSync(identityPanelPath, "utf8");
+  const projectsViewSource = fs.readFileSync(projectsViewPath, "utf8");
+
+  assert.match(identityPanelSource, /onCancelEdit: \(\) => void/);
+  assert.match(identityPanelSource, /props\.mode === "edit" \?/);
+  assert.match(identityPanelSource, /t\("projects\.identity\.cancelEdit"\)/);
+  assert.match(projectsViewSource, /const handleCancelEdit = \(\) => \{/);
+  assert.match(projectsViewSource, /setDraft\(emptyDraft\)/);
+  assert.match(projectsViewSource, /onCancelEdit=\{handleCancelEdit\}/);
+});
+
 test("project identity panel gives the project path a dedicated hero row", () => {
   const identityPanelSource = fs.readFileSync(identityPanelPath, "utf8");
 
   assert.match(identityPanelSource, /import \{ FolderSearch \} from "lucide-react"/);
   assert.match(identityPanelSource, /className="space-y-5"/);
-  assert.match(identityPanelSource, /className="group flex items-center gap-2 rounded-\[1\.35rem\]/);
-  assert.match(identityPanelSource, /className="mt-1 block max-w-xl/);
+  assert.match(identityPanelSource, /className="group flex h-12 items-center gap-2 rounded-\[1\.2rem\]/);
+  assert.match(identityPanelSource, /className="mt-1 flex flex-col gap-3/);
+  assert.match(identityPanelSource, /className="block min-w-0 flex-1 space-y-3 min-\[720px\]:max-w-xl/);
   assert.match(identityPanelSource, /<FolderSearch className="size-4"/);
-  assert.match(identityPanelSource, /className="group rounded-\[1\.2rem\] border border-slate-700\/80 bg-slate-950\/90 p-2/);
+  assert.match(identityPanelSource, /className="group relative h-12 rounded-\[1\.1rem\] border border-slate-700\/80 bg-slate-950\/90 p-1/);
+});
+
+test("project identity panel moves helper chips inline until a display name is typed", () => {
+  const identityPanelSource = fs.readFileSync(identityPanelPath, "utf8");
+
+  assert.match(identityPanelSource, /const showDisplayInlineHint = !props\.displayName\.trim\(\)/);
+  assert.match(identityPanelSource, /showDisplayInlineHint \? \(/);
+  assert.match(identityPanelSource, /t\("projects\.identity\.suggested"\)/);
+  assert.match(identityPanelSource, /readOnlyPath \? \(/);
+  assert.doesNotMatch(identityPanelSource, /rounded-full border border-slate-700 px-3 py-1">\s*\{t\("projects\.identity\.suggested"\)/);
+  assert.doesNotMatch(identityPanelSource, /rounded-full border border-slate-700 px-3 py-1">\s*\{t\("projects\.identity\.readOnlyPath"\)/);
 });
 
 test("project draft auto-fills display names until the user edits them", () => {

@@ -5,11 +5,12 @@
 
 ## Overview
 
-Right-side summary panel for the Projects workbench. Shows draft counts, expected write targets, unsupported saved agents, duplicate-path warnings, and the primary save CTA.
+Right-side inspector panel for the Projects workbench. Mirrors selected skills and agents, then shows expected write targets, unsupported saved agents, and duplicate-path warnings.
 
 ## Responsibilities
 
 - displays the create/edit title and selected counts
+- mirrors selected skills as compact chips and selected agents as compact status rows
 - lists target directories returned by project-path inspection
 - surfaces duplicate-path and globally-disabled-skill warnings
-- owns the save button loading/disabled state
+- stays scrollable within a viewport-aware maximum height and relies on the identity panel for the primary save action

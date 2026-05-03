@@ -89,6 +89,7 @@ export function ProjectsView() {
   const summary = buildProjectSummary(
     draft,
     inspection,
+    scanResult.skills,
     sortedAgentInventory,
     disabledSkillIds,
   );
@@ -208,6 +209,10 @@ export function ProjectsView() {
     });
   };
 
+  const handleCancelEdit = () => {
+    setDraft(emptyDraft);
+  };
+
   if (!repoPath) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
@@ -234,11 +239,13 @@ export function ProjectsView() {
         <div className="space-y-4">
           <ProjectIdentityPanel
             canBrowseProjectPath={draft.mode === "create"}
+            canSave={!duplicatePath && draft.projectPath.trim().length > 0}
             displayName={draft.displayName}
             duplicatePath={duplicatePath}
             inferredName={suggestProjectDisplayName(draft.projectPath)}
             inspectionError={inspectionError}
             isInspecting={isInspecting}
+            isSaving={isSavingDraft}
             mode={draft.mode}
             onBrowseProjectPath={() => void handleBrowseProjectPath()}
             onDisplayNameChange={(value) =>
@@ -247,7 +254,14 @@ export function ProjectsView() {
             onProjectPathChange={(value) =>
               setDraft((current) => applyProjectPathToDraft(current, value))
             }
+            onCancelEdit={handleCancelEdit}
+            onSave={() => void handleSaveDraft()}
             projectPath={draft.projectPath}
+            saveLabel={
+              draft.mode === "edit"
+                ? t("projects.summary.saveEdit")
+                : t("projects.summary.saveCreate")
+            }
           />
           <ProjectAssignmentEditor
             agentQuery={agentQuery}
@@ -262,31 +276,23 @@ export function ProjectsView() {
             skills={visibleSkills}
           />
         </div>
-        <div className="min-h-0 min-[1380px]:relative min-[1380px]:overflow-hidden">
-          <div className="min-[1380px]:absolute min-[1380px]:inset-0">
-            <ProjectAssignmentSummary
-              canSave={!duplicatePath && draft.projectPath.trim().length > 0}
-              disabledSelectedSkillIds={summary.disabledSelectedSkillIds}
-              duplicatePath={duplicatePath}
-              inspectionTargets={summary.inspectionAgents}
-              isInspecting={isInspecting}
-              isSaving={isSavingDraft}
-              onSave={() => void handleSaveDraft()}
-              saveLabel={
-                draft.mode === "edit"
-                  ? t("projects.summary.saveEdit")
-                  : t("projects.summary.saveCreate")
-              }
-              selectedAgentCount={summary.selectedAgentCount}
-              selectedSkillCount={summary.selectedSkillCount}
-              title={
-                draft.mode === "edit"
-                  ? t("projects.summary.editTitle")
-                  : t("projects.summary.createTitle")
-              }
-              unsupportedAgentKeys={summary.unsupportedAgentKeys}
-            />
-          </div>
+        <div className="min-h-0 min-[1380px]:sticky min-[1380px]:top-8 min-[1380px]:self-start">
+          <ProjectAssignmentSummary
+            disabledSelectedSkillIds={summary.disabledSelectedSkillIds}
+            duplicatePath={duplicatePath}
+            inspectionTargets={summary.inspectionAgents}
+            isInspecting={isInspecting}
+            selectedAgentCount={summary.selectedAgentCount}
+            selectedAgents={summary.selectedAgents}
+            selectedSkillCount={summary.selectedSkillCount}
+            selectedSkills={summary.selectedSkills}
+            title={
+              draft.mode === "edit"
+                ? t("projects.summary.editTitle")
+                : t("projects.summary.createTitle")
+            }
+            unsupportedAgentKeys={summary.unsupportedAgentKeys}
+          />
         </div>
       </div>
 

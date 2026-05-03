@@ -186,10 +186,15 @@
   "projects.identity.suggested": "Suggested",
   "projects.identity.duplicate": "Path already exists in saved projects",
   "projects.identity.readOnlyPath": "Project path is locked while editing an existing assignment.",
+  "projects.identity.cancelEdit": "Cancel edit",
   "projects.editor.skillsTitle": "Skills",
   "projects.editor.agentsTitle": "Agents",
   "projects.summary.inspecting": "Inspecting project path…",
   "projects.summary.disabledSkills": "Globally disabled skills still remain selected for project sync in this phase.",
+  "projects.summary.selectedSkillsTitle": "Selected skills",
+  "projects.summary.noSelectedSkills": "No skills selected yet.",
+  "projects.summary.selectedAgentsTitle": "Selected agents",
+  "projects.summary.noSelectedAgents": "No agents selected yet.",
   "projects.summary.unsupportedAgents": "Unsupported saved agents",
   "projects.summary.targetsTitle": "Expected write targets",
   "projects.summary.markerStatus": "Marker",
@@ -389,6 +394,7 @@
 
   "tooltip.projects.delete": "Remove this project assignment permanently",
   "tooltip.projects.browsePath": "Open a folder picker to choose the project directory",
+  "tooltip.projects.cancelEdit": "Exit edit mode without saving local draft changes",
   "tooltip.projects.dismiss": "Dismiss this notification",
 
   "tooltip.settings.browse": "Open a folder picker to select the repository directory",
