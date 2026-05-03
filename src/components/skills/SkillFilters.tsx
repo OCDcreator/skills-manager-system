@@ -54,11 +54,11 @@ export function SkillFilters(props: SkillFiltersProps) {
         </button>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          {t("skills.filters.source")}
-        </p>
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <p className="mr-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {t("skills.filters.source")}
+          </p>
           {summaries.map((summary) => (
             <button
               key={summary.key}
@@ -75,13 +75,11 @@ export function SkillFilters(props: SkillFiltersProps) {
             </button>
           ))}
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          {t("skills.filters.status")}
-        </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <p className="mr-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {t("skills.filters.status")}
+          </p>
           {statusSummaries.map((summary) => (
             <button
               key={summary.key}

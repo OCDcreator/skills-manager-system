@@ -25,7 +25,7 @@ export function SkillList(props: SkillListProps) {
   const { t } = useTranslation();
 
   return (
-    <section className="flex max-h-[clamp(24rem,calc(100vh-10rem),46rem)] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4">
+    <section className="flex max-h-[clamp(34rem,calc(100vh-6rem),64rem)] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4">
       <header className="flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{title}</h3>
         <span className="text-xs text-slate-500">{skills.length}</span>

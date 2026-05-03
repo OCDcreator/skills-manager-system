@@ -86,11 +86,20 @@ test('SkillList uses an auto-fit card grid so cards respond to container width',
   assert.match(source, /repeat\(auto-fit,\s*minmax\(/);
 });
 
+test("SkillFilters keeps source and status controls on one compact row", () => {
+  const source = fs.readFileSync(path.resolve("src/components/skills/SkillFilters.tsx"), "utf8");
+
+  assert.match(source, /flex flex-wrap items-start gap-x-8 gap-y-3/);
+  assert.match(source, /flex min-w-0 flex-wrap items-center gap-2/);
+  assert.match(source, /t\("skills\.filters\.source"\)[\s\S]*t\("skills\.filters\.status"\)/);
+  assert.doesNotMatch(source, /<div className="space-y-2">/);
+});
+
 test("SkillList caps source windows and scrolls cards with the shared scrollbar skin", () => {
   const source = fs.readFileSync(path.resolve("src/components/skills/SkillList.tsx"), "utf8");
 
-  assert.match(source, /max-h-\[clamp\(24rem,calc\(100vh-10rem\),46rem\)\]/);
-  assert.match(source, /flex max-h-\[clamp\(24rem,calc\(100vh-10rem\),46rem\)\] flex-col overflow-hidden/);
+  assert.match(source, /max-h-\[clamp\(34rem,calc\(100vh-6rem\),64rem\)\]/);
+  assert.match(source, /flex max-h-\[clamp\(34rem,calc\(100vh-6rem\),64rem\)\] flex-col overflow-hidden/);
   assert.match(source, /skill-markdown-scroll min-h-0 overflow-y-auto pr-1/);
   assert.match(source, /grid gap-3 \[grid-template-columns:repeat\(auto-fit,minmax\(18rem,1fr\)\)\]/);
 });
