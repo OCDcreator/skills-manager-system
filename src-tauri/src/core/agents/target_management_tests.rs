@@ -25,7 +25,10 @@ fn custom_skill(repo_root: &Path, name: &str) -> SkillSummary {
         source_type: "custom".to_string(),
         relative_path,
         directory_path: skill_dir.to_string_lossy().replace('\\', "/"),
-        skill_document_path: skill_dir.join("SKILL.md").to_string_lossy().replace('\\', "/"),
+        skill_document_path: skill_dir
+            .join("SKILL.md")
+            .to_string_lossy()
+            .replace('\\', "/"),
         managed_source: None,
     }
 }
@@ -48,9 +51,9 @@ fn taking_over_unmanaged_entry_keeps_existing_contents_when_sync_would_conflict(
     let target_dir = tempdir().unwrap();
     let alpha = custom_skill(repo_dir.path(), "alpha");
 
-    let unmanaged_dir = manual_target_skill(target_dir.path(), "custom--alpha", "manual:alpha");
+    let unmanaged_dir = manual_target_skill(target_dir.path(), "alpha", "manual:alpha");
 
-    take_over_unmanaged_target_skill(target_dir.path(), "codex", "custom--alpha").unwrap();
+    take_over_unmanaged_target_skill(target_dir.path(), "codex", "alpha").unwrap();
 
     let desired_entries = build_desired_skill_entries(&[alpha]);
     let stats = apply_desired_entries(target_dir.path(), "codex", &desired_entries, SyncMode::Copy)
@@ -65,7 +68,7 @@ fn taking_over_unmanaged_entry_keeps_existing_contents_when_sync_would_conflict(
     let entries = scan_target_skill_entries(target_dir.path(), "codex").unwrap();
     let entry = entries
         .iter()
-        .find(|item| item.entry_name == "custom--alpha")
+        .find(|item| item.entry_name == "alpha")
         .unwrap();
     assert!(entry.managed);
 }
@@ -86,19 +89,19 @@ fn deleting_requested_entry_preserves_other_target_entries() {
     delete_target_skill_entry(target_dir.path(), "codex", "manual-one").unwrap();
     assert!(!unmanaged_one.exists());
     assert!(unmanaged_two.exists());
-    assert!(target_dir.path().join("custom--alpha").exists());
-    assert!(target_dir.path().join("custom--beta").exists());
+    assert!(target_dir.path().join("alpha").exists());
+    assert!(target_dir.path().join("beta").exists());
 
-    delete_target_skill_entry(target_dir.path(), "codex", "custom--alpha").unwrap();
-    assert!(!target_dir.path().join("custom--alpha").exists());
-    assert!(target_dir.path().join("custom--beta").exists());
+    delete_target_skill_entry(target_dir.path(), "codex", "alpha").unwrap();
+    assert!(!target_dir.path().join("alpha").exists());
+    assert!(target_dir.path().join("beta").exists());
     assert!(unmanaged_two.exists());
 
     let entries = scan_target_skill_entries(target_dir.path(), "codex").unwrap();
     assert!(entries.iter().any(|entry| entry.entry_name == "manual-two"));
-    assert!(entries.iter().any(|entry| entry.entry_name == "custom--beta"));
-    assert!(!entries.iter().any(|entry| entry.entry_name == "custom--alpha"));
-  }
+    assert!(entries.iter().any(|entry| entry.entry_name == "beta"));
+    assert!(!entries.iter().any(|entry| entry.entry_name == "alpha"));
+}
 
 #[test]
 fn importing_unmanaged_entry_copies_into_repo_and_only_deletes_when_requested() {
@@ -118,12 +121,10 @@ fn importing_unmanaged_entry_copies_into_repo_and_only_deletes_when_requested() 
     )
     .unwrap();
     assert_eq!(imported_keep.relative_path, "custom/manual-keep");
-    assert!(
-        repo_dir
-            .path()
-            .join("custom/manual-keep/assets/marker.txt")
-            .exists()
-    );
+    assert!(repo_dir
+        .path()
+        .join("custom/manual-keep/assets/marker.txt")
+        .exists());
     assert!(manual_keep.exists());
 
     let imported_delete = import_unmanaged_target_skill(
@@ -135,11 +136,9 @@ fn importing_unmanaged_entry_copies_into_repo_and_only_deletes_when_requested() 
     )
     .unwrap();
     assert_eq!(imported_delete.relative_path, "custom/manual-delete");
-    assert!(
-        repo_dir
-            .path()
-            .join("custom/manual-delete/assets/marker.txt")
-            .exists()
-    );
+    assert!(repo_dir
+        .path()
+        .join("custom/manual-delete/assets/marker.txt")
+        .exists());
     assert!(!manual_delete.exists());
 }

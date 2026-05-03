@@ -112,10 +112,6 @@ fn projects_apply_uses_full_snapshot_without_path_argument() {
     );
 
     assert_eq!(result.response.status, CliStatus::Success);
-    assert!(project_a
-        .join(".codex/skills/custom--alpha/SKILL.md")
-        .exists());
-    assert!(project_b
-        .join(".codex/skills/custom--beta/SKILL.md")
-        .exists());
+    assert!(project_a.join(".codex/skills/alpha/SKILL.md").exists());
+    assert!(project_b.join(".codex/skills/beta/SKILL.md").exists());
 }

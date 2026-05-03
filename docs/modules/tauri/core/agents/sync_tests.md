@@ -13,7 +13,7 @@ This is a test-only module and exports no runtime API.
 
 ## Core Logic
 
-Builds disposable repositories and target directories to verify per-agent direct selection, explicit scene selections, scene/direct dedupe, exclusions, global hard-disable filtering, scoped apply, disabled-agent cleanup, and override-path precedence.
+Builds disposable repositories and target directories to verify per-agent direct selection, explicit scene selections, scene/direct dedupe, exclusions, global hard-disable filtering, scoped apply, disabled-agent cleanup, override-path precedence, and target entries that use the source skill folder name.
 
 ## Data Flow
 

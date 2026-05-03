@@ -74,12 +74,15 @@ fn agents_sync_conflicts_return_partial_status() {
     std::fs::create_dir_all(repo_dir.join("custom/alpha")).unwrap();
     std::fs::write(repo_dir.join("custom/alpha/SKILL.md"), "# Alpha").unwrap();
     std::fs::create_dir_all(&target_dir).unwrap();
-    std::fs::create_dir_all(target_dir.join("custom--alpha")).unwrap();
+    std::fs::create_dir_all(target_dir.join("alpha")).unwrap();
 
     let store = AgentConfigStore::new(config_dir.clone());
     store.set_agent_enabled("codex", true).unwrap();
     store
         .set_agent_path_override("codex", target_dir.to_string_lossy().as_ref())
+        .unwrap();
+    store
+        .set_agent_selection("codex", vec!["custom:alpha".to_string()], vec![], vec![])
         .unwrap();
 
     let context = test_context(config_dir, Some(repo_dir.clone()));

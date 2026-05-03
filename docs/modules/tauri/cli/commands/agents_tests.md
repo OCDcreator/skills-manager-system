@@ -5,7 +5,7 @@
 
 ## Overview
 
-Validates agent mutation payloads, partial sync behavior, and Windows symlink error mapping.
+Validates agent mutation payloads, folder-name conflict reporting, partial sync behavior, and Windows symlink error mapping.
 
 ## Import Relationships
 
@@ -27,4 +27,3 @@ Tests use temp config/repo/target directories and injected `AgentSystemDirs` so 
 ## Interactions
 
 Keep assertions aligned with stable CLI status values and error codes.
-

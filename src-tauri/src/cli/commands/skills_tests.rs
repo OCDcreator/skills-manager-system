@@ -116,6 +116,7 @@ fn skills_list_enriches_managed_external_mirrors() {
     let skill_relative_path = "external/managed/github/demo__repo/codex/impeccable";
     let skill_dir = repo_dir.path().join(skill_relative_path);
 
+    std::fs::create_dir_all(repo_dir.path().join("custom")).unwrap();
     std::fs::create_dir_all(&skill_dir).unwrap();
     std::fs::write(
         skill_dir.join("SKILL.md"),

@@ -22,7 +22,7 @@ Downstream: src-tauri/src/cli/commands/scenes.rs, src-tauri/src/core/scenes/*
 
 ## Core Logic
 
-Tests construct temporary repos with SKILL.md files and injected agent dirs, then assert scene mutations and scene apply write only the expected managed skill targets. The suite now covers the explicit-empty new-scene model while keeping legacy compatibility checks in the core scene tests.
+Tests construct temporary repos with SKILL.md files and injected agent dirs, then assert scene mutations and scene apply write only the expected managed folder-name skill targets. The suite now covers the explicit-empty new-scene model while keeping legacy compatibility checks in the core scene tests.
 
 ## Interactions
 

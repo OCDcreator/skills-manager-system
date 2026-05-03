@@ -75,8 +75,8 @@ fn selected_agent_skills_do_not_fall_back_to_all_global_skills() {
     .unwrap();
 
     assert_eq!(response.enabled_skill_count, 2);
-    assert!(skills_dir.join("custom--alpha/SKILL.md").exists());
-    assert!(!skills_dir.join("external--vendor--beta").exists());
+    assert!(skills_dir.join("alpha/SKILL.md").exists());
+    assert!(!skills_dir.join("beta").exists());
 }
 
 #[test]
@@ -109,8 +109,8 @@ fn globally_disabled_skills_are_excluded_even_when_agent_selected() {
     .unwrap();
 
     assert_eq!(response.enabled_skill_count, 1);
-    assert!(skills_dir.join("custom--alpha/SKILL.md").exists());
-    assert!(!skills_dir.join("external--vendor--beta").exists());
+    assert!(skills_dir.join("alpha/SKILL.md").exists());
+    assert!(!skills_dir.join("beta").exists());
 }
 
 #[test]
@@ -123,13 +123,14 @@ fn scene_and_direct_skill_duplicates_are_written_once() {
     create_skill(repo_dir.path(), "custom/alpha");
     create_skill(repo_dir.path(), "external/vendor/beta");
     let scene_store = SceneConfigStore::new(config_dir.path().to_path_buf());
-    scene_store
-        .create_scene("work", "Work", "")
-        .unwrap();
+    scene_store.create_scene("work", "Work", "").unwrap();
     scene_store
         .set_scene_skills(
             "work",
-            vec!["custom:alpha".to_string(), "external:vendor/beta".to_string()],
+            vec![
+                "custom:alpha".to_string(),
+                "external:vendor/beta".to_string(),
+            ],
         )
         .unwrap();
     configure_agent(
@@ -156,8 +157,8 @@ fn scene_and_direct_skill_duplicates_are_written_once() {
         .find(|result| result.key == "codex")
         .unwrap();
     assert_eq!(codex_result.written_count, 2);
-    assert!(skills_dir.join("custom--alpha/SKILL.md").exists());
-    assert!(skills_dir.join("external--vendor--beta/SKILL.md").exists());
+    assert!(skills_dir.join("alpha/SKILL.md").exists());
+    assert!(skills_dir.join("beta/SKILL.md").exists());
 }
 
 #[test]
@@ -170,13 +171,14 @@ fn excluded_scene_skill_is_removed_on_reapply() {
     create_skill(repo_dir.path(), "custom/alpha");
     create_skill(repo_dir.path(), "external/vendor/beta");
     let scene_store = SceneConfigStore::new(config_dir.path().to_path_buf());
-    scene_store
-        .create_scene("work", "Work", "")
-        .unwrap();
+    scene_store.create_scene("work", "Work", "").unwrap();
     scene_store
         .set_scene_skills(
             "work",
-            vec!["custom:alpha".to_string(), "external:vendor/beta".to_string()],
+            vec![
+                "custom:alpha".to_string(),
+                "external:vendor/beta".to_string(),
+            ],
         )
         .unwrap();
     configure_agent(
@@ -213,8 +215,8 @@ fn excluded_scene_skill_is_removed_on_reapply() {
     )
     .unwrap();
 
-    assert!(skills_dir.join("custom--alpha/SKILL.md").exists());
-    assert!(!skills_dir.join("external--vendor--beta").exists());
+    assert!(skills_dir.join("alpha/SKILL.md").exists());
+    assert!(!skills_dir.join("beta").exists());
 }
 
 #[test]
@@ -254,8 +256,8 @@ fn scoped_apply_only_updates_requested_agent() {
     .unwrap();
 
     assert_eq!(response.results.len(), 1);
-    assert!(codex_dir.join("custom--alpha/SKILL.md").exists());
-    assert!(!opencode_dir.join("external--vendor--beta").exists());
+    assert!(codex_dir.join("alpha/SKILL.md").exists());
+    assert!(!opencode_dir.join("beta").exists());
 }
 
 #[test]
@@ -295,7 +297,7 @@ fn disabled_agent_still_cleans_managed_entries() {
     )
     .unwrap();
 
-    assert!(!skills_dir.join("custom--alpha").exists());
+    assert!(!skills_dir.join("alpha").exists());
 }
 
 #[test]
@@ -326,6 +328,6 @@ fn path_override_target_is_used() {
     )
     .unwrap();
 
-    assert!(override_dir.join("custom--alpha/SKILL.md").exists());
-    assert!(!detected_dir.join("custom--alpha").exists());
+    assert!(override_dir.join("alpha/SKILL.md").exists());
+    assert!(!detected_dir.join("alpha").exists());
 }

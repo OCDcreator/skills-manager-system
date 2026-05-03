@@ -29,11 +29,13 @@ Downstream: std::fs, src-tauri/src/core/agents/target_manifest.rs, src-tauri/src
 
 ## Core Logic
 
-This module loads a target-local manifest, removes stale managed entries, protects unmanaged conflicts, and deploys selected skills by copy or symlink. Manifest entries can also be marked as preserved take-overs, which means manual sync keeps them in place and reports a conflict instead of overwriting them with repo-backed content. The module skips nested `.git` directories so external source metadata is not copied into agent targets.
+This module loads a target-local manifest, removes stale managed entries, protects unmanaged conflicts, and deploys selected skills by copy or symlink. Target entry names prefer the skill directory name, falling back to a sanitized relative path only when selected skills would otherwise collide. Manifest entries can also be marked as preserved take-overs, which means manual sync keeps them in place and reports a conflict instead of overwriting them with repo-backed content.
+
+Copy mode materializes a full target skill directory while skipping nested `.git` directories so external source metadata is not copied into agent targets. Symlink mode links the target skill entry itself to the source skill directory so non-`SKILL.md` assets remain available through the same directory boundary.
 
 ## Interactions
 
-Global agent sync calls it with discovered global agent directories. Project sync calls it with project-relative agent directories. Explicit target-entry actions reuse its `remove_target` helper while manifest serialization is centralized in `target_manifest.rs`.
+Global agent sync calls it with discovered global agent directories. Project sync calls it with project-relative agent directories and therefore shares the same target naming and whole-directory deployment semantics. Explicit target-entry actions reuse its `remove_target` helper while manifest serialization is centralized in `target_manifest.rs`.
 
 ## Change Notes
 

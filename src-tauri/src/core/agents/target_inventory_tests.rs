@@ -22,7 +22,10 @@ fn custom_skill(repo_root: &Path, name: &str) -> SkillSummary {
         source_type: "custom".to_string(),
         relative_path,
         directory_path: skill_dir.to_string_lossy().replace('\\', "/"),
-        skill_document_path: skill_dir.join("SKILL.md").to_string_lossy().replace('\\', "/"),
+        skill_document_path: skill_dir
+            .join("SKILL.md")
+            .to_string_lossy()
+            .replace('\\', "/"),
         managed_source: None,
     }
 }
@@ -48,7 +51,7 @@ fn target_inventory_classifies_managed_and_unmanaged_entries() {
 
     let managed = entries
         .iter()
-        .find(|entry| entry.entry_name == "custom--alpha")
+        .find(|entry| entry.entry_name == "alpha")
         .unwrap();
     assert!(managed.managed);
     assert_eq!(managed.skill_id.as_deref(), Some("custom:alpha"));
@@ -71,13 +74,7 @@ fn target_inventory_ignores_manifest_and_keeps_unmanaged_after_cleanup() {
 
     let desired_entries = build_desired_skill_entries(&[alpha]);
     apply_desired_entries(target_dir.path(), "codex", &desired_entries, SyncMode::Copy).unwrap();
-    apply_desired_entries(
-        target_dir.path(),
-        "codex",
-        &BTreeMap::new(),
-        SyncMode::Copy,
-    )
-    .unwrap();
+    apply_desired_entries(target_dir.path(), "codex", &BTreeMap::new(), SyncMode::Copy).unwrap();
 
     let entries = scan_target_skill_entries(target_dir.path(), "codex").unwrap();
 

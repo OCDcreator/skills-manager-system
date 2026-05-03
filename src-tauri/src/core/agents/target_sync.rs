@@ -42,11 +42,26 @@ pub(crate) struct TargetApplyStats {
 pub(crate) fn build_desired_skill_entries(
     skills: &[SkillSummary],
 ) -> BTreeMap<String, DesiredSkillEntry> {
+    let preferred_names = skills
+        .iter()
+        .map(|skill| preferred_entry_name(&skill.relative_path))
+        .fold(BTreeMap::<String, usize>::new(), |mut counts, name| {
+            *counts.entry(name).or_default() += 1;
+            counts
+        });
+
     skills
         .iter()
         .map(|skill| {
+            let preferred_name = preferred_entry_name(&skill.relative_path);
+            let entry_name = if preferred_names.get(&preferred_name) == Some(&1) {
+                preferred_name
+            } else {
+                managed_entry_name(&skill.relative_path)
+            };
+
             (
-                managed_entry_name(&skill.id),
+                entry_name,
                 DesiredSkillEntry {
                     skill_id: skill.id.clone(),
                     relative_path: skill.relative_path.clone(),
@@ -170,47 +185,30 @@ pub(crate) fn load_managed_entry_snapshots(
 
 fn deploy_skill(source_dir: &Path, target_dir: &Path, mode: SyncMode) -> Result<()> {
     match mode {
-        SyncMode::Symlink => symlink_dir_contents(source_dir, target_dir),
+        SyncMode::Symlink => symlink_skill_directory(source_dir, target_dir),
         SyncMode::Copy => copy_dir_recursive(source_dir, target_dir),
     }
 }
 
-fn symlink_dir_contents(source_dir: &Path, target_dir: &Path) -> Result<()> {
-    fs::create_dir_all(target_dir).with_context(|| format!("Failed to create {:?}", target_dir))?;
+fn symlink_skill_directory(source_dir: &Path, target_dir: &Path) -> Result<()> {
+    if let Some(parent) = target_dir.parent() {
+        fs::create_dir_all(parent).with_context(|| format!("Failed to create {:?}", parent))?;
+    }
 
-    for entry in
-        fs::read_dir(source_dir).with_context(|| format!("Failed to read {:?}", source_dir))?
+    #[cfg(unix)]
     {
-        let entry = entry?;
-        let file_name = entry.file_name();
-        if file_name == ".git" {
-            continue;
-        }
+        std::os::unix::fs::symlink(source_dir, target_dir)
+            .with_context(|| format!("Failed to symlink {:?} -> {:?}", source_dir, target_dir))?;
+    }
 
-        let link_path = target_dir.join(&file_name);
-        let original = entry.path();
-
-        #[cfg(unix)]
-        {
-            std::os::unix::fs::symlink(&original, &link_path)
-                .with_context(|| format!("Failed to symlink {:?} -> {:?}", original, link_path))?;
-        }
-
-        #[cfg(windows)]
-        {
-            if entry.file_type()?.is_dir() {
-                std::os::windows::fs::symlink_dir(&original, &link_path).with_context(|| {
-                    format!(
-                        "Failed to symlink dir {:?} -> {:?} (developer mode may be required)",
-                        original, link_path
-                    )
-                })?;
-            } else {
-                std::os::windows::fs::symlink_file(&original, &link_path).with_context(|| {
-                    format!("Failed to symlink {:?} -> {:?}", original, link_path)
-                })?;
-            }
-        }
+    #[cfg(windows)]
+    {
+        std::os::windows::fs::symlink_dir(source_dir, target_dir).with_context(|| {
+            format!(
+                "Failed to symlink dir {:?} -> {:?} (developer mode may be required)",
+                source_dir, target_dir
+            )
+        })?;
     }
 
     Ok(())
@@ -258,4 +256,14 @@ pub(crate) fn remove_target(target: &Path) -> Result<()> {
 
 pub(crate) fn managed_entry_name(skill_id: &str) -> String {
     skill_id.replace(':', "--").replace(['/', '\\'], "--")
+}
+
+fn preferred_entry_name(relative_path: &str) -> String {
+    relative_path
+        .replace('\\', "/")
+        .rsplit('/')
+        .find(|segment| !segment.is_empty())
+        .map(managed_entry_name)
+        .filter(|name| !name.is_empty())
+        .unwrap_or_else(|| managed_entry_name(relative_path))
 }

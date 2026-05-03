@@ -20,4 +20,4 @@ Loads the target scene, computes its currently unselected skill count from the l
 
 ## Tests
 
-Includes regressions for explicit-empty new scenes, legacy/selected scene sync behavior, and symlink/copy mode application after the per-agent sync redesign.
+Includes regressions for explicit-empty new scenes, legacy/selected scene sync behavior, folder-name target entries, and symlink/copy mode application after the per-agent sync redesign.

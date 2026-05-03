@@ -39,7 +39,12 @@ pub fn apply_scene(
     );
 
     apply_agent_state_for_scene(config_dir, system_dirs, &scene)?;
-    apply_agent_sync(config_dir, repo_path, system_dirs, load_sync_mode(config_dir)?)?;
+    apply_agent_sync(
+        config_dir,
+        repo_path,
+        system_dirs,
+        load_sync_mode(config_dir)?,
+    )?;
     SceneConfigStore::new(config_dir.to_path_buf()).set_active_scene(Some(scene_id))?;
 
     Ok(ApplySceneResult {
@@ -66,8 +71,11 @@ fn apply_agent_state_for_scene(
     let agent_store = AgentConfigStore::new(config_dir.to_path_buf());
     let inventory = load_agent_inventory(config_dir, system_dirs)?;
 
-    let scene_enabled: std::collections::BTreeSet<&str> =
-        scene.enabled_agent_keys.iter().map(|s| s.as_str()).collect();
+    let scene_enabled: std::collections::BTreeSet<&str> = scene
+        .enabled_agent_keys
+        .iter()
+        .map(|s| s.as_str())
+        .collect();
 
     for agent in &inventory.agents {
         let should_enable = scene_enabled.contains(agent.key.as_str());
@@ -136,8 +144,8 @@ mod tests {
         .unwrap();
 
         assert_eq!(result.scene_name, "Focus");
-        assert!(target_dir.join("custom--alpha/SKILL.md").exists());
-        assert!(!target_dir.join("custom--beta").exists());
+        assert!(target_dir.join("alpha/SKILL.md").exists());
+        assert!(!target_dir.join("beta").exists());
     }
 
     #[test]
@@ -175,8 +183,8 @@ mod tests {
 
         assert_eq!(result.scene_name, "Blank");
         assert_eq!(result.disabled_skill_count, 2);
-        assert!(!target_dir.join("custom--alpha").exists());
-        assert!(!target_dir.join("custom--beta").exists());
+        assert!(!target_dir.join("alpha").exists());
+        assert!(!target_dir.join("beta").exists());
     }
 
     #[cfg(unix)]
@@ -215,7 +223,7 @@ mod tests {
         )
         .unwrap();
 
-        let metadata = fs::symlink_metadata(target_dir.join("custom--alpha/SKILL.md")).unwrap();
+        let metadata = fs::symlink_metadata(target_dir.join("alpha")).unwrap();
         assert!(metadata.file_type().is_symlink());
     }
 }

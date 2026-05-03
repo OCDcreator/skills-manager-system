@@ -22,9 +22,8 @@ Downstream: src-tauri/src/cli/commands/projects.rs, src-tauri/src/core/projects/
 
 ## Core Logic
 
-Tests create two independent project assignments and assert one `projects apply` invocation writes both target directories, guarding against reintroducing a per-path apply argument.
+Tests create two independent project assignments and assert one `projects apply` invocation writes both target directories with folder-name skill entries, guarding against reintroducing a per-path apply argument.
 
 ## Interactions
 
 Keep aligned with `ProjectsCommand::Apply` parse tests and `apply_project_assignments`.
-

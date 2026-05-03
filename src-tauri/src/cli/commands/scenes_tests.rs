@@ -163,6 +163,6 @@ fn scenes_apply_syncs_agent_targets_and_sets_active_scene() {
     );
 
     assert_eq!(result.response.status, CliStatus::Success);
-    assert!(target_dir.join("custom--alpha/SKILL.md").exists());
-    assert!(!target_dir.join("custom--beta").exists());
+    assert!(target_dir.join("alpha/SKILL.md").exists());
+    assert!(!target_dir.join("beta").exists());
 }
