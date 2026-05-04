@@ -16,7 +16,7 @@ Defines the consumer-facing `AppContext` contract separately from the provider i
 
 ## Core Logic
 
-`AppContextValue` now includes `externalSources`, loading and mutation flags for source/import actions, plus CRUD-style methods for add/fetch/import/update/remove/repair flows. The interface remains the source of truth for cross-view state shared by `SkillsView`, `AgentsView`, `ExternalSourcesView`, and the shell.
+`AppContextValue` now includes `externalSources`, loading and mutation flags for source/import actions, plus CRUD-style methods for add/fetch/import/update/remove/repair flows. The add-source action uses the shared `AddExternalSourceInput` DTO so branch and repository subpath stay typed from the form down to the Tauri command, while import actions accept `ExternalVariantKey` so neutral skill-repository variants can be imported without pretending to be an installed agent. The interface remains the source of truth for cross-view state shared by `SkillsView`, `AgentsView`, `ExternalSourcesView`, and the shell.
 
 ## Interactions
 

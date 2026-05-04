@@ -72,8 +72,12 @@ test("AddExternalSourceForm catches submit failures and preserves the draft inpu
   const source = readIfExists("src/components/external-sources/AddExternalSourceForm.tsx");
   assert.match(source, /onSubmit=\{async \(event\) =>/);
   assert.match(source, /try \{/);
-  assert.match(source, /await onSubmit\(trimmed\)/);
+  assert.match(source, /await onSubmit\(\{/);
+  assert.match(source, /branch: branch\.trim\(\) \|\| null/);
+  assert.match(source, /subpath: subpath\.trim\(\) \|\| null/);
   assert.match(source, /setRepoUrl\(""\)/);
+  assert.match(source, /setBranch\(""\)/);
+  assert.match(source, /setSubpath\(""\)/);
   assert.match(source, /catch \{/);
   assert.match(source, /setSubmitFailed\(true\)/);
   assert.doesNotMatch(source, /\.then\(\(\) => setRepoUrl\(""\)\)/);
@@ -95,6 +99,10 @@ test("Sources surface strings are backed by real i18n keys", () => {
     "sources.variants.title",
     "sources.imports.update",
     "sources.meta.unknown",
+    "sources.meta.subpath",
+    "sources.tags.skillRepository",
+    "sources.form.branchLabel",
+    "sources.form.subpathLabel",
     "sources.warnings.count",
     "sources.actions.expand",
     "sources.actions.collapse",
@@ -116,6 +124,8 @@ test("Sources surface strings are backed by real i18n keys", () => {
   assert.match(cardSource, /t\("sources\.actions\.openRepo"\)/);
   assert.match(cardSource, /primaryVariant\?\.description/);
   assert.match(cardSource, /shortCommit\(record\.lastFetchedCommit, unknownLabel\)/);
+  assert.match(cardSource, /record\.branch \?\? record\.defaultBranch/);
+  assert.match(cardSource, /record\.subpath \?\? t\("sources\.meta\.rootSubpath"\)/);
   assert.match(cardSource, /t\("sources\.warnings\.count", \{ count: record\.warnings\.length \}\)/);
   assert.match(importListSource, /t\("sources\.imports\.update"\)/);
   assert.match(listSource, /t\("sources\.emptyTitle"\)/);
@@ -133,6 +143,14 @@ test("Tauri desktop wiring includes opener plugin support for external repo link
   assert.match(cargo, /tauri-plugin-opener/);
   assert.match(lib, /plugin\(tauri_plugin_opener::init\(\)\)/);
   assert.match(capability, /"opener:default"/);
+});
+
+test("Tauri production config keeps macOS bundle and CSP settings explicit", () => {
+  const config = JSON.parse(readIfExists("src-tauri/tauri.conf.json"));
+
+  assert.match(config.app.security.csp, /default-src 'self'/);
+  assert.match(config.app.security.csp, /connect-src ipc: http:\/\/ipc\.localhost/);
+  assert.equal(config.bundle.macOS.minimumSystemVersion, "11.0");
 });
 
 test("scan_skills desktop command enriches scan payloads with managed external source metadata", () => {

@@ -15,7 +15,7 @@ Persists `external-sources.json` under the app config directory.
 
 ## Core Logic
 
-`load()` returns an empty schema when the file is missing. `save()` requires a caller-owned `ConfigLockGuard`, serializes the snapshot with pretty JSON, and writes it through `write_text_atomic()` so persistence uses lock plus atomic write-rename discipline instead of plain overwrite.
+`load()` returns an empty schema when the file is missing and relies on the serde defaults in `models.rs` so legacy source records without optional `branch`/`subpath` request fields remain compatible. `save()` requires a caller-owned `ConfigLockGuard`, serializes the snapshot with pretty JSON, and writes it through `write_text_atomic()` so persistence uses lock plus atomic write-rename discipline instead of plain overwrite.
 
 ## Interactions
 

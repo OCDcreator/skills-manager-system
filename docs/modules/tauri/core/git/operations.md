@@ -27,7 +27,7 @@ Downstream: commands::git, core::git::operations_test
 
 ## Core Logic
 
-All operations invoke the system `git` binary via `std::process::Command` with `GIT_TERMINAL_PROMPT=0` and `LC_ALL=C`. The status parser handles porcelain v2 format lines (`1 `, `2 `, `u `, `? `) and branch metadata (`# branch.head`, `# branch.ab`). Operation helpers now retain stdout, stderr, and exit status alongside the existing display message so CLI adapters can expose structured error details. Tests live in `operations_test.rs` so this module remains focused on runtime behavior.
+All operations invoke Git through `core::command_resolution::git_command()` with `GIT_TERMINAL_PROMPT=0` and `LC_ALL=C`, so Windows launcher order and macOS sparse-PATH fallbacks stay centralized. The status parser handles porcelain v2 format lines (`1 `, `2 `, `u `, `? `) and branch metadata (`# branch.head`, `# branch.ab`). Operation helpers retain stdout, stderr, and exit status alongside the existing display message so CLI adapters can expose structured error details, and spawn failures include the attempted Git candidates without changing normal nonzero Git stderr behavior. Tests live in `operations_test.rs` so this module remains focused on runtime behavior.
 
 ## Data Flow
 
@@ -40,7 +40,7 @@ All operations invoke the system `git` binary via `std::process::Command` with `
 
 - `commands::git` — thin wrappers calling these functions
 - `core::settings` — provides repo_path
-- Git CLI must be available on the system PATH
+- Git CLI must be available on PATH or in one of the shared macOS fallback locations
 
 ## Configuration
 

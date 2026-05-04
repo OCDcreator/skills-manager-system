@@ -12,7 +12,7 @@ Hosts the thin Tauri command layer for external GitHub source management.
 | Export | Purpose |
 |---|---|
 | `list_external_sources` | Returns current source snapshots, optionally enriched with runtime repo integrity warnings. |
-| `add_external_source` | Adds or updates a source record, attempts an immediate fetch, then returns the refreshed list. |
+| `add_external_source` | Adds or updates a source record from `repoUrl` plus optional `branch`/`subpath`, attempts an immediate fetch, then returns the refreshed list. |
 | `fetch_external_source` | Refreshes one cached source and returns the refreshed list. |
 | `import_external_variant` | Imports one detected variant into the configured repo. |
 | `update_external_import` | Re-imports one managed mirror at the latest fetched upstream commit. |
@@ -21,7 +21,7 @@ Hosts the thin Tauri command layer for external GitHub source management.
 
 ## Core Logic
 
-The module resolves `app_config_dir`, loads the configured repo path from `SettingsStore`, enforces repo-path presence only for operations that need a live repo root, and delegates all business rules to `core::external_sources::service`.
+The module resolves `app_config_dir`, loads the configured repo path from `SettingsStore`, enforces repo-path presence only for operations that need a live repo root, and delegates all business rules to `core::external_sources::service`. `add_external_source` still accepts the existing `repoUrl` argument used by the current frontend, while optional `branch` and `subpath` arguments are forwarded into `AddExternalSourceInput` when present.
 
 ## Interactions
 

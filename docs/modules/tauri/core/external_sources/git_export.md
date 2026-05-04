@@ -15,7 +15,7 @@ Exports one upstream variant tree from git object data into a staging directory.
 
 ## Core Logic
 
-The helper reads blob entries directly from git instead of the worktree, recreates the variant tree under a destination directory, skips `.skills-manager-source.json` when computing the returned fingerprint, and hashes the exported files in sorted relative-path order. That keeps import/update flows stable across line-ending or worktree drift.
+The helper reads blob entries directly from Git instead of the worktree, using `git_command.rs` for repository-scoped process creation. It recreates the variant tree under a destination directory, skips `.skills-manager-source.json` when computing the returned fingerprint, and hashes the exported files in sorted relative-path order. Variant path `.` is treated as the repository root so generic root skill repositories can import `SKILL.md` plus sibling assets without checking out the cache worktree. That keeps import/update flows stable across line-ending or worktree drift, while spawn failures report the attempted Git candidates without altering nonzero Git stderr behavior.
 
 ## Interactions
 

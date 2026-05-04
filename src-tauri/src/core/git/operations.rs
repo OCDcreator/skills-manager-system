@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use std::path::Path;
 use std::process::Command;
 
@@ -10,7 +10,7 @@ use super::types::{
 // ---------- helpers ----------
 
 fn git_cmd(repo_path: &Path) -> Command {
-    let mut cmd = Command::new("git");
+    let (mut cmd, _) = crate::core::command_resolution::git_command();
     cmd.arg("-C")
         .arg(repo_path)
         .env("GIT_TERMINAL_PROMPT", "0")
@@ -19,7 +19,14 @@ fn git_cmd(repo_path: &Path) -> Command {
 }
 
 fn run_git(cmd: &mut Command) -> Result<String> {
-    let output = cmd.output().context("Failed to execute git")?;
+    let output = cmd.output().map_err(|error| {
+        anyhow!(
+            "{}",
+            crate::core::command_resolution::git_command()
+                .1
+                .spawn_error_message(&error)
+        )
+    })?;
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout)
             .trim_end()
@@ -40,13 +47,18 @@ fn run_git_result(cmd: &mut Command) -> GitOperationResult {
             &output.stderr,
             output.status.code(),
         ),
-        Err(error) => GitOperationResult {
-            success: false,
-            message: error.to_string(),
-            stdout: None,
-            stderr: Some(error.to_string()),
-            exit_code: None,
-        },
+        Err(error) => {
+            let message = crate::core::command_resolution::git_command()
+                .1
+                .spawn_error_message(&error);
+            GitOperationResult {
+                success: false,
+                message: message.clone(),
+                stdout: None,
+                stderr: Some(message),
+                exit_code: None,
+            }
+        }
     }
 }
 

@@ -2,21 +2,26 @@ use std::fs;
 use std::path::Path;
 
 use anyhow::{anyhow, Result};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::app_runtime::config_lock::acquire_config_lock;
 use crate::core::external_sources::imports::{
-    import_variant_into_repo as import_variant_into_repo_core,
-    preflight_remove_imported_variant, remove_imported_variant_from_repo, ImportVariantInput,
-    ImportVariantResult,
+    import_variant_into_repo as import_variant_into_repo_core, preflight_remove_imported_variant,
+    remove_imported_variant_from_repo, ImportVariantInput, ImportVariantResult,
 };
-use crate::core::external_sources::models::{
-    ExternalSourceRecord, ImportedExternalSkillRecord,
-};
+use crate::core::external_sources::models::{ExternalSourceRecord, ImportedExternalSkillRecord};
 use crate::core::external_sources::ExternalSourcesStore;
 
 use super::source_snapshot::{load_variants_for_source, runtime_integrity_warning};
-use super::source_sync::{fetch_source, set_source_failure, upsert_source};
+use super::source_sync::{fetch_source, set_source_failure, upsert_source, SourceUpsertInput};
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddExternalSourceInput {
+    pub repo_url: String,
+    pub branch: Option<String>,
+    pub subpath: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -87,7 +92,30 @@ pub fn add_external_source(
     repo_root: Option<&Path>,
     repo_url: &str,
 ) -> Result<ExternalSourcesListResponse> {
-    let source_id = upsert_source(config_dir, repo_url)?;
+    add_external_source_with_input(
+        config_dir,
+        repo_root,
+        AddExternalSourceInput {
+            repo_url: repo_url.to_string(),
+            branch: None,
+            subpath: None,
+        },
+    )
+}
+
+pub fn add_external_source_with_input(
+    config_dir: &Path,
+    repo_root: Option<&Path>,
+    input: AddExternalSourceInput,
+) -> Result<ExternalSourcesListResponse> {
+    let source_id = upsert_source(
+        config_dir,
+        SourceUpsertInput {
+            repo_url: &input.repo_url,
+            branch: input.branch.as_deref(),
+            subpath: input.subpath.as_deref(),
+        },
+    )?;
     if let Err(error) = fetch_source(config_dir, &source_id) {
         let _ = set_source_failure(config_dir, &source_id, &error.to_string());
     }

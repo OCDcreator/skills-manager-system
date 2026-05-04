@@ -13,6 +13,7 @@ Declares backend core domains used by Tauri command modules.
 |---|---|
 | `agents` | Agent inventory and sync domain. |
 | `assistant` | Project assistant domain. |
+| `command_resolution` | Platform-aware external command candidate and spawn diagnostics domain. |
 | `external_sources` | External GitHub source detection, caching, imports, and persistence. |
 | `git` | Git operations domain. |
 | `platform_paths` | Shared portable path-string normalization for persisted paths and DTOs. |

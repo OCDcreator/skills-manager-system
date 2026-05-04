@@ -217,10 +217,10 @@ export function AppProvider({ children }: PropsWithChildren) {
     }
   }, []);
 
-  const addExternalSource = useCallback(async (repoUrl: string) => {
+  const addExternalSource = useCallback(async (input: api.AddExternalSourceInput) => {
     setIsAddingExternalSource(true);
     try {
-      const snapshot = await api.addExternalSource(repoUrl);
+      const snapshot = await api.addExternalSource(input);
       setExternalSources(snapshot.sources);
       setErrorMessage(null);
     } catch (error) {
@@ -248,7 +248,7 @@ export function AppProvider({ children }: PropsWithChildren) {
   }, []);
 
   const importExternalVariant = useCallback(
-    async (sourceId: string, agentKey: api.AgentKey, variantPath: string) => {
+    async (sourceId: string, agentKey: api.ExternalVariantKey, variantPath: string) => {
       setUpdatingExternalSourceId(sourceId);
       try {
         await api.importExternalVariant(sourceId, agentKey, variantPath);

@@ -37,6 +37,9 @@ export function ExternalSourceCard({
   const unknownLabel = t("sources.meta.unknown");
   const agentLabels = sourceAgentLabels(variants);
   const primaryVariant = variants.find((variant) => variant.description) ?? variants[0] ?? null;
+  const kindTag = record.detectedKind === "skill_repository"
+    ? t("sources.tags.skillRepository")
+    : t("sources.tags.generatedBundle");
   const detailsId = `external-source-${record.id}`;
   const summaryLabel = primaryVariant?.description
     ?? (variants.length
@@ -66,7 +69,7 @@ export function ExternalSourceCard({
           <div className="flex flex-wrap items-center gap-2">
             {variants.length ? (
               <span className="rounded-full border border-sky-700/60 bg-sky-950/40 px-3 py-1 text-xs font-medium text-sky-200">
-                {t("sources.tags.generatedBundle")}
+                {kindTag}
               </span>
             ) : null}
             {agentLabels.map((label) => (
@@ -100,7 +103,11 @@ export function ExternalSourceCard({
             <span className="shrink-0 text-xs text-slate-500">{t("sources.actions.openRepo")}</span>
           </a>
           <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-            <span>{t("sources.meta.branch", { branch: record.defaultBranch ?? unknownLabel })}</span>
+            <span>{t("sources.meta.branch", { branch: record.branch ?? record.defaultBranch ?? unknownLabel })}</span>
+            {record.branch && record.defaultBranch ? (
+              <span>{t("sources.meta.defaultBranch", { branch: record.defaultBranch })}</span>
+            ) : null}
+            <span>{t("sources.meta.subpath", { path: record.subpath ?? t("sources.meta.rootSubpath") })}</span>
             <span>{t("sources.meta.head", { commit: shortCommit(record.lastFetchedCommit, unknownLabel) })}</span>
             <span>{t("sources.meta.kind", { kind: record.detectedKind ?? t("sources.meta.unclassified") })}</span>
           </div>

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { AgentKey, ExternalSourceSnapshotItem } from "../../lib/tauri";
+import type { ExternalSourceSnapshotItem, ExternalVariantKey } from "../../lib/tauri";
 import { ExternalSourceCard } from "./ExternalSourceCard";
 
 interface ExternalSourceListProps {
@@ -8,7 +8,7 @@ interface ExternalSourceListProps {
   updatingExternalSourceId: string | null;
   updatingExternalImportId: string | null;
   onFetchSource: (sourceId: string) => Promise<void>;
-  onImportVariant: (sourceId: string, agentKey: AgentKey, variantPath: string) => Promise<void>;
+  onImportVariant: (sourceId: string, agentKey: ExternalVariantKey, variantPath: string) => Promise<void>;
   onRemoveSource: (sourceId: string, removeImports: boolean) => Promise<void>;
   onUpdateImport: (importId: string) => Promise<void>;
   onRepairImport: (importId: string) => Promise<void>;

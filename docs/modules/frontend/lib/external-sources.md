@@ -20,7 +20,7 @@ Provides tiny presentation helpers shared by the external-source and managed-ski
 
 ## Core Logic
 
-This file stays presentation-only. It trims trailing slashes before deriving owner/repo labels, intentionally does not normalize or validate repository URLs beyond that display concern, maps agent keys to user-facing labels for summary badges, and centralizes the busy-state logic shared by `ExternalImportList` so repair and update labels stay truthful when a row is disabled mid-action.
+This file stays presentation-only. It trims trailing slashes before deriving owner/repo labels, intentionally does not normalize or validate repository URLs beyond that display concern, maps agent and neutral skill-repository variant keys to user-facing labels for summary badges, and centralizes the busy-state logic shared by `ExternalImportList` so repair and update labels stay truthful when a row is disabled mid-action.
 
 ## Interactions
 

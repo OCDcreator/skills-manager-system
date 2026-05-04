@@ -1,8 +1,8 @@
 use anyhow::{anyhow, bail, Context, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
+use super::git_command::{git_cmd, run_git, run_git_bytes};
 use super::hash::sha256_hex;
 use crate::core::skills::identity::canonicalize_repo_relative_path;
 
@@ -32,7 +32,10 @@ pub fn ensure_cached_repo(cache_root: &Path, source_id: &str, repo_url: &str) ->
 
     let repo_dir = cache_root.join(source_id).join("repo");
     if repo_dir.exists() && !repo_dir.is_dir() {
-        bail!("Cached repo path is not a directory: {}", repo_dir.display());
+        bail!(
+            "Cached repo path is not a directory: {}",
+            repo_dir.display()
+        );
     }
 
     fs::create_dir_all(repo_dir.parent().context("Cached repo parent is missing")?)
@@ -41,14 +44,14 @@ pub fn ensure_cached_repo(cache_root: &Path, source_id: &str, repo_url: &str) ->
     if !repo_dir.join(".git").exists() {
         fs::create_dir_all(&repo_dir)
             .with_context(|| format!("Failed to create repo dir {}", repo_dir.display()))?;
-        run_git(
-            Command::new("git")
-                .arg("init")
-                .arg(&repo_dir)
-                .env("GIT_TERMINAL_PROMPT", "0")
-                .env("LC_ALL", "C"),
-        )
-        .with_context(|| format!("Failed to initialize cached repo {}", repo_dir.display()))?;
+        let (mut init_cmd, _) = crate::core::command_resolution::git_command();
+        init_cmd
+            .arg("init")
+            .arg(&repo_dir)
+            .env("GIT_TERMINAL_PROMPT", "0")
+            .env("LC_ALL", "C");
+        run_git(&mut init_cmd)
+            .with_context(|| format!("Failed to initialize cached repo {}", repo_dir.display()))?;
     }
 
     sync_origin_remote(&repo_dir, repo_url)?;
@@ -69,11 +72,9 @@ pub fn read_default_branch(repo_dir: &Path) -> Result<String> {
         // Some remotes may not advertise HEAD, but symbolic-ref can still succeed from prior fetches.
     }
 
-    if let Ok(head_ref) = run_git(git_cmd(repo_dir).args([
-        "symbolic-ref",
-        "refs/remotes/origin/HEAD",
-        "--short",
-    ])) {
+    if let Ok(head_ref) =
+        run_git(git_cmd(repo_dir).args(["symbolic-ref", "refs/remotes/origin/HEAD", "--short"]))
+    {
         return head_ref
             .trim()
             .strip_prefix("origin/")
@@ -81,8 +82,9 @@ pub fn read_default_branch(repo_dir: &Path) -> Result<String> {
             .ok_or_else(|| anyhow!("Unexpected origin HEAD ref: {head_ref}"));
     }
 
-    let symref_output = run_git(git_cmd(repo_dir).args(["ls-remote", "--symref", "origin", "HEAD"]))
-        .context("Failed to resolve origin HEAD")?;
+    let symref_output =
+        run_git(git_cmd(repo_dir).args(["ls-remote", "--symref", "origin", "HEAD"]))
+            .context("Failed to resolve origin HEAD")?;
     for line in symref_output.lines() {
         if let Some(rest) = line.strip_prefix("ref: refs/heads/") {
             let (branch, target) = rest
@@ -115,7 +117,11 @@ pub fn fingerprint_variant_at_ref(
     git_ref: &str,
     variant_path: &str,
 ) -> Result<Option<String>> {
-    let variant_path = canonicalize_repo_relative_path(variant_path)?;
+    let variant_path = if variant_path.trim() == "." {
+        ".".to_string()
+    } else {
+        canonicalize_repo_relative_path(variant_path)?
+    };
     let mut entries = list_variant_blob_entries(repo_dir, git_ref, &variant_path)?;
     if entries.is_empty() {
         return Ok(None);
@@ -129,8 +135,9 @@ pub fn fingerprint_variant_at_ref(
             continue;
         }
 
-        let blob_bytes = run_git_bytes(git_cmd(repo_dir).args(["cat-file", "blob", &entry.object_id]))
-            .with_context(|| format!("Failed to read blob {}", entry.object_id))?;
+        let blob_bytes =
+            run_git_bytes(git_cmd(repo_dir).args(["cat-file", "blob", &entry.object_id]))
+                .with_context(|| format!("Failed to read blob {}", entry.object_id))?;
         let file_hash = sha256_hex(&blob_bytes);
         serialized.extend_from_slice(entry.relative_path.as_bytes());
         serialized.push(b'\n');
@@ -210,7 +217,8 @@ fn validate_source_id(source_id: &str) -> Result<&str> {
     if source_id.is_empty() {
         bail!("Source id cannot be empty");
     }
-    if source_id == "." || source_id == ".." || source_id.contains('/') || source_id.contains('\\') {
+    if source_id == "." || source_id == ".." || source_id.contains('/') || source_id.contains('\\')
+    {
         bail!("Source id must be a single path-safe segment");
     }
     Ok(source_id)
@@ -235,6 +243,7 @@ fn list_variant_blob_entries(
     git_ref: &str,
     variant_path: &str,
 ) -> Result<Vec<VariantBlobEntry>> {
+    let is_root_variant = variant_path == ".";
     let output = run_git_bytes(git_cmd(repo_dir).args([
         "ls-tree",
         "-r",
@@ -267,7 +276,9 @@ fn list_variant_blob_entries(
             continue;
         }
 
-        let relative_path = if path == variant_path {
+        let relative_path = if is_root_variant {
+            path.to_string()
+        } else if path == variant_path {
             PathBuf::from(path)
                 .file_name()
                 .map(|value| value.to_string_lossy().to_string())
@@ -289,41 +300,6 @@ fn list_variant_blob_entries(
     Ok(entries)
 }
 
-fn git_cmd(repo_path: &Path) -> Command {
-    let mut cmd = Command::new("git");
-    cmd.arg("-C")
-        .arg(repo_path)
-        .env("GIT_TERMINAL_PROMPT", "0")
-        .env("LC_ALL", "C");
-    cmd
-}
-
-fn run_git(cmd: &mut Command) -> Result<String> {
-    let output = cmd.output().context("Failed to execute git")?;
-    if output.status.success() {
-        Ok(String::from_utf8_lossy(&output.stdout)
-            .trim_end()
-            .to_string())
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr)
-            .trim_end()
-            .to_string();
-        Err(anyhow!(stderr))
-    }
-}
-
-fn run_git_bytes(cmd: &mut Command) -> Result<Vec<u8>> {
-    let output = cmd.output().context("Failed to execute git")?;
-    if output.status.success() {
-        Ok(output.stdout)
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr)
-            .trim_end()
-            .to_string();
-        Err(anyhow!(stderr))
-    }
-}
-
 struct VariantBlobEntry {
     relative_path: String,
     object_id: String,
@@ -332,17 +308,19 @@ struct VariantBlobEntry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::process::Command;
     use tempfile::tempdir;
 
     #[test]
     fn normalize_github_repo_url_coalesces_https_and_ssh_variants() {
-        let https = normalize_github_repo_url("https://github.com/OCDcreator/Skills-Manager-System")
-            .unwrap();
+        let https =
+            normalize_github_repo_url("https://github.com/OCDcreator/Skills-Manager-System")
+                .unwrap();
         let https_git =
             normalize_github_repo_url("https://github.com/OCDcreator/Skills-Manager-System.git")
                 .unwrap();
-        let ssh = normalize_github_repo_url("git@github.com:OCDcreator/Skills-Manager-System")
-            .unwrap();
+        let ssh =
+            normalize_github_repo_url("git@github.com:OCDcreator/Skills-Manager-System").unwrap();
         let ssh_url =
             normalize_github_repo_url("ssh://git@github.com/OCDcreator/Skills-Manager-System.git")
                 .unwrap();
@@ -366,8 +344,20 @@ mod tests {
         let work_dir = temp.path().join("work");
         let cache_root = temp.path().join("cache");
 
-        run_git(Command::new("git").arg("init").arg("--bare").arg(&remote_dir)).unwrap();
-        run_git(Command::new("git").arg("clone").arg(&remote_dir).arg(&work_dir)).unwrap();
+        run_git(
+            Command::new("git")
+                .arg("init")
+                .arg("--bare")
+                .arg(&remote_dir),
+        )
+        .unwrap();
+        run_git(
+            Command::new("git")
+                .arg("clone")
+                .arg(&remote_dir)
+                .arg(&work_dir),
+        )
+        .unwrap();
         run_git(git_cmd(&work_dir).args(["checkout", "-b", "main"])).unwrap();
         run_git(git_cmd(&work_dir).args(["config", "user.email", "test@example.com"])).unwrap();
         run_git(git_cmd(&work_dir).args(["config", "user.name", "Test User"])).unwrap();
@@ -380,17 +370,19 @@ mod tests {
         run_git(git_cmd(&work_dir).args(["add", "."])).unwrap();
         run_git(git_cmd(&work_dir).args(["commit", "-m", "initial"])).unwrap();
         run_git(git_cmd(&work_dir).args(["push", "-u", "origin", "main"])).unwrap();
-        run_git(
-            Command::new("git")
-                .arg("--git-dir")
-                .arg(&remote_dir)
-                .args(["symbolic-ref", "HEAD", "refs/heads/main"]),
-        )
+        run_git(Command::new("git").arg("--git-dir").arg(&remote_dir).args([
+            "symbolic-ref",
+            "HEAD",
+            "refs/heads/main",
+        ]))
         .unwrap();
 
-        let repo_dir =
-            ensure_cached_repo(&cache_root, "src_test", remote_dir.to_string_lossy().as_ref())
-                .unwrap();
+        let repo_dir = ensure_cached_repo(
+            &cache_root,
+            "src_test",
+            remote_dir.to_string_lossy().as_ref(),
+        )
+        .unwrap();
 
         assert_eq!(read_default_branch(&repo_dir).unwrap(), "main");
         assert_eq!(read_head_commit(&repo_dir, "main").unwrap().len(), 40);
@@ -413,23 +405,17 @@ mod tests {
         run_git(git_cmd(&repo_dir).args(["commit", "-m", "initial"])).unwrap();
 
         let head = run_git(git_cmd(&repo_dir).args(["rev-parse", "HEAD"])).unwrap();
-        let before = fingerprint_variant_at_ref(
-            &repo_dir,
-            &head,
-            "dist/agents/.agents/skills/impeccable",
-        )
-        .unwrap()
-        .unwrap();
+        let before =
+            fingerprint_variant_at_ref(&repo_dir, &head, "dist/agents/.agents/skills/impeccable")
+                .unwrap()
+                .unwrap();
 
         fs::write(variant_dir.join("SKILL.md"), "line one\r\nline two\r\n").unwrap();
 
-        let after = fingerprint_variant_at_ref(
-            &repo_dir,
-            &head,
-            "dist/agents/.agents/skills/impeccable",
-        )
-        .unwrap()
-        .unwrap();
+        let after =
+            fingerprint_variant_at_ref(&repo_dir, &head, "dist/agents/.agents/skills/impeccable")
+                .unwrap()
+                .unwrap();
 
         assert_eq!(before, after);
     }
@@ -438,9 +424,12 @@ mod tests {
     fn ensure_cached_repo_rejects_parent_traversal_source_id() {
         let temp = tempdir().unwrap();
 
-        let error =
-            ensure_cached_repo(temp.path(), "../other", "https://github.com/example/repo.git")
-                .unwrap_err();
+        let error = ensure_cached_repo(
+            temp.path(),
+            "../other",
+            "https://github.com/example/repo.git",
+        )
+        .unwrap_err();
 
         assert!(error
             .to_string()
@@ -451,9 +440,12 @@ mod tests {
     fn ensure_cached_repo_rejects_source_id_with_forward_slash() {
         let temp = tempdir().unwrap();
 
-        let error =
-            ensure_cached_repo(temp.path(), "foo/bar", "https://github.com/example/repo.git")
-                .unwrap_err();
+        let error = ensure_cached_repo(
+            temp.path(),
+            "foo/bar",
+            "https://github.com/example/repo.git",
+        )
+        .unwrap_err();
 
         assert!(error
             .to_string()
@@ -464,9 +456,12 @@ mod tests {
     fn ensure_cached_repo_rejects_source_id_with_backslash() {
         let temp = tempdir().unwrap();
 
-        let error =
-            ensure_cached_repo(temp.path(), r"foo\bar", "https://github.com/example/repo.git")
-                .unwrap_err();
+        let error = ensure_cached_repo(
+            temp.path(),
+            r"foo\bar",
+            "https://github.com/example/repo.git",
+        )
+        .unwrap_err();
 
         assert!(error
             .to_string()

@@ -7,7 +7,7 @@ import {
 } from "../../lib/external-sources";
 import type {
   AgentInventoryItem,
-  AgentKey,
+  ExternalVariantKey,
   ExternalSourceSnapshotItem,
 } from "../../lib/tauri";
 import { AgentBrandIcon } from "./AgentBrandIcon";
@@ -20,7 +20,7 @@ interface AgentExternalVariantPanelProps {
   updatingExternalSourceId: string | null;
   onImportVariant: (
     sourceId: string,
-    agentKey: AgentKey,
+    agentKey: ExternalVariantKey,
     variantPath: string,
   ) => Promise<void>;
   onRepairImport: (importId: string) => Promise<void>;

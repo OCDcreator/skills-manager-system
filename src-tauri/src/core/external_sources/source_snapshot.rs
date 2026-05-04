@@ -1,9 +1,6 @@
 use std::fs;
 use std::path::Path;
 
-use crate::core::external_sources::detect::{
-    detect_external_source_variants_at_ref, detect_external_source_variants_from_worktree,
-};
 use crate::core::external_sources::git_tree::read_text_file_at_ref;
 use crate::core::external_sources::models::{
     ExternalSourceRecord, ExternalSourceWarning, ImportedExternalSkillRecord,
@@ -27,7 +24,7 @@ pub(super) fn load_variants_for_source(
         .and_then(|_| {
             let repo_dir = cache_repo_absolute_path(config_dir, &record.id);
             let git_ref = record.last_fetched_commit.as_deref();
-            load_source_detection(&repo_dir, &record.id, git_ref)
+            load_source_detection(&repo_dir, &record.id, git_ref, record.subpath.as_deref())
                 .ok()
                 .map(|detection| {
                     detection
@@ -59,15 +56,19 @@ fn load_source_detection(
     repo_dir: &Path,
     source_id: &str,
     git_ref: Option<&str>,
+    subpath: Option<&str>,
 ) -> anyhow::Result<crate::core::external_sources::detect::DetectionResult> {
     if let Some(git_ref) = git_ref {
-        if let Ok(detection) = detect_external_source_variants_at_ref(repo_dir, git_ref, source_id)
-        {
+        if let Ok(detection) = super::detect::detect_external_source_variants_at_ref_in_root(
+            repo_dir, git_ref, source_id, subpath,
+        ) {
             return Ok(detection);
         }
     }
 
-    detect_external_source_variants_from_worktree(repo_dir, source_id)
+    super::detect::detect_external_source_variants_from_worktree_in_root(
+        repo_dir, source_id, subpath,
+    )
 }
 
 fn load_variant_metadata(

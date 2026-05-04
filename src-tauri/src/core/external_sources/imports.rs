@@ -3,8 +3,8 @@ use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::git_repo::normalize_github_repo_url;
 use super::git_export::export_variant_from_git;
+use super::git_repo::normalize_github_repo_url;
 use super::import_paths::{
     determine_mirror_relative_path, resolve_cached_repo_path, stable_import_id,
 };
@@ -59,8 +59,9 @@ pub fn import_variant_into_repo(
     let store = ExternalSourcesStore::new(config_dir.to_path_buf());
     let snapshot = store.load()?;
     let source = find_source(&snapshot, &input.external_source_id)?;
-    let variant_path = canonicalize_repo_relative_path(&input.upstream_variant_path)?;
-    let cached_repo_path = resolve_cached_repo_path(config_dir, source.cached_repo_path.as_deref())?;
+    let variant_path = normalize_variant_path(&input.upstream_variant_path)?;
+    let cached_repo_path =
+        resolve_cached_repo_path(config_dir, source.cached_repo_path.as_deref())?;
     let normalized_repo_url = normalize_github_repo_url(&source.repo_url)?;
     let existing_import = snapshot.imports.iter().find(|record| {
         record.external_source_id == input.external_source_id
@@ -79,7 +80,13 @@ pub fn import_variant_into_repo(
     let skill_id = build_skill_id_from_relative_path(&mirror_relative_path)?;
     let import_id = existing_import
         .map(|record| record.import_id.clone())
-        .unwrap_or_else(|| stable_import_id(&input.external_source_id, &input.agent_key, &mirror_relative_path));
+        .unwrap_or_else(|| {
+            stable_import_id(
+                &input.external_source_id,
+                &input.agent_key,
+                &mirror_relative_path,
+            )
+        });
     let manifest = ManagedSkillMirrorManifest {
         schema_version: ExternalSourcesSnapshot::SCHEMA_VERSION,
         managed: true,
@@ -99,8 +106,12 @@ pub fn import_variant_into_repo(
     let stage_dir = create_operation_dir(repo_root, "stage", &import_id)?;
     let mut warnings = Vec::new();
     let import_result = (|| -> Result<ImportVariantResult> {
-        let fingerprint =
-            export_variant_from_git(&cached_repo_path, &input.pinned_commit, &variant_path, &stage_dir)?;
+        let fingerprint = export_variant_from_git(
+            &cached_repo_path,
+            &input.pinned_commit,
+            &variant_path,
+            &stage_dir,
+        )?;
         write_manifest(&stage_dir, &manifest)?;
         validate_mirror_dir(&stage_dir, &manifest)?;
 
@@ -193,7 +204,8 @@ pub fn remove_imported_variant_from_repo(
     repo_root: &Path,
     skill_id: &str,
 ) -> Result<ImportRemovalResult> {
-    let (import_record, target_dir) = preflight_remove_imported_variant(config_dir, repo_root, skill_id)?;
+    let (import_record, target_dir) =
+        preflight_remove_imported_variant(config_dir, repo_root, skill_id)?;
     let guard = acquire_config_lock(config_dir)?;
     let store = ExternalSourcesStore::new(config_dir.to_path_buf());
     let snapshot = store.load()?;
@@ -266,6 +278,14 @@ fn find_source<'a>(
         .iter()
         .find(|source| source.id == source_id)
         .ok_or_else(|| anyhow!("External source '{}' was not found", source_id))
+}
+
+fn normalize_variant_path(raw: &str) -> Result<String> {
+    if raw.trim() == "." {
+        Ok(".".to_string())
+    } else {
+        canonicalize_repo_relative_path(raw)
+    }
 }
 
 #[cfg(test)]

@@ -19,7 +19,7 @@ Defines the persisted schema for external-source records, managed import records
 
 ## Core Logic
 
-The snapshot schema currently keeps two top-level collections: `sources` and `imports`. The mirror manifest intentionally repeats enough metadata to validate a live mirror without needing the source record to still exist.
+The snapshot schema currently keeps two top-level collections: `sources` and `imports`. Source records persist the canonical identity fields plus optional `branch` and `subpath` request fields; both use serde defaults so older `external-sources.json` files that only contain `repoUrl` and fetch diagnostics continue to load. The mirror manifest intentionally repeats enough metadata to validate a live mirror without needing the source record to still exist.
 
 ## Interactions
 

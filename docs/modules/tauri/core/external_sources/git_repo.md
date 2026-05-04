@@ -19,7 +19,7 @@ Owns GitHub URL normalization, cached-repo bootstrap/sync, and git-object reads 
 
 ## Core Logic
 
-The module validates source ids, keeps cached repos under the external-source cache root, hard-disables interactive git prompts, and uses low-level git commands like `ls-tree` and `show` to inspect variant contents without checking them out into the user's repo.
+The module validates source ids, keeps cached repos under the external-source cache root, and uses low-level git commands like `ls-tree` and `show` to inspect variant contents without checking them out into the user's repo. Variant fingerprinting accepts the special `.` root variant used by generic root skill repositories and hashes repo-root blob paths directly. Repository-scoped Git process setup now goes through `git_command.rs`, which centralizes noninteractive Git environment defaults, shared command resolution, and spawn-error mapping while leaving cached-repo behavior here.
 
 ## Interactions
 

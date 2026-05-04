@@ -11,6 +11,7 @@ Owns source-record mutation, cached fetch, and import refresh logic for external
 
 | Export | Purpose |
 |---|---|
+| `SourceUpsertInput` | Internal add/update boundary carrying `repoUrl` plus optional requested `branch` and repo-relative `subpath`. |
 | `upsert_source` | Adds or updates a normalized source record and returns its stable id. |
 | `set_source_failure` | Persists a fetch failure onto the source record without panicking the service layer. |
 | `fetch_source` | Refreshes the cached repo, detection result, warnings, and import update flags. |
@@ -18,7 +19,9 @@ Owns source-record mutation, cached fetch, and import refresh logic for external
 
 ## Core Logic
 
-The module normalizes GitHub URLs into stable `src_<hash>` ids, keeps cached repos under `config/external-sources/<id>/repo`, fetches upstream state through `git_repo.rs`, and recalculates per-import `updateAvailable` plus `variant_disappeared` warnings after every fetch. Source status is derived from warning severity, not from a separate state machine.
+The module normalizes GitHub URLs into stable `src_<hash>` ids, so duplicate/upsert identity remains based on the canonical repo URL only. Upsert stores trimmed optional branch values and validates optional subpaths through the shared repo-relative path canonicalizer; traversal, rooted, or drive-qualified paths are rejected before the snapshot is written.
+
+Fetch keeps cached repos under `config/external-sources/<id>/repo`, still resolves and stores `defaultBranch` for diagnostics, then reads `lastFetchedCommit` from the requested branch when one is stored or from the default branch otherwise. Detection runs against the fetched commit and receives the stored repo-relative `subpath`, so both generated-bundle rules and the generic skill repository fallback scan the selected subtree rather than always scanning the repository root. After every fetch, the module recalculates per-import `updateAvailable` plus `variant_disappeared` warnings. If no variants are detected, fetch records a `no_importable_skills` warning that names either the configured subpath or the repository root, so an empty source does not look silently healthy. Source status is derived from warning severity, not from a separate state machine.
 
 ## Interactions
 

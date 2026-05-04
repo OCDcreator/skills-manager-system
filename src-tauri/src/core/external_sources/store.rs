@@ -20,7 +20,8 @@ impl ExternalSourcesStore {
             return Ok(ExternalSourcesSnapshot::default());
         }
 
-        let raw = fs::read_to_string(&path).with_context(|| format!("Failed to read {:?}", path))?;
+        let raw =
+            fs::read_to_string(&path).with_context(|| format!("Failed to read {:?}", path))?;
         serde_json::from_str(&raw).with_context(|| format!("Failed to parse {:?}", path))
     }
 
@@ -28,7 +29,8 @@ impl ExternalSourcesStore {
         fs::create_dir_all(&self.config_dir)
             .with_context(|| format!("Failed to create {:?}", self.config_dir))?;
         let json = serde_json::to_string_pretty(snapshot)?;
-        write_text_atomic(&self.snapshot_path(), &json).context("Failed to write external-sources.json")?;
+        write_text_atomic(&self.snapshot_path(), &json)
+            .context("Failed to write external-sources.json")?;
         Ok(())
     }
 
@@ -68,6 +70,8 @@ mod tests {
             sources: vec![ExternalSourceRecord {
                 id: "src_01".to_string(),
                 repo_url: "github.com/ocdcreator/example".to_string(),
+                branch: Some("release".to_string()),
+                subpath: Some("packages/skills".to_string()),
                 default_branch: Some("main".to_string()),
                 cached_repo_path: Some("external-sources/src_01/repo".to_string()),
                 detected_kind: Some("generated_agent_bundle".to_string()),
@@ -100,6 +104,35 @@ mod tests {
         store.save(&guard, &snapshot).unwrap();
 
         assert_eq!(store.load().unwrap(), snapshot);
+    }
+
+    #[test]
+    fn load_defaults_branch_and_subpath_for_legacy_source_records() {
+        let dir = tempdir().unwrap();
+        fs::write(
+            dir.path().join("external-sources.json"),
+            r#"{
+              "schemaVersion": 1,
+              "sources": [
+                {
+                  "id": "src_legacy",
+                  "repoUrl": "https://github.com/example/repo",
+                  "defaultBranch": "main",
+                  "status": "ok",
+                  "warnings": []
+                }
+              ],
+              "imports": []
+            }"#,
+        )
+        .unwrap();
+        let store = ExternalSourcesStore::new(dir.path().to_path_buf());
+
+        let snapshot = store.load().unwrap();
+
+        assert_eq!(snapshot.sources.len(), 1);
+        assert_eq!(snapshot.sources[0].branch, None);
+        assert_eq!(snapshot.sources[0].subpath, None);
     }
 
     #[test]

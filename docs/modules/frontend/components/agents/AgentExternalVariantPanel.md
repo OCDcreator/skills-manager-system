@@ -15,7 +15,7 @@ Renders the agent-scoped external-source sidecar inside `AgentsView`, showing on
 
 ## Core Logic
 
-The component filters the global `externalSources` snapshot down to records that either expose variants for the current `agent.key` or already own imports for that agent. It presents a left column for detected upstream variants and a right column for imported mirrors, translates warning codes like `variant_disappeared` and `integrity_mismatch`, and keeps busy-state UX scoped to either source-level imports or import-level update/repair actions.
+The component filters the global `externalSources` snapshot down to records that either expose variants for the current `agent.key` or already own imports for that agent. Its import callback accepts the broader external variant key type, but this panel only renders entries matching the concrete agent key. It presents a left column for detected upstream variants and a right column for imported mirrors, translates warning codes like `variant_disappeared` and `integrity_mismatch`, and keeps busy-state UX scoped to either source-level imports or import-level update/repair actions.
 
 ## Interactions
 

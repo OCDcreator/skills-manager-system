@@ -20,7 +20,7 @@ Provides the public import/remove/preflight API for managed mirrors under `exter
 
 ## Core Logic
 
-This module now owns workflow ordering rather than every helper detail itself. The import path/id rules live in `import_paths.rs`, filesystem validation and rollback helpers live in `mirror_fs.rs`, and git blob export stays in `git_export.rs`. `imports.rs` coordinates those helpers into one transactional flow: resolve the cached repo, choose or reuse a stable mirror path, stage the exported variant, validate it, swap it into the repo, then persist the updated import record under the same config lock.
+This module now owns workflow ordering rather than every helper detail itself. The import path/id rules live in `import_paths.rs`, filesystem validation and rollback helpers live in `mirror_fs.rs`, and git blob export stays in `git_export.rs`. `imports.rs` coordinates those helpers into one transactional flow: resolve the cached repo, choose or reuse a stable mirror path, stage the exported variant, validate it, swap it into the repo, then persist the updated import record under the same config lock. Import validation accepts `.` as the special upstream variant path for generic root skill repositories; all other upstream variant paths still go through the normal repo-relative path canonicalizer.
 
 Removal preflight and destructive removal share the same guardrails: block referenced skills through `reference_check.rs`, require a valid live managed mirror, and restore backups if persistence fails mid-operation.
 

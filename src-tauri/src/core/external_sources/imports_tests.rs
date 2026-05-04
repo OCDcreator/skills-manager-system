@@ -61,16 +61,91 @@ fn import_variant_writes_manifest_and_updates_record() {
         result.mirror_relative_path,
         "external/managed/github/ocdcreator__impeccable/codex/impeccable"
     );
-    assert!(
-        repo_root
-            .join(&result.mirror_relative_path)
-            .join(".skills-manager-source.json")
-            .exists()
-    );
+    assert!(repo_root
+        .join(&result.mirror_relative_path)
+        .join(".skills-manager-source.json")
+        .exists());
 
     let snapshot = store.load().unwrap();
     assert_eq!(snapshot.imports.len(), 1);
     assert_eq!(snapshot.imports[0].skill_id, result.skill_id);
+    assert_eq!(snapshot.imports[0].pinned_commit, pinned_commit);
+}
+
+#[test]
+fn import_generic_root_variant_writes_manifest_and_preserves_unmanaged_collision() {
+    let temp = tempdir().unwrap();
+    let config_dir = temp.path().join("config");
+    let repo_root = temp.path().join("my-skills");
+    let cached_repo = temp.path().join("cached-repo");
+    fs::create_dir_all(repo_root.join("external/managed/github/ocdcreator__root-skill/codex"))
+        .unwrap();
+    fs::create_dir_all(
+        repo_root.join("external/managed/github/ocdcreator__root-skill/codex/variant"),
+    )
+    .unwrap();
+    fs::write(
+        repo_root.join("external/managed/github/ocdcreator__root-skill/codex/variant/SKILL.md"),
+        "# Unmanaged\n",
+    )
+    .unwrap();
+    initialize_repo_with_root_skill(&cached_repo);
+    let pinned_commit = git_output(&cached_repo, ["rev-parse", "HEAD"]);
+
+    let store = ExternalSourcesStore::new(config_dir.clone());
+    let guard = acquire_config_lock(&config_dir).unwrap();
+    store
+        .save(
+            &guard,
+            &ExternalSourcesSnapshot {
+                schema_version: 1,
+                sources: vec![ExternalSourceRecord {
+                    id: "src_01".to_string(),
+                    repo_url: "git@github.com:OCDcreator/root-skill.git".to_string(),
+                    cached_repo_path: Some(cached_repo.to_string_lossy().to_string()),
+                    ..ExternalSourceRecord::default()
+                }],
+                imports: Vec::new(),
+            },
+        )
+        .unwrap();
+    drop(guard);
+
+    let result = import_variant_into_repo(
+        &config_dir,
+        &repo_root,
+        ImportVariantInput {
+            external_source_id: "src_01".to_string(),
+            agent_key: "codex".to_string(),
+            upstream_variant_path: ".".to_string(),
+            pinned_commit: pinned_commit.clone(),
+        },
+    )
+    .unwrap();
+
+    assert_ne!(
+        result.mirror_relative_path,
+        "external/managed/github/ocdcreator__root-skill/codex/variant"
+    );
+    assert_eq!(
+        fs::read_to_string(
+            repo_root.join("external/managed/github/ocdcreator__root-skill/codex/variant/SKILL.md")
+        )
+        .unwrap(),
+        "# Unmanaged\n"
+    );
+    assert!(repo_root
+        .join(&result.mirror_relative_path)
+        .join(".skills-manager-source.json")
+        .exists());
+    assert!(repo_root
+        .join(&result.mirror_relative_path)
+        .join("asset.txt")
+        .exists());
+
+    let snapshot = store.load().unwrap();
+    assert_eq!(snapshot.imports.len(), 1);
+    assert_eq!(snapshot.imports[0].upstream_variant_path, ".");
     assert_eq!(snapshot.imports[0].pinned_commit, pinned_commit);
 }
 
@@ -129,14 +204,12 @@ fn remove_import_blocks_when_skill_is_referenced() {
         remove_imported_variant_from_repo(&config_dir, &repo_root, &imported.skill_id).unwrap_err();
 
     assert!(error.to_string().contains("referenced"));
-    assert!(
-        store
-            .load()
-            .unwrap()
-            .imports
-            .iter()
-            .any(|record| record.skill_id == imported.skill_id)
-    );
+    assert!(store
+        .load()
+        .unwrap()
+        .imports
+        .iter()
+        .any(|record| record.skill_id == imported.skill_id));
     assert!(repo_root.join(imported.mirror_relative_path).exists());
 }
 
@@ -234,6 +307,17 @@ fn initialize_repo_with_variant(repo_dir: &Path, variant_path: &str, skill_md: &
     fs::create_dir_all(&skill_path).unwrap();
     fs::write(skill_path.join("SKILL.md"), skill_md).unwrap();
     fs::write(skill_path.join("notes.txt"), "hello\n").unwrap();
+    run_git(git_cmd(repo_dir).args(["add", "."]));
+    run_git(git_cmd(repo_dir).args(["commit", "-m", "initial"]));
+}
+
+fn initialize_repo_with_root_skill(repo_dir: &Path) {
+    run_git(Command::new("git").arg("init").arg(repo_dir));
+    run_git(git_cmd(repo_dir).args(["config", "user.email", "test@example.com"]));
+    run_git(git_cmd(repo_dir).args(["config", "user.name", "Test User"]));
+    fs::create_dir_all(repo_dir).unwrap();
+    fs::write(repo_dir.join("SKILL.md"), "# Root skill\n").unwrap();
+    fs::write(repo_dir.join("asset.txt"), "hello\n").unwrap();
     run_git(git_cmd(repo_dir).args(["add", "."]));
     run_git(git_cmd(repo_dir).args(["commit", "-m", "initial"]));
 }

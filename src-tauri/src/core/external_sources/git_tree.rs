@@ -1,8 +1,8 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use std::collections::BTreeSet;
 use std::path::Path;
-use std::process::Command;
 
+use super::git_command::{git_cmd, run_git_bytes};
 use crate::core::skills::identity::canonicalize_repo_relative_path;
 
 pub(crate) fn list_direct_child_skill_dirs_at_ref(
@@ -21,15 +21,27 @@ pub(crate) fn list_recursive_skill_dirs_at_ref(
     list_skill_dirs_at_ref(repo_dir, git_ref, root, false)
 }
 
-pub(crate) fn read_text_file_at_ref(repo_dir: &Path, git_ref: &str, relative_path: &str) -> Result<String> {
+pub(crate) fn read_text_file_at_ref(
+    repo_dir: &Path,
+    git_ref: &str,
+    relative_path: &str,
+) -> Result<String> {
     let relative_path = canonicalize_repo_relative_path(relative_path)?;
-    let output = run_git_bytes(git_cmd(repo_dir).args([
-        "show",
-        &format!("{git_ref}:{relative_path}"),
-    ]))
-    .with_context(|| format!("Failed to read {git_ref}:{relative_path}"))?;
+    let output =
+        run_git_bytes(git_cmd(repo_dir).args(["show", &format!("{git_ref}:{relative_path}")]))
+            .with_context(|| format!("Failed to read {git_ref}:{relative_path}"))?;
 
     String::from_utf8(output).context("Git file content was not valid UTF-8")
+}
+
+pub(crate) fn skill_dir_exists_at_ref(repo_dir: &Path, git_ref: &str, root: &str) -> Result<bool> {
+    let skill_path = if root == "." {
+        "SKILL.md".to_string()
+    } else {
+        format!("{}/SKILL.md", canonicalize_repo_relative_path(root)?)
+    };
+
+    Ok(read_text_file_at_ref(repo_dir, git_ref, &skill_path).is_ok())
 }
 
 fn list_skill_dirs_at_ref(
@@ -38,7 +50,11 @@ fn list_skill_dirs_at_ref(
     root: &str,
     direct_only: bool,
 ) -> Result<Vec<String>> {
-    let root = canonicalize_repo_relative_path(root)?;
+    let root = if root == "." {
+        ".".to_string()
+    } else {
+        canonicalize_repo_relative_path(root)?
+    };
     let output = run_git_bytes(git_cmd(repo_dir).args([
         "ls-tree",
         "-r",
@@ -51,7 +67,11 @@ fn list_skill_dirs_at_ref(
     .with_context(|| format!("Failed to list tree for {git_ref}:{root}"))?;
 
     let mut dirs = BTreeSet::new();
-    let root_prefix = format!("{root}/");
+    let root_prefix = if root == "." {
+        String::new()
+    } else {
+        format!("{root}/")
+    };
     for chunk in output.split(|byte| *byte == 0) {
         if chunk.is_empty() {
             continue;
@@ -65,8 +85,13 @@ fn list_skill_dirs_at_ref(
         let Some(parent) = path.strip_suffix("/SKILL.md") else {
             continue;
         };
-        let Some(remainder) = parent.strip_prefix(&root_prefix) else {
-            continue;
+        let remainder = if root_prefix.is_empty() {
+            parent
+        } else {
+            let Some(remainder) = parent.strip_prefix(&root_prefix) else {
+                continue;
+            };
+            remainder
         };
         if remainder.is_empty() {
             continue;
@@ -81,31 +106,11 @@ fn list_skill_dirs_at_ref(
     Ok(dirs.into_iter().collect())
 }
 
-fn git_cmd(repo_dir: &Path) -> Command {
-    let mut cmd = Command::new("git");
-    cmd.arg("-C")
-        .arg(repo_dir)
-        .env("GIT_TERMINAL_PROMPT", "0")
-        .env("LC_ALL", "C");
-    cmd
-}
-
-fn run_git_bytes(cmd: &mut Command) -> Result<Vec<u8>> {
-    let output = cmd.output().context("Failed to execute git")?;
-    if output.status.success() {
-        Ok(output.stdout)
-    } else {
-        Err(anyhow!(
-            "{}",
-            String::from_utf8_lossy(&output.stderr).trim_end()
-        ))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::fs;
+    use std::process::Command;
     use tempfile::tempdir;
 
     #[test]
@@ -133,7 +138,8 @@ mod tests {
         run_git(git_cmd(&repo_dir).args(["commit", "-m", "initial"])).unwrap();
 
         let head = run_git(git_cmd(&repo_dir).args(["rev-parse", "HEAD"])).unwrap();
-        let direct = list_direct_child_skill_dirs_at_ref(&repo_dir, &head, ".agents/skills").unwrap();
+        let direct =
+            list_direct_child_skill_dirs_at_ref(&repo_dir, &head, ".agents/skills").unwrap();
         let recursive = list_recursive_skill_dirs_at_ref(&repo_dir, &head, ".agents").unwrap();
 
         assert_eq!(direct, vec![".agents/skills/impeccable".to_string()]);

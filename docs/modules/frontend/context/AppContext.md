@@ -16,7 +16,7 @@ Owns the frontend global state for top-level view selection, repo path, skills, 
 
 ## Core Logic
 
-The provider loads the saved repo path, refreshes agents, skills, agent order, and external sources, and centralizes all async mutation flags and error handling. For the external-sources slice it exposes source-list refresh, source add/fetch/remove mutations, and variant import plus import update/repair mutations. Import-changing operations deliberately refresh both external-source snapshots and skill summaries so managed-source badges and detail metadata stay current. When the same skill remains selected after a refresh, `refreshSkills()` now also reloads the selected document so the Skills detail pane does not keep stale markdown beside fresh managed-source metadata.
+The provider loads the saved repo path, refreshes agents, skills, agent order, and external sources, and centralizes all async mutation flags and error handling. For the external-sources slice it exposes source-list refresh, source add/fetch/remove mutations, and variant import plus import update/repair mutations. Adding a source now accepts the structured URL/branch/subpath input and leaves validation to the Rust command, preserving the older default-branch behavior when optional fields are empty. Import-changing operations deliberately refresh both external-source snapshots and skill summaries so managed-source badges and detail metadata stay current. When the same skill remains selected after a refresh, `refreshSkills()` now also reloads the selected document so the Skills detail pane does not keep stale markdown beside fresh managed-source metadata.
 
 ## Interactions
 

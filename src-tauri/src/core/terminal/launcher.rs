@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use anyhow::{bail, Result};
 
+use crate::core::command_resolution::command_candidate_strings;
+
 use super::model::{CliKey, TerminalLaunchInput};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,27 +16,10 @@ pub struct TerminalLaunchSpec {
 }
 
 fn command_candidates(base_names: &[&str]) -> Vec<String> {
-    if cfg!(windows) {
-        let mut candidates = Vec::with_capacity(base_names.len() * 3);
-        for name in base_names {
-            candidates.push(format!("{name}.cmd"));
-            candidates.push(format!("{name}.exe"));
-            candidates.push((*name).to_string());
-        }
-        return candidates;
-    }
-
-    let mut candidates = Vec::new();
-    for name in base_names {
-        candidates.push((*name).to_string());
-        if cfg!(target_os = "macos") {
-            candidates.push(format!("/opt/homebrew/bin/{name}"));
-            candidates.push(format!("/usr/local/bin/{name}"));
-            candidates.push(format!("/opt/homebrew/sbin/{name}"));
-            candidates.push(format!("/usr/local/sbin/{name}"));
-        }
-    }
-    candidates
+    base_names
+        .iter()
+        .flat_map(|name| command_candidate_strings(name))
+        .collect()
 }
 
 fn program_candidates_for(cli_key: CliKey) -> Vec<String> {

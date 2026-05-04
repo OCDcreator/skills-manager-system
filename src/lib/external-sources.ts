@@ -48,6 +48,7 @@ const AGENT_LABELS: Record<string, string> = {
   gemini_cli: "Gemini CLI",
   github_copilot: "GitHub Copilot",
   windsurf: "Windsurf",
+  skill_repository: "Skill Repository",
 };
 
 export function sourceAgentLabels(variants: ExternalVariantSnapshot[]) {

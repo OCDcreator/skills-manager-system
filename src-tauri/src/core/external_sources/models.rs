@@ -28,6 +28,8 @@ impl Default for ExternalSourcesSnapshot {
 pub struct ExternalSourceRecord {
     pub id: String,
     pub repo_url: String,
+    pub branch: Option<String>,
+    pub subpath: Option<String>,
     pub default_branch: Option<String>,
     pub cached_repo_path: Option<String>,
     pub detected_kind: Option<String>,
@@ -42,6 +44,8 @@ impl Default for ExternalSourceRecord {
         Self {
             id: String::new(),
             repo_url: String::new(),
+            branch: None,
+            subpath: None,
             default_branch: None,
             cached_repo_path: None,
             detected_kind: None,

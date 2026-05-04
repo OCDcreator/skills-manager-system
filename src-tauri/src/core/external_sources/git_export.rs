@@ -1,8 +1,8 @@
 use anyhow::{anyhow, bail, Context, Result};
 use std::fs;
 use std::path::Path;
-use std::process::Command;
 
+use super::git_command::{git_cmd, run_git_bytes};
 use super::hash::sha256_hex;
 
 pub(super) fn export_variant_from_git(
@@ -13,15 +13,18 @@ pub(super) fn export_variant_from_git(
 ) -> Result<String> {
     let entries = list_variant_blob_entries(repo_dir, git_ref, variant_path)?;
     if entries.is_empty() {
-        bail!("Variant '{}' was not found at commit {}", variant_path, git_ref);
+        bail!(
+            "Variant '{}' was not found at commit {}",
+            variant_path,
+            git_ref
+        );
     }
 
     let mut fingerprint_entries = Vec::new();
     for entry in entries {
-        let bytes = run_git_bytes(git_cmd(repo_dir).args([
-            "show",
-            &format!("{git_ref}:{}", entry.full_path),
-        ]))
+        let bytes = run_git_bytes(
+            git_cmd(repo_dir).args(["show", &format!("{git_ref}:{}", entry.full_path)]),
+        )
         .with_context(|| format!("Failed to read {}", entry.full_path))?;
         let target_path = destination_dir.join(&entry.relative_path);
         if let Some(parent) = target_path.parent() {
@@ -52,6 +55,7 @@ fn list_variant_blob_entries(
     git_ref: &str,
     variant_path: &str,
 ) -> Result<Vec<VariantBlobEntry>> {
+    let is_root_variant = variant_path == ".";
     let output = run_git_bytes(git_cmd(repo_dir).args([
         "ls-tree",
         "-r",
@@ -81,7 +85,9 @@ fn list_variant_blob_entries(
             continue;
         }
 
-        let relative_path = if full_path == variant_path {
+        let relative_path = if is_root_variant {
+            full_path.to_string()
+        } else if full_path == variant_path {
             Path::new(full_path)
                 .file_name()
                 .and_then(|name| name.to_str())
@@ -101,27 +107,6 @@ fn list_variant_blob_entries(
     }
 
     Ok(entries)
-}
-
-fn git_cmd(repo_dir: &Path) -> Command {
-    let mut cmd = Command::new("git");
-    cmd.arg("-C")
-        .arg(repo_dir)
-        .env("GIT_TERMINAL_PROMPT", "0")
-        .env("LC_ALL", "C");
-    cmd
-}
-
-fn run_git_bytes(cmd: &mut Command) -> Result<Vec<u8>> {
-    let output = cmd.output().context("Failed to execute git")?;
-    if output.status.success() {
-        Ok(output.stdout)
-    } else {
-        Err(anyhow!(
-            "{}",
-            String::from_utf8_lossy(&output.stderr).trim_end()
-        ))
-    }
 }
 
 struct VariantBlobEntry {

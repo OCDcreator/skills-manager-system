@@ -19,6 +19,7 @@ The tests cover three behavior groups:
 - additional aligned agent roots under `.cursor`, `.gemini`, `.github`, and `.kiro` plus their `dist/*` equivalents
 - warnings for unsupported nested or unknown agent layouts
 - git-ref-backed detection for fetched cache repos whose worktrees are empty, plus support for root-level hidden agent roots such as `.agents/skills`
+- generic skill repository fallback detection for repo-root `SKILL.md`, direct child skills under a configured subpath, neutral `skill_repository` variant keys, and generated-bundle precedence over generic variants
 
 ## Interactions
 

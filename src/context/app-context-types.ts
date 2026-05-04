@@ -3,7 +3,9 @@ import type {
   AgentInventoryItem,
   AgentKey,
   AgentSyncMode,
+  AddExternalSourceInput,
   ApplyAgentSyncResponse,
+  ExternalVariantKey,
   ExternalSourceSnapshotItem,
   ScanSkillsResponse,
   SkillDocument,
@@ -55,9 +57,9 @@ export interface AppContextValue {
   saveAgentConfiguration: (config: AgentConfigurationInput) => Promise<void>;
   saveAgentOrder: (agentOrder: AgentKey[]) => Promise<void>;
   applyAgentSync: (syncMode?: AgentSyncMode, agentKey?: string) => Promise<void>;
-  addExternalSource: (repoUrl: string) => Promise<void>;
+  addExternalSource: (input: AddExternalSourceInput) => Promise<void>;
   fetchExternalSource: (sourceId: string) => Promise<void>;
-  importExternalVariant: (sourceId: string, agentKey: AgentKey, variantPath: string) => Promise<void>;
+  importExternalVariant: (sourceId: string, agentKey: ExternalVariantKey, variantPath: string) => Promise<void>;
   updateExternalImport: (importId: string) => Promise<void>;
   removeExternalSource: (sourceId: string, removeImports: boolean) => Promise<void>;
   repairExternalImport: (importId: string) => Promise<void>;

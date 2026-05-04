@@ -4,9 +4,7 @@ use std::process::Command;
 
 use tempfile::tempdir;
 
-use super::operations::{
-    git_commit, git_diff, git_log, git_remote_url, git_status,
-};
+use super::operations::{git_commit, git_diff, git_log, git_remote_url, git_status};
 
 fn run_git(dir: &Path, args: &[&str]) {
     let output = Command::new("git")

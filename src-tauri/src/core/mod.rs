@@ -1,5 +1,6 @@
 pub mod agents;
 pub mod assistant;
+pub mod command_resolution;
 pub mod external_sources;
 pub mod git;
 pub mod platform_paths;

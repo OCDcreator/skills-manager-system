@@ -14,12 +14,14 @@ export type AgentKey =
   | "github_copilot"
   | "windsurf";
 
+export type ExternalVariantKey = AgentKey | "skill_repository";
+
 export interface ManagedSourceInfo {
   kind: "github_import";
   importId: string;
   repoUrl: string;
   pinnedCommit: string;
-  agentKey: AgentKey;
+  agentKey: ExternalVariantKey;
   updateAvailable: boolean;
   integrity: "mismatch" | null;
 }
@@ -136,6 +138,8 @@ export interface ExternalSourceWarning {
 export interface ExternalSourceRecord {
   id: string;
   repoUrl: string;
+  branch: string | null;
+  subpath: string | null;
   defaultBranch: string | null;
   cachedRepoPath: string | null;
   detectedKind: string | null;
@@ -146,7 +150,7 @@ export interface ExternalSourceRecord {
 }
 
 export interface ExternalVariantSnapshot {
-  agentKey: AgentKey;
+  agentKey: ExternalVariantKey;
   variantPath: string;
   sourceOfTruthPath: string | null;
   metadataPath: string | null;
@@ -157,7 +161,7 @@ export interface ExternalVariantSnapshot {
 export interface ImportedExternalSkillRecord {
   importId: string;
   externalSourceId: string;
-  agentKey: AgentKey;
+  agentKey: ExternalVariantKey;
   upstreamVariantPath: string;
   pinnedCommit: string;
   pinnedVariantFingerprint: string | null;
@@ -177,6 +181,12 @@ export interface ExternalSourceSnapshotItem {
 
 export interface ExternalSourcesListResponse {
   sources: ExternalSourceSnapshotItem[];
+}
+
+export interface AddExternalSourceInput {
+  repoUrl: string;
+  branch?: string | null;
+  subpath?: string | null;
 }
 
 export interface ExternalImportResult {
@@ -262,15 +272,19 @@ export const importAgentTargetSkill = (
 export const listExternalSources = () =>
   invoke<ExternalSourcesListResponse>("list_external_sources");
 
-export const addExternalSource = (repoUrl: string) =>
-  invoke<ExternalSourcesListResponse>("add_external_source", { repoUrl });
+export const addExternalSource = (input: AddExternalSourceInput) =>
+  invoke<ExternalSourcesListResponse>("add_external_source", {
+    repoUrl: input.repoUrl,
+    branch: input.branch ?? null,
+    subpath: input.subpath ?? null,
+  });
 
 export const fetchExternalSource = (sourceId: string) =>
   invoke<ExternalSourcesListResponse>("fetch_external_source", { sourceId });
 
 export const importExternalVariant = (
   sourceId: string,
-  agentKey: AgentKey,
+  agentKey: ExternalVariantKey,
   variantPath: string,
 ) =>
   invoke<ExternalImportResult>("import_external_variant", {

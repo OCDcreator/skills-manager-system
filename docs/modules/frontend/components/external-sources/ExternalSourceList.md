@@ -15,7 +15,7 @@ Provides the list shell for the dedicated external-sources page.
 
 ## Core Logic
 
-This component is intentionally thin. It renders the empty-state callout when no sources exist and otherwise maps each snapshot to `ExternalSourceCard`, forwarding all source, import, and repo-path props without adding business rules.
+This component is intentionally thin. It renders the empty-state callout when no sources exist and otherwise maps each snapshot to `ExternalSourceCard`, forwarding all source, import, repo-path, and external variant key props without adding business rules.
 
 ## Interactions
 
