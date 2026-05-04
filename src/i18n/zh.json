@@ -1,6 +1,8 @@
 {
   "app.title": "Skills Manager System",
   "app.subtitle": "浏览并检查本地技能仓库",
+  "app.nav.desktopLabel": "{{title}} 桌面导航",
+  "app.nav.mobileLabel": "{{title}} 移动端导航",
   "nav.skills": "技能浏览",
   "nav.agents": "Agent 同步",
   "nav.git": "Git 同步",

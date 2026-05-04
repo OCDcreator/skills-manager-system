@@ -21,4 +21,4 @@ The shell reads `activeView`, guarded navigation actions, and `pendingNavigation
 
 ## Interactions
 
-Must stay aligned with `AppView` in `src/context/navigation-guard.ts`, the active-view switch in `src/App.tsx`, and i18n keys under `nav.*` and `tooltip.nav.*`. Shell layout and palette primitives are intentionally centralized in `src/styles/foundation.css` so the component does not grow large Tailwind class strings for routine chrome.
+Must stay aligned with `AppView` in `src/context/navigation-guard.ts`, the active-view switch in `src/App.tsx`, and i18n keys under `nav.*`, `tooltip.nav.*`, and `app.nav.*`. Shell layout and palette primitives are intentionally centralized in `src/styles/foundation.css` so the component does not grow large Tailwind class strings for routine chrome.

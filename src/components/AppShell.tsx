@@ -47,8 +47,8 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
   } = useAppContext();
   const widthClassName = contentWidthClassName ?? "max-w-7xl";
   const appTitle = t("app.title");
-  const desktopNavLabel = `${appTitle} desktop navigation`;
-  const mobileNavLabel = `${appTitle} mobile navigation`;
+  const desktopNavLabel = t("app.nav.desktopLabel", { title: appTitle });
+  const mobileNavLabel = t("app.nav.mobileLabel", { title: appTitle });
 
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon;

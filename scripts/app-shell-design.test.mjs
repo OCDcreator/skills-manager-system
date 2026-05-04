@@ -11,6 +11,10 @@ function readSource(relativePath) {
   return fs.readFileSync(path.resolve(relativePath), "utf8");
 }
 
+function readJson(relativePath) {
+  return JSON.parse(readSource(relativePath));
+}
+
 async function loadRenderableAppShell() {
   let tempDir = "";
   const sourcePath = path.resolve("src/components/AppShell.tsx");
@@ -152,12 +156,31 @@ test("AppShell renders preserved shell behavior through the DOM contract", async
     assert.match(markup, /max-w-readable/);
     assert.match(markup, /data-app-shell-main="true"/);
     assert.match(markup, /nav\.sources/);
-    assert.match(markup, /aria-label="app\.title desktop navigation"/);
-    assert.match(markup, /aria-label="app\.title mobile navigation"/);
+    assert.match(markup, /aria-label="app\.nav\.desktopLabel"/);
+    assert.match(markup, /aria-label="app\.nav\.mobileLabel"/);
     assert.doesNotMatch(markup, /<nav[^>]+aria-label="app\.title"[^>]*>/);
   } finally {
     cleanup();
   }
+});
+
+test("AppShell navigation landmark labels are localized", () => {
+  const componentSource = readSource("src/components/AppShell.tsx");
+  const englishStrings = readJson("src/i18n/en.json");
+  const chineseStrings = readJson("src/i18n/zh.json");
+
+  assert.match(componentSource, /t\("app\.nav\.desktopLabel", \{ title: appTitle \}\)/);
+  assert.match(componentSource, /t\("app\.nav\.mobileLabel", \{ title: appTitle \}\)/);
+
+  for (const key of ["app.nav.desktopLabel", "app.nav.mobileLabel"]) {
+    assert.equal(typeof englishStrings[key], "string", `missing English ${key}`);
+    assert.equal(typeof chineseStrings[key], "string", `missing Chinese ${key}`);
+    assert.match(englishStrings[key], /\{\{title\}\}/);
+    assert.match(chineseStrings[key], /\{\{title\}\}/);
+  }
+
+  assert.doesNotMatch(componentSource, /desktop navigation/);
+  assert.doesNotMatch(componentSource, /mobile navigation/);
 });
 
 test("AppShell dispatches guarded navigation from rendered nav buttons", async () => {
