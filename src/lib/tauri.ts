@@ -62,6 +62,7 @@ export interface AgentTargetSkillEntry {
   entryName: string;
   displayName: string;
   absolutePath: string;
+  symlinkTargetPath: string | null;
   managed: boolean;
   preserveExisting: boolean;
   skillId: string | null;

@@ -130,6 +130,23 @@ test('Agent global skill list exposes batch target actions in selection mode', (
   assert.match(i18nZh, /"agents\.globalSkills\.batchImportDelete"/);
 });
 
+test('Agent global skill list renders symlink target metadata when available', () => {
+  const listSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentGlobalSkillList.tsx'),
+    'utf8',
+  );
+  const i18nEn = fs.readFileSync(path.resolve('src/i18n/en.json'), 'utf8');
+  const i18nZh = fs.readFileSync(path.resolve('src/i18n/zh.json'), 'utf8');
+
+  assert.match(listSource, /entry\.entryKind === "symlink"/);
+  assert.match(listSource, /entry\.symlinkTargetPath/);
+  assert.match(listSource, /secondaryLabel !== entry\.displayName/);
+  assert.match(listSource, /-webkit-line-clamp:2/);
+  assert.match(listSource, /agents\.globalSkills\.symlinkTarget/);
+  assert.match(i18nEn, /"agents\.globalSkills\.symlinkTarget"/);
+  assert.match(i18nZh, /"agents\.globalSkills\.symlinkTarget"/);
+});
+
 test('Agent floating nav stays centered in the viewport and caps its own scroll height', () => {
   const navSource = fs.readFileSync(
     path.resolve('src/components/agents/AgentFloatingNav.tsx'),

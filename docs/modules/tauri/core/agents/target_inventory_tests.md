@@ -13,6 +13,7 @@ Verifies agent target-directory inventory classification for managed and unmanag
 |---|---|
 | `target_inventory_classifies_managed_and_unmanaged_entries` | Confirms folder-name sync entries remain marked managed while manual folders stay unmanaged and keep metadata-derived display names. |
 | `target_inventory_ignores_manifest_and_keeps_unmanaged_after_cleanup` | Confirms managed cleanup does not surface the manifest file and does not erase unrelated manual entries. |
+| `target_inventory_reports_symlink_target_paths` | Confirms visible directory symlinks report both their `symlink` entry kind and the normalized target path shown in the UI. |
 
 ## Interactions
 

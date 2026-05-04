@@ -15,7 +15,7 @@ Renders the sidecar inventory and explicit management actions for skills already
 
 ## Core Logic
 
-Counts managed versus unmanaged entries, reports target scan errors, highlights taken-over entries separately from synced ones, and lists per-entry actions. A multi-select mode adds checkboxes to target entries and exposes batch delete, take-over, import, and import-delete commands alongside the managed/unmanaged count chips. Batch take-over and import actions only use selected unmanaged/importable entries, while delete can apply to any selected visible entry.
+Counts managed versus unmanaged entries, reports target scan errors, highlights taken-over entries separately from synced ones, and lists per-entry actions. A multi-select mode adds checkboxes to target entries and exposes batch delete, take-over, import, and import-delete commands alongside the managed/unmanaged count chips. Batch take-over and import actions only use selected unmanaged/importable entries, while delete can apply to any selected visible entry. The secondary path label is hidden when it would just repeat the bold title, and symlink target paths use a two-line clamp so managed and unmanaged links can both be inspected without wasting vertical space on duplicated labels.
 
 The sidecar shell is a full-height flex column with hidden overflow, and the scrollable list uses `flex-1` instead of a fixed max-height so it fills the wrapper height without stretching the surrounding grid row. The component never mutates files directly: it forwards explicit button clicks back to `AgentsView`, which owns confirmation dialogs and Tauri command calls.
 

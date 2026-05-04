@@ -21,6 +21,7 @@ pub struct AgentTargetSkillEntry {
     pub entry_name: String,
     pub display_name: String,
     pub absolute_path: String,
+    pub symlink_target_path: Option<String>,
     pub managed: bool,
     pub preserve_existing: bool,
     pub skill_id: Option<String>,
@@ -53,6 +54,7 @@ pub fn scan_target_skill_entries(
         let managed = managed_entries.get(&entry_name);
         let metadata = fs::symlink_metadata(&path)?;
         let entry_kind = entry_kind_from(&metadata);
+        let symlink_target_path = read_symlink_target_path(&path, &entry_kind);
         let has_skill_document = path.join("SKILL.md").exists();
 
         if !should_report_entry(&entry_name, managed.is_some(), has_skill_document, &entry_kind) {
@@ -66,6 +68,7 @@ pub fn scan_target_skill_entries(
                 .unwrap_or_else(|| entry_name.clone()),
             entry_name: entry_name.clone(),
             absolute_path: normalize_path(path),
+            symlink_target_path,
             managed: managed.is_some(),
             preserve_existing: managed.is_some_and(|item| item.preserve_existing),
             skill_id: managed.map(|item| item.skill_id.clone()),
@@ -114,6 +117,24 @@ fn should_report_entry(
 fn read_skill_display_name(path: &Path) -> Option<String> {
     let raw = fs::read_to_string(path.join("SKILL.md")).ok()?;
     read_frontmatter_name(&raw).or_else(|| read_heading_name(&raw))
+}
+
+fn read_symlink_target_path(
+    path: &Path,
+    entry_kind: &AgentTargetSkillEntryKind,
+) -> Option<String> {
+    if !matches!(entry_kind, AgentTargetSkillEntryKind::Symlink) {
+        return None;
+    }
+
+    let raw_target = fs::read_link(path).ok()?;
+    let resolved_target = if raw_target.is_absolute() {
+        raw_target
+    } else {
+        path.parent().unwrap_or(Path::new("")).join(raw_target)
+    };
+
+    Some(normalize_path(resolved_target))
 }
 
 fn read_frontmatter_name(raw: &str) -> Option<String> {

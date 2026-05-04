@@ -6,7 +6,7 @@ use tempfile::tempdir;
 
 use crate::core::skills::scan::SkillSummary;
 
-use super::target_inventory::scan_target_skill_entries;
+use super::target_inventory::{scan_target_skill_entries, AgentTargetSkillEntryKind};
 use super::target_sync::{apply_desired_entries, build_desired_skill_entries, SyncMode};
 
 fn custom_skill(repo_root: &Path, name: &str) -> SkillSummary {
@@ -81,4 +81,47 @@ fn target_inventory_ignores_manifest_and_keeps_unmanaged_after_cleanup() {
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0].entry_name, "manual-skill");
     assert!(!entries[0].managed);
+}
+
+#[cfg_attr(
+    windows,
+    ignore = "requires Developer Mode or administrator symlink privilege"
+)]
+#[test]
+fn target_inventory_reports_symlink_target_paths() {
+    let target_dir = tempdir().unwrap();
+    let source_root = tempdir().unwrap();
+    let source_skill = source_root.path().join("linked-skill");
+    fs::create_dir_all(&source_skill).unwrap();
+    fs::write(
+        source_skill.join("SKILL.md"),
+        "---\nname: Linked Skill\n---\n# Linked Skill",
+    )
+    .unwrap();
+
+    let link_path = target_dir.path().join("linked-skill");
+    create_directory_symlink(&source_skill, &link_path);
+
+    let entries = scan_target_skill_entries(target_dir.path(), "codex").unwrap();
+    let linked = entries
+        .iter()
+        .find(|entry| entry.entry_name == "linked-skill")
+        .unwrap();
+
+    assert_eq!(linked.entry_kind, AgentTargetSkillEntryKind::Symlink);
+    assert_eq!(
+        linked.symlink_target_path.as_deref(),
+        Some(source_skill.to_string_lossy().replace('\\', "/").as_str())
+    );
+    assert_eq!(linked.display_name, "Linked Skill");
+}
+
+#[cfg(unix)]
+fn create_directory_symlink(source: &Path, target: &Path) {
+    std::os::unix::fs::symlink(source, target).unwrap();
+}
+
+#[cfg(windows)]
+fn create_directory_symlink(source: &Path, target: &Path) {
+    std::os::windows::fs::symlink_dir(source, target).unwrap();
 }

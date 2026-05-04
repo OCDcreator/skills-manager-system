@@ -19,12 +19,12 @@ Downstream: std::fs, serde, src-tauri/src/core/agents/target_manifest.rs, src-ta
 | Export | Purpose |
 |---|---|
 | `AgentTargetSkillEntryKind` | Serialized entry type for directory, symlink, file, or other target entries. |
-| `AgentTargetSkillEntry` | Frontend-facing target skill row with managed/unmanaged metadata plus a flag for preserved take-over entries. |
+| `AgentTargetSkillEntry` | Frontend-facing target skill row with managed/unmanaged metadata, preserved take-over state, and optional symlink-target metadata. |
 | `scan_target_skill_entries` | Lists target-directory skill entries and classifies app-managed entries via the target manifest. |
 
 ## Core Logic
 
-Loads managed snapshots through `target_sync`, uses `target_manifest` to hide the app manifest file, walks the target directory, and includes managed entries, entries with `SKILL.md`, and visible directory/symlink entries. Managed snapshots distinguish synced entries from preserved take-over entries so the frontend can show that explicit ownership state without mutating files here.
+Loads managed snapshots through `target_sync`, uses `target_manifest` to hide the app manifest file, walks the target directory, and includes managed entries, entries with `SKILL.md`, and visible directory/symlink entries. Managed snapshots distinguish synced entries from preserved take-over entries so the frontend can show that explicit ownership state without mutating files here. When an entry is itself a symlink, the scanner also resolves the link target into a normalized display path so the UI can show where that entry points without taking ownership of it.
 
 ## Interactions
 

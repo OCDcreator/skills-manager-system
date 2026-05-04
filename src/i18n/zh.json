@@ -79,6 +79,7 @@
   "agents.globalSkills.batchImportDelete": "一键导入并删除",
   "agents.globalSkills.working": "处理中……",
   "agents.globalSkills.noSkillDocument": "无 SKILL.md",
+  "agents.globalSkills.symlinkTarget": "软链接 -> {{path}}",
   "agents.globalSkills.noTarget": "当前还没有可用的目标目录。",
   "agents.globalSkills.empty": "这个目标目录中还没有发现现有技能。",
   "agents.globalSkills.confirmTakeOverTitle": "接管未托管技能？",

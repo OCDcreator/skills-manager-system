@@ -79,6 +79,7 @@
   "agents.globalSkills.batchImportDelete": "Import + delete selected",
   "agents.globalSkills.working": "Working…",
   "agents.globalSkills.noSkillDocument": "No SKILL.md",
+  "agents.globalSkills.symlinkTarget": "Symlink -> {{path}}",
   "agents.globalSkills.noTarget": "No effective target directory is available yet.",
   "agents.globalSkills.empty": "No existing skills were found in this target directory.",
   "agents.globalSkills.confirmTakeOverTitle": "Take over unmanaged skill?",
