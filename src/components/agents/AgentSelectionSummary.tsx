@@ -14,16 +14,29 @@ interface AgentSelectionSummaryProps {
   onDraftChange: (draft: AgentConfigDraft) => void;
 }
 
+type PreviewFilter = "all" | "will-sync" | "excluded" | "global-ignored";
+
 export function AgentSelectionSummary({
   draft,
   preview,
   onDraftChange,
 }: AgentSelectionSummaryProps) {
   const { t } = useTranslation();
+  const [activeFilter, setActiveFilter] = useState<PreviewFilter>("all");
   const [selectedPreviewSkillIds, setSelectedPreviewSkillIds] = useState<string[]>([]);
   const selectedPreviewSkillSet = useMemo(
     () => new Set(selectedPreviewSkillIds),
     [selectedPreviewSkillIds],
+  );
+  const filteredItems = useMemo(
+    () =>
+      preview.items.filter((item) => {
+        if (activeFilter === "will-sync") return item.willSync;
+        if (activeFilter === "excluded") return item.isExcluded;
+        if (activeFilter === "global-ignored") return item.isGloballyDisabled;
+        return true;
+      }),
+    [activeFilter, preview.items],
   );
   const selectedItems = preview.items.filter((item) =>
     selectedPreviewSkillSet.has(item.skill.id),
@@ -32,6 +45,12 @@ export function AgentSelectionSummary({
   const hasSelectedItems = selectedItems.length > 0;
   const hasSelectedDirectItems = selectedDirectItems.length > 0;
   const scrollRef = useRememberedScrollPosition(`agents:selection-summary:${draft.key}`);
+  const filterButtonClass = (filter: PreviewFilter, tone: string) =>
+    `rounded-full border px-2 py-1 transition ${
+      activeFilter === filter
+        ? tone
+        : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
+    }`;
 
   const togglePreviewSkillSelection = (skillId: string) => {
     setSelectedPreviewSkillIds((current) =>
@@ -39,6 +58,9 @@ export function AgentSelectionSummary({
         ? current.filter((candidate) => candidate !== skillId)
         : [...current, skillId],
     );
+  };
+  const toggleFilter = (filter: PreviewFilter) => {
+    setActiveFilter((current) => (current === filter ? "all" : filter));
   };
 
   useEffect(() => {
@@ -104,17 +126,38 @@ export function AgentSelectionSummary({
   return (
     <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
       <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-        <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-200">
+        <button
+          className={filterButtonClass(
+            "will-sync",
+            "border-emerald-500/50 bg-emerald-500/15 text-emerald-100",
+          )}
+          onClick={() => toggleFilter("will-sync")}
+          type="button"
+        >
           {t("agents.card.syncCount", { count: preview.syncCount })}
-        </span>
-        <span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-200">
+        </button>
+        <button
+          className={filterButtonClass(
+            "excluded",
+            "border-amber-500/50 bg-amber-500/15 text-amber-100",
+          )}
+          onClick={() => toggleFilter("excluded")}
+          type="button"
+        >
           {t("agents.card.excludedCount", { count: preview.excludedCount })}
-        </span>
-        <span className="rounded-full bg-slate-800 px-2 py-1 text-slate-300">
+        </button>
+        <button
+          className={filterButtonClass(
+            "global-ignored",
+            "border-slate-600 bg-slate-800 text-slate-100",
+          )}
+          onClick={() => toggleFilter("global-ignored")}
+          type="button"
+        >
           {t("agents.card.globalIgnoredCount", {
             count: preview.globallyDisabledCount,
           })}
-        </span>
+        </button>
         <span className="rounded-full bg-slate-800 px-2 py-1 text-slate-300">
           {t("agents.card.batchSelectedCount", { count: selectedPreviewSkillIds.length })}
         </span>
@@ -142,8 +185,10 @@ export function AgentSelectionSummary({
       >
         {preview.items.length === 0 ? (
           <div className="text-xs text-slate-500">{t("agents.card.noEffectiveSkills")}</div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-xs text-slate-500">{t("agents.card.noMatchingPreviewSkills")}</div>
         ) : (
-          preview.items.map((item) => {
+          filteredItems.map((item) => {
             const sourceText = [
               item.isDirect ? t("agents.card.sourceDirect") : null,
               ...item.sceneNames,

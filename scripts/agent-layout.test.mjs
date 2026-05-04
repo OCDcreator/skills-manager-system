@@ -104,6 +104,37 @@ test('Agent selection summary exposes batch exclude and deselect controls', () =
   assert.match(i18nZh, /"agents\.card\.batchDeselectDirect"/);
 });
 
+test('Agent selection summary turns status pills into selectable filters', () => {
+  const summarySource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSelectionSummary.tsx'),
+    'utf8',
+  );
+
+  assert.match(summarySource, /activeFilter/);
+  assert.match(summarySource, /preview\.items\.filter\(\(item\) =>/);
+  assert.match(summarySource, /item\.willSync/);
+  assert.match(summarySource, /item\.isGloballyDisabled/);
+  assert.match(summarySource, /item\.isExcluded/);
+  assert.match(summarySource, /type="button"/);
+});
+
+test('Agent skill selector keeps the selected-only toggle beside the search field', () => {
+  const selectorSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSkillSelector.tsx'),
+    'utf8',
+  );
+  const i18nEn = fs.readFileSync(path.resolve('src/i18n/en.json'), 'utf8');
+  const i18nZh = fs.readFileSync(path.resolve('src/i18n/zh.json'), 'utf8');
+
+  assert.match(selectorSource, /showSelectedOnly/);
+  assert.match(selectorSource, /className="flex items-center gap-2"/);
+  assert.match(selectorSource, /placeholder=\{t\("agents\.card\.searchSkills"\)\}/);
+  assert.match(selectorSource, /t\("agents\.card\.selectedOnly"\)/);
+  assert.match(selectorSource, /selected\.has\(skill\.id\)/);
+  assert.match(i18nEn, /"agents\.card\.selectedOnly"/);
+  assert.match(i18nZh, /"agents\.card\.selectedOnly"/);
+});
+
 test('Agent global skill list exposes batch target actions in selection mode', () => {
   const listSource = fs.readFileSync(
     path.resolve('src/components/agents/AgentGlobalSkillList.tsx'),
@@ -128,6 +159,21 @@ test('Agent global skill list exposes batch target actions in selection mode', (
   assert.match(hookSource, /executeBatchTargetAction/);
   assert.match(i18nEn, /"agents\.globalSkills\.batchDelete"/);
   assert.match(i18nZh, /"agents\.globalSkills\.batchImportDelete"/);
+});
+
+test('Agent global skill list lets the managed and unmanaged pills filter the visible entries', () => {
+  const listSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentGlobalSkillList.tsx'),
+    'utf8',
+  );
+
+  assert.match(listSource, /activeFilter/);
+  assert.match(listSource, /agent\.targetSkillEntries\.filter\(\(entry\) =>/);
+  assert.match(listSource, /entry\.managed/);
+  assert.match(listSource, /managedCount/);
+  assert.match(listSource, /unmanagedCount/);
+  assert.match(listSource, /toggleFilter\("managed"\)/);
+  assert.match(listSource, /toggleFilter\("unmanaged"\)/);
 });
 
 test('Agent global skill list renders symlink target metadata when available', () => {

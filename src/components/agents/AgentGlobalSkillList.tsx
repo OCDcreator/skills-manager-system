@@ -11,15 +11,14 @@ interface AgentGlobalSkillListProps {
   actionKey: string | null;
   canImport: boolean;
   onBatchDelete: (entries: AgentTargetSkillEntry[]) => void;
-  onBatchImport: (
-    entries: AgentTargetSkillEntry[],
-    deleteSourceAfterImport: boolean,
-  ) => void;
+  onBatchImport: (entries: AgentTargetSkillEntry[], deleteSourceAfterImport: boolean) => void;
   onBatchTakeOver: (entries: AgentTargetSkillEntry[]) => void;
   onDelete: (entry: AgentTargetSkillEntry) => void;
   onImport: (entry: AgentTargetSkillEntry, deleteSourceAfterImport: boolean) => void;
   onTakeOver: (entry: AgentTargetSkillEntry) => void;
 }
+
+type TargetFilter = "all" | "managed" | "unmanaged";
 
 export function AgentGlobalSkillList({
   agent,
@@ -33,17 +32,23 @@ export function AgentGlobalSkillList({
   onTakeOver,
 }: AgentGlobalSkillListProps) {
   const { t } = useTranslation();
+  const [activeFilter, setActiveFilter] = useState<TargetFilter>("all");
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedEntryNames, setSelectedEntryNames] = useState<string[]>([]);
-  const managedCount = useMemo(
-    () => agent.targetSkillEntries.filter((entry) => entry.managed).length,
-    [agent.targetSkillEntries],
-  );
+  const managedCount = useMemo(() => agent.targetSkillEntries.filter((entry) => entry.managed).length, [
+    agent.targetSkillEntries,
+  ]);
   const unmanagedCount = agent.targetSkillEntries.length - managedCount;
-  const selectedEntryNameSet = useMemo(
-    () => new Set(selectedEntryNames),
-    [selectedEntryNames],
+  const filteredEntries = useMemo(
+    () =>
+      agent.targetSkillEntries.filter((entry) => {
+        if (activeFilter === "managed") return entry.managed;
+        if (activeFilter === "unmanaged") return !entry.managed;
+        return true;
+      }),
+    [activeFilter, agent.targetSkillEntries],
   );
+  const selectedEntryNameSet = useMemo(() => new Set(selectedEntryNames), [selectedEntryNames]);
   const selectedEntries = agent.targetSkillEntries.filter((entry) =>
     selectedEntryNameSet.has(entry.entryName),
   );
@@ -55,8 +60,18 @@ export function AgentGlobalSkillList({
   const scrollRef = useRememberedScrollPosition(`agents:global-skills:${agent.key}`);
   const entryActionKey = (entry: AgentTargetSkillEntry, action: string) =>
     `${agent.key}:${entry.entryName}:${action}`;
+  const filterButtonClass = (filter: TargetFilter, tone: string) =>
+    `rounded-full border px-2 py-1 transition ${
+      activeFilter === filter
+        ? tone
+        : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
+    }`;
   const toggleSelectionMode = () => {
     setIsSelectionMode((current) => !current);
+    setSelectedEntryNames([]);
+  };
+  const toggleFilter = (filter: TargetFilter) => {
+    setActiveFilter((current) => (current === filter ? "all" : filter));
     setSelectedEntryNames([]);
   };
   const toggleEntrySelection = (entryName: string) => {
@@ -99,12 +114,20 @@ export function AgentGlobalSkillList({
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-[11px]">
-          <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-200">
+          <button
+            className={filterButtonClass("managed", "border-emerald-500/50 bg-emerald-500/15 text-emerald-100")}
+            onClick={() => toggleFilter("managed")}
+            type="button"
+          >
             {t("agents.globalSkills.managedCount", { count: managedCount })}
-          </span>
-          <span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-200">
+          </button>
+          <button
+            className={filterButtonClass("unmanaged", "border-amber-500/50 bg-amber-500/15 text-amber-100")}
+            onClick={() => toggleFilter("unmanaged")}
+            type="button"
+          >
             {t("agents.globalSkills.unmanagedCount", { count: unmanagedCount })}
-          </span>
+          </button>
           <button
             className="rounded-full border border-slate-700 px-2 py-1 text-slate-200 hover:bg-slate-800"
             onClick={toggleSelectionMode}
@@ -166,12 +189,14 @@ export function AgentGlobalSkillList({
         </p>
       ) : agent.targetSkillEntries.length === 0 ? (
         <p className="mt-3 text-xs text-slate-500">{t("agents.globalSkills.empty")}</p>
+      ) : filteredEntries.length === 0 ? (
+        <p className="mt-3 text-xs text-slate-500">{t("agents.globalSkills.noMatchingEntries")}</p>
       ) : (
         <div
           className="skill-markdown-scroll mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1"
           ref={scrollRef}
         >
-          {agent.targetSkillEntries.map((entry) => {
+          {filteredEntries.map((entry) => {
             const secondaryLabel = entry.relativePath || entry.entryName;
             const showSecondaryLabel = secondaryLabel !== entry.displayName;
 

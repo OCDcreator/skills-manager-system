@@ -19,18 +19,24 @@ export function AgentSkillSelector({
 }: AgentSkillSelectorProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const disabled = useMemo(() => new Set(disabledSkillIds), [disabledSkillIds]);
   const selected = useMemo(() => new Set(draft.selectedSkillIds), [draft.selectedSkillIds]);
   const filteredSkills = useMemo(() => {
     const lowered = search.trim().toLowerCase();
-    if (!lowered) return skills;
-    return skills.filter((skill) =>
-      [skill.name, skill.description, skill.relativePath]
+    return skills.filter((skill) => {
+      if (showSelectedOnly && !selected.has(skill.id)) {
+        return false;
+      }
+      if (!lowered) {
+        return true;
+      }
+      return [skill.name, skill.description, skill.relativePath]
         .join(" ")
         .toLowerCase()
-        .includes(lowered),
-    );
-  }, [search, skills]);
+        .includes(lowered);
+    });
+  }, [search, selected, showSelectedOnly, skills]);
   const scrollRef = useRememberedScrollPosition(`agents:skill-selector:${draft.key}`);
 
   const toggleSkill = (skillId: string) => {
@@ -55,47 +61,66 @@ export function AgentSkillSelector({
           {t("agents.card.selectedCount", { count: draft.selectedSkillIds.length })}
         </span>
       </div>
-      <input
-        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 outline-none focus:border-sky-400"
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder={t("agents.card.searchSkills")}
-        value={search}
-      />
+      <div className="flex items-center gap-2">
+        <input
+          className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 outline-none focus:border-sky-400"
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={t("agents.card.searchSkills")}
+          value={search}
+        />
+        <button
+          className={`shrink-0 rounded-lg border px-3 py-2 text-xs transition ${
+            showSelectedOnly
+              ? "border-sky-500/70 bg-sky-500/15 text-sky-100"
+              : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
+          }`}
+          onClick={() => setShowSelectedOnly((current) => !current)}
+          type="button"
+        >
+          {t("agents.card.selectedOnly")}
+        </button>
+      </div>
       <div
         className="skill-markdown-scroll max-h-56 space-y-1 overflow-y-auto pr-1"
         ref={scrollRef}
       >
-        {filteredSkills.map((skill) => {
-          const isSelected = selected.has(skill.id);
-          const isGloballyDisabled = disabled.has(skill.id);
-          return (
-            <label
-              className={`flex items-start gap-2 rounded-md px-2 py-1.5 text-xs ${
-                isGloballyDisabled ? "text-slate-500" : "text-slate-300"
-              }`}
-              key={skill.id}
-            >
-              <input
-                checked={isSelected}
-                className="mt-0.5 rounded border-slate-600"
-                disabled={isGloballyDisabled && !isSelected}
-                onChange={() => toggleSkill(skill.id)}
-                type="checkbox"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate">{skill.name}</span>
-                <span className="block truncate text-[11px] text-slate-500">
-                  {skill.relativePath}
+        {filteredSkills.length === 0 ? (
+          <div className="px-2 py-1.5 text-xs text-slate-500">
+            {t("agents.card.noMatchingDirectSkills")}
+          </div>
+        ) : (
+          filteredSkills.map((skill) => {
+            const isSelected = selected.has(skill.id);
+            const isGloballyDisabled = disabled.has(skill.id);
+            return (
+              <label
+                className={`flex items-start gap-2 rounded-md px-2 py-1.5 text-xs ${
+                  isGloballyDisabled ? "text-slate-500" : "text-slate-300"
+                }`}
+                key={skill.id}
+              >
+                <input
+                  checked={isSelected}
+                  className="mt-0.5 rounded border-slate-600"
+                  disabled={isGloballyDisabled && !isSelected}
+                  onChange={() => toggleSkill(skill.id)}
+                  type="checkbox"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">{skill.name}</span>
+                  <span className="block truncate text-[11px] text-slate-500">
+                    {skill.relativePath}
+                  </span>
                 </span>
-              </span>
-              {isGloballyDisabled ? (
-                <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-200">
-                  {t("agents.card.globalDisabled")}
-                </span>
-              ) : null}
-            </label>
-          );
-        })}
+                {isGloballyDisabled ? (
+                  <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-200">
+                    {t("agents.card.globalDisabled")}
+                  </span>
+                ) : null}
+              </label>
+            );
+          })
+        )}
       </div>
     </div>
   );
