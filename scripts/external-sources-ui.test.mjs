@@ -29,11 +29,12 @@ async function loadExternalSourcesModule() {
   return import(pathToFileURL(tempFile).href);
 }
 
-test("AppShell exposes the sources view in the top nav", () => {
+test("AppShell exposes the sources view in the workbench nav", () => {
   const source = readIfExists("src/components/AppShell.tsx");
   assert.match(source, /"sources"/);
-  assert.match(source, /t\(`nav\.\$\{view\}`\)/);
-  assert.match(source, /t\(`tooltip\.nav\.\$\{view\}`\)/);
+  assert.match(source, /t\(`nav\.\$\{item\.view\}`\)/);
+  assert.match(source, /t\(`tooltip\.nav\.\$\{item\.view\}`\)/);
+  assert.match(source, /icon: Boxes/);
   assert.doesNotMatch(source, /defaultValue/);
 });
 

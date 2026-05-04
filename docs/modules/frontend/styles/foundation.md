@@ -5,7 +5,7 @@
 
 ## Overview
 
-Defines the app-wide CSS foundation layer: root palette defaults, application font stack, root height behavior, and baseline element inheritance shared by every page.
+Defines the app-wide CSS foundation layer: root palette defaults, application font stack, root height behavior, baseline element inheritance, and the shared workbench shell layout primitives used by `AppShell`.
 
 ## Import Relationships
 
@@ -16,8 +16,10 @@ Downstream: browser root/body/button/input elements, #root
 
 ## Core Logic
 
-All rules live in Tailwind's `@layer base` so they compose with preflight instead of fighting it. The file intentionally stays small and only owns defaults that truly apply across the whole app.
+Base rules live in Tailwind's `@layer base` so they compose with preflight instead of fighting it. The root now exposes OKLCH workbench tokens for the tinted neutral product palette, with a restrained green accent and non-pure dark surfaces.
+
+The `@layer components` rules define stable `app-shell*` classes for the responsive desktop workbench shell: mobile receives a compact top header with horizontally scrollable icon navigation that hides scrollbar chrome without disabling scroll, while desktop switches to a sticky, scrollable left rail and keeps the main content width controlled by the React shell. Shared nav items also define a visible focus outline in the workbench accent color.
 
 ## Interactions
 
-Do not move feature-specific colors, spacing, or component skins here. Anything narrower than app-wide foundation should stay in Tailwind classes or a narrower CSS domain file.
+Keep app-wide shell chrome here so `AppShell` stays readable and avoids scattered utility strings. Feature-specific colors, spacing, and component skins should still stay in Tailwind classes or a narrower CSS domain file unless they are part of the global shell contract.

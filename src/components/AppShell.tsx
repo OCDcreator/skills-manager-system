@@ -1,10 +1,34 @@
 import type { PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  Bot,
+  Boxes,
+  FolderKanban,
+  GitBranch,
+  Library,
+  Settings,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 import { useAppContext, type AppView } from "../context/AppContext";
 import { ProjectAssistantLauncher } from "./assistant/ProjectAssistantLauncher";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 
-const NAV_ITEMS: AppView[] = ["skills", "agents", "git", "scenes", "projects", "sources", "settings"];
+interface NavItem {
+  icon: LucideIcon;
+  view: AppView;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { view: "skills", icon: Library },
+  { view: "agents", icon: Bot },
+  { view: "git", icon: GitBranch },
+  { view: "scenes", icon: Sparkles },
+  { view: "projects", icon: FolderKanban },
+  { view: "sources", icon: Boxes },
+  { view: "settings", icon: Settings },
+];
+const BRAND_MARK_TEXT = "SM";
 
 interface AppShellProps extends PropsWithChildren {
   contentWidthClassName?: string;
@@ -22,45 +46,71 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
     setActiveView,
   } = useAppContext();
   const widthClassName = contentWidthClassName ?? "max-w-7xl";
+  const appTitle = t("app.title");
+  const desktopNavLabel = `${appTitle} desktop navigation`;
+  const mobileNavLabel = `${appTitle} mobile navigation`;
+
+  const renderNavItem = (item: NavItem) => {
+    const Icon = item.icon;
+    const isActive = activeView === item.view;
+
+    return (
+      <button
+        key={item.view}
+        aria-current={isActive ? "page" : undefined}
+        className="app-shell__nav-item"
+        data-active={isActive ? "true" : "false"}
+        onClick={() => setActiveView(item.view)}
+        title={t(`tooltip.nav.${item.view}`)}
+      >
+        <Icon className="app-shell__nav-icon" aria-hidden="true" />
+        <span>{t(`nav.${item.view}`)}</span>
+      </button>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header
-        className="border-b border-slate-800 bg-slate-900/90 backdrop-blur"
-        data-app-shell-header
-      >
-        <div className={`mx-auto flex ${widthClassName} items-center justify-between px-6 py-4`}>
+    <div className="app-shell">
+      <aside className="app-shell__sidebar" data-app-shell-sidebar>
+        <div className="app-shell__brand">
+          <div className="app-shell__brand-mark">{BRAND_MARK_TEXT}</div>
           <div>
-            <h1 className="text-2xl font-semibold">{t("app.title")}</h1>
-            <p className="text-sm text-slate-400">{t("app.subtitle")}</p>
+            <h1 className="app-shell__title">{appTitle}</h1>
+            <p className="app-shell__subtitle">{t("app.subtitle")}</p>
           </div>
-          <nav className="flex gap-2">
-            {NAV_ITEMS.map((view) => (
-              <button
-                key={view}
-                className={`rounded-lg px-4 py-2 text-sm ${
-                  activeView === view
-                    ? "bg-sky-400 text-slate-950"
-                    : "bg-slate-800 text-slate-200"
-                }`}
-                onClick={() => setActiveView(view)}
-                title={t(`tooltip.nav.${view}`)}
-              >
-                {t(`nav.${view}`)}
-              </button>
-            ))}
-          </nav>
         </div>
+        <nav className="app-shell__nav" aria-label={desktopNavLabel}>
+          {NAV_ITEMS.map(renderNavItem)}
+        </nav>
+      </aside>
+
+      <div className="app-shell__workspace">
+        <header className="app-shell__mobile-header" data-app-shell-mobile-header>
+          <div className="app-shell__brand app-shell__brand--mobile">
+            <div className="app-shell__brand-mark">{BRAND_MARK_TEXT}</div>
+            <div>
+              <h1 className="app-shell__title">{appTitle}</h1>
+              <p className="app-shell__subtitle">{t("app.subtitle")}</p>
+            </div>
+          </div>
+          <nav className="app-shell__mobile-nav" aria-label={mobileNavLabel}>
+            {NAV_ITEMS.map(renderNavItem)}
+          </nav>
+        </header>
+
         {errorMessage ? (
-          <div className="border-t border-rose-900/50 bg-rose-950/60 px-6 py-3 text-sm text-rose-200">
+          <div className="app-shell__error" role="alert">
             {errorMessage}
           </div>
         ) : null}
-      </header>
 
-      <main className={`mx-auto ${widthClassName} px-6 py-8`} data-app-shell-main>
-        {children}
-      </main>
+        <main
+          className={`app-shell__content mx-auto ${widthClassName}`}
+          data-app-shell-main
+        >
+          {children}
+        </main>
+      </div>
 
       <ProjectAssistantLauncher />
 

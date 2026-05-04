@@ -5,7 +5,7 @@
 
 ## Overview
 
-Provides the shared desktop chrome: header, top-level navigation, global error banner, main content frame, project-assistant launcher, and pending-navigation dialog host.
+Provides the shared desktop workbench chrome: left navigation rail, compact mobile navigation header, global error banner, main content frame, project-assistant launcher, and pending-navigation dialog host.
 
 ## Public Surface
 
@@ -15,8 +15,10 @@ Provides the shared desktop chrome: header, top-level navigation, global error b
 
 ## Core Logic
 
-The shell reads `activeView`, guarded navigation actions, and `pendingNavigation` from `AppContext`. It renders seven nav buttons now that `sources` is a first-class view, forwards all route changes through guarded `setActiveView`, and mounts `UnsavedChangesDialog` whenever the current view registered dirty-state protection.
+The shell reads `activeView`, guarded navigation actions, and `pendingNavigation` from `AppContext`. It owns one icon-backed nav configuration for all seven top-level views, renders it as a desktop left rail and as a horizontal mobile nav through CSS-controlled layout classes, gives those two nav landmarks distinct accessible names, forwards all route changes through guarded `setActiveView`, and mounts `UnsavedChangesDialog` whenever the current view registered dirty-state protection.
+
+`contentWidthClassName` is still applied to the main workbench content region so wide surfaces can opt out of the default `max-w-7xl` frame without changing navigation chrome.
 
 ## Interactions
 
-Must stay aligned with `AppView` in `src/context/navigation-guard.ts`, the active-view switch in `src/App.tsx`, and i18n keys under `nav.*` and `tooltip.nav.*`.
+Must stay aligned with `AppView` in `src/context/navigation-guard.ts`, the active-view switch in `src/App.tsx`, and i18n keys under `nav.*` and `tooltip.nav.*`. Shell layout and palette primitives are intentionally centralized in `src/styles/foundation.css` so the component does not grow large Tailwind class strings for routine chrome.
