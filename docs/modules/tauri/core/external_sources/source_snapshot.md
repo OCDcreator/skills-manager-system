@@ -18,7 +18,7 @@ Builds runtime snapshot data for one persisted external source record.
 
 This helper keeps snapshot assembly read-only. It loads detected variants only when a cached repo path exists, enriches those variants with parsed `SKILL.md` name/description metadata, and computes integrity warnings from live repo files instead of persisted snapshot state, so the UI can explain what an upstream repository is for while still flagging missing `SKILL.md`, unreadable manifests, or mismatched mirror metadata without rewriting stored records first.
 
-When a fetched `HEAD` is available, metadata is read from git objects through `git_tree.rs` instead of the worktree. If the cache repo is only a local temp repo without fetched refs, the helper falls back to reading on-disk files.
+When `lastFetchedCommit` is available on the source record, variant detection and metadata are read from git objects through `git_tree.rs` instead of the worktree. The startup/listing path must not resolve remote `HEAD` or otherwise touch the network; if no persisted commit is available, the helper falls back to reading on-disk files.
 
 ## Interactions
 

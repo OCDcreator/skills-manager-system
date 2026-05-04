@@ -14,10 +14,12 @@ Classifies cached repositories and enumerates generated agent-specific skill var
 | `DetectedExternalVariant` | One detected generated skill variant plus optional source-of-truth metadata. |
 | `DetectionResult` | Detection kind, variants, and warnings bundle. |
 | `detect_external_source_variants` | Scans a cached repository for supported generated layouts, preferring fetched git refs over the worktree. |
+| `detect_external_source_variants_at_ref` | Scans a known commit/ref without consulting remotes. |
+| `detect_external_source_variants_from_worktree` | Scans local files as the fallback for temp repos and caches without a persisted commit. |
 
 ## Core Logic
 
-Detection is now rule-table-driven. It first tries to resolve the fetched upstream `HEAD` through `git_repo.rs`, then reads variant directories from git object data via `git_tree.rs` so cached repos do not need a checked-out worktree. If no fetched ref can be resolved, it falls back to the local filesystem for temp-repo tests and other non-fetched directories.
+Detection is now rule-table-driven. The broad `detect_external_source_variants` helper still resolves fetched upstream `HEAD` for fetch-time flows, then reads variant directories from git object data via `git_tree.rs` so cached repos do not need a checked-out worktree. Startup snapshot assembly calls the explicit `*_at_ref` helper with the persisted `lastFetchedCommit`, avoiding remote `HEAD` resolution on read-only list operations. If no fetched ref can be resolved, callers can fall back to the local filesystem for temp-repo tests and other non-fetched directories.
 
 Supported roots now include both the legacy generated bundle layout under `dist/agents/...` and root-level hidden agent folders such as `.agents/skills`, `.claude/skills`, and `.opencode/skills`. The aligned rule table also recognizes additional upstream layouts that map cleanly onto the app's existing agent catalog:
 

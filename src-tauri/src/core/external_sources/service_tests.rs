@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 
 use crate::app_runtime::config_lock::acquire_config_lock;
 use crate::core::external_sources::models::{
@@ -9,6 +10,68 @@ use crate::core::scenes::config::SceneConfigStore;
 use tempfile::tempdir;
 
 use super::{remove_external_source, ExternalSourcesStore, ImportedExternalSkillRecord};
+
+#[test]
+fn list_external_sources_reads_variants_from_persisted_fetch_commit() {
+    let temp = tempdir().unwrap();
+    let config_dir = temp.path().join("config");
+    let source_id = "src_cached";
+    let repo_dir = config_dir
+        .join("external-sources")
+        .join(source_id)
+        .join("repo");
+    fs::create_dir_all(&repo_dir).unwrap();
+
+    run_git(Command::new("git").arg("init").arg(&repo_dir));
+    run_git(git_cmd(&repo_dir).args(["config", "user.email", "test@example.com"]));
+    run_git(git_cmd(&repo_dir).args(["config", "user.name", "Test User"]));
+    let variant_dir = repo_dir.join("dist/agents/.agents/skills/fast-start");
+    fs::create_dir_all(&variant_dir).unwrap();
+    fs::write(
+        variant_dir.join("SKILL.md"),
+        "---\nname: Fast Start\ndescription: Loaded from git objects\n---\n# Fast Start\n",
+    )
+    .unwrap();
+    run_git(git_cmd(&repo_dir).args(["add", "."]));
+    run_git(git_cmd(&repo_dir).args(["commit", "-m", "cache snapshot"]));
+    let head = run_git_output(git_cmd(&repo_dir).args(["rev-parse", "HEAD"]));
+    fs::remove_dir_all(repo_dir.join("dist")).unwrap();
+
+    let store = ExternalSourcesStore::new(config_dir.clone());
+    let guard = acquire_config_lock(&config_dir).unwrap();
+    store
+        .save(
+            &guard,
+            &ExternalSourcesSnapshot {
+                schema_version: 1,
+                sources: vec![ExternalSourceRecord {
+                    id: source_id.to_string(),
+                    repo_url: "https://github.com/example/repo".to_string(),
+                    cached_repo_path: Some(format!("external-sources/{source_id}/repo")),
+                    last_fetched_commit: Some(head),
+                    status: Some("ok".to_string()),
+                    ..ExternalSourceRecord::default()
+                }],
+                imports: Vec::new(),
+            },
+        )
+        .unwrap();
+    drop(guard);
+
+    let response = super::list_external_sources(&config_dir, None).unwrap();
+
+    let variants = &response.sources[0].variants;
+    assert_eq!(variants.len(), 1);
+    assert_eq!(
+        variants[0].variant_path,
+        "dist/agents/.agents/skills/fast-start"
+    );
+    assert_eq!(variants[0].name.as_deref(), Some("Fast Start"));
+    assert_eq!(
+        variants[0].description.as_deref(),
+        Some("Loaded from git objects")
+    );
+}
 
 #[test]
 fn remove_external_source_preflight_blocks_partial_import_deletion() {
@@ -54,8 +117,8 @@ fn remove_external_source_preflight_blocks_partial_import_deletion() {
         .set_scene_skills("focus", vec![blocked.skill_id.clone()])
         .unwrap();
 
-    let error = remove_external_source(&config_dir, Some(&repo_root), "src_example", true)
-        .unwrap_err();
+    let error =
+        remove_external_source(&config_dir, Some(&repo_root), "src_example", true).unwrap_err();
 
     assert!(error.to_string().contains("referenced"));
     assert!(repo_root.join(&removable.mirror_relative_path).exists());
@@ -72,6 +135,31 @@ fn remove_external_source_preflight_blocks_partial_import_deletion() {
         .imports
         .iter()
         .any(|item| item.skill_id == blocked.skill_id));
+}
+
+fn git_cmd(repo_path: &Path) -> Command {
+    let mut command = Command::new("git");
+    command.arg("-C").arg(repo_path);
+    command
+}
+
+fn run_git(command: &mut Command) {
+    let output = command.output().unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+fn run_git_output(command: &mut Command) -> String {
+    let output = command.output().unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8_lossy(&output.stdout).trim().to_string()
 }
 
 #[test]

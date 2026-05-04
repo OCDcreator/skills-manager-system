@@ -5,9 +5,7 @@ use std::path::Path;
 use walkdir::WalkDir;
 
 use super::git_repo::{read_default_branch, read_head_commit};
-use super::git_tree::{
-    list_direct_child_skill_dirs_at_ref, list_recursive_skill_dirs_at_ref,
-};
+use super::git_tree::{list_direct_child_skill_dirs_at_ref, list_recursive_skill_dirs_at_ref};
 use super::models::ExternalSourceWarning;
 use crate::core::skills::identity::canonicalize_repo_relative_path;
 
@@ -29,7 +27,10 @@ pub struct DetectionResult {
     pub warnings: Vec<ExternalSourceWarning>,
 }
 
-pub fn detect_external_source_variants(repo_dir: &Path, source_id: &str) -> Result<DetectionResult> {
+pub fn detect_external_source_variants(
+    repo_dir: &Path,
+    source_id: &str,
+) -> Result<DetectionResult> {
     if let Ok(default_branch) = read_default_branch(repo_dir) {
         if let Ok(head_commit) = read_head_commit(repo_dir, &default_branch) {
             return detect_external_source_variants_at_ref(repo_dir, &head_commit, source_id);
@@ -51,7 +52,7 @@ pub(crate) fn detect_external_source_variants_at_ref(
     )
 }
 
-fn detect_external_source_variants_from_worktree(
+pub(crate) fn detect_external_source_variants_from_worktree(
     repo_dir: &Path,
     source_id: &str,
 ) -> Result<DetectionResult> {
@@ -144,7 +145,9 @@ fn collect_direct_skill_dirs_from_worktree(repo_dir: &Path, root: &str) -> Resul
             continue;
         }
         skill_dirs.insert(canonicalize_repo_relative_path(
-            path_relative_to(repo_dir, &skill_dir)?.to_string_lossy().as_ref(),
+            path_relative_to(repo_dir, &skill_dir)?
+                .to_string_lossy()
+                .as_ref(),
         )?);
     }
 
@@ -170,7 +173,9 @@ fn collect_recursive_skill_dirs_from_worktree(repo_dir: &Path, root: &str) -> Re
             .parent()
             .with_context(|| format!("Missing parent for {}", skill_file.path().display()))?;
         skill_dirs.insert(canonicalize_repo_relative_path(
-            path_relative_to(repo_dir, skill_dir)?.to_string_lossy().as_ref(),
+            path_relative_to(repo_dir, skill_dir)?
+                .to_string_lossy()
+                .as_ref(),
         )?);
     }
 
@@ -220,8 +225,7 @@ fn generated_scan_roots() -> Vec<&'static str> {
 }
 
 fn is_supported_variant_dir(rule: &GeneratedRule, relative_skill_dir: &str) -> bool {
-    let Some(remainder) = relative_skill_dir
-        .strip_prefix(&format!("{}/", rule.variant_root))
+    let Some(remainder) = relative_skill_dir.strip_prefix(&format!("{}/", rule.variant_root))
     else {
         return false;
     };
