@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { AgentInventoryItem, AgentTargetSkillEntry } from "../../lib/tauri";
 
 const multiLinePathClass =
@@ -51,6 +52,7 @@ export function AgentGlobalSkillList({
     (entry) => entry.hasSkillDocument && canImport,
   );
   const isBatchWorking = actionKey?.startsWith(`${agent.key}:batch:`) ?? false;
+  const scrollRef = useRememberedScrollPosition(`agents:global-skills:${agent.key}`);
   const entryActionKey = (entry: AgentTargetSkillEntry, action: string) =>
     `${agent.key}:${entry.entryName}:${action}`;
   const toggleSelectionMode = () => {
@@ -165,7 +167,10 @@ export function AgentGlobalSkillList({
       ) : agent.targetSkillEntries.length === 0 ? (
         <p className="mt-3 text-xs text-slate-500">{t("agents.globalSkills.empty")}</p>
       ) : (
-        <div className="skill-markdown-scroll mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
+        <div
+          className="skill-markdown-scroll mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1"
+          ref={scrollRef}
+        >
           {agent.targetSkillEntries.map((entry) => {
             const secondaryLabel = entry.relativePath || entry.entryName;
             const showSecondaryLabel = secondaryLabel !== entry.displayName;

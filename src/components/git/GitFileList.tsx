@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { GitStatusEntry } from "../../lib/git";
 
 interface GitFileListProps {
@@ -13,10 +14,14 @@ interface GitFileListProps {
 
 export function GitFileList({ staged, unstaged, untracked, selectedPath, onSelect }: GitFileListProps) {
   const { t } = useTranslation();
+  const scrollRef = useRememberedScrollPosition("git:file-list");
 
   return (
     <section className="min-w-0 rounded-2xl border border-slate-800 bg-slate-900">
-      <div className="skill-markdown-scroll space-y-4 overflow-y-auto p-4 lg:max-h-[calc(100vh-16rem)]">
+      <div
+        className="skill-markdown-scroll space-y-4 overflow-y-auto p-4 lg:max-h-[calc(100vh-16rem)]"
+        ref={scrollRef}
+      >
         <Section
           entries={staged}
           selectedPath={selectedPath}

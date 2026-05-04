@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toggleId, type AgentConfigDraft } from "../../lib/agent-selection";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { SkillSummary } from "../../lib/tauri";
 
 interface AgentSkillSelectorProps {
@@ -30,6 +31,7 @@ export function AgentSkillSelector({
         .includes(lowered),
     );
   }, [search, skills]);
+  const scrollRef = useRememberedScrollPosition(`agents:skill-selector:${draft.key}`);
 
   const toggleSkill = (skillId: string) => {
     const nextSelected = toggleId(draft.selectedSkillIds, skillId);
@@ -59,7 +61,10 @@ export function AgentSkillSelector({
         placeholder={t("agents.card.searchSkills")}
         value={search}
       />
-      <div className="skill-markdown-scroll max-h-56 space-y-1 overflow-y-auto pr-1">
+      <div
+        className="skill-markdown-scroll max-h-56 space-y-1 overflow-y-auto pr-1"
+        ref={scrollRef}
+      >
         {filteredSkills.map((skill) => {
           const isSelected = selected.has(skill.id);
           const isGloballyDisabled = disabled.has(skill.id);

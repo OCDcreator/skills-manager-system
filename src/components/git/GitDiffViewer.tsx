@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GitDiffResponse } from "../../lib/git";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 
 interface GitDiffViewerProps {
   diff: GitDiffResponse | null;
@@ -12,6 +13,7 @@ interface GitDiffViewerProps {
 export function GitDiffViewer({ diff, isLoading, diffMode, onModeChange }: GitDiffViewerProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const scrollRef = useRememberedScrollPosition(`git:diff:${diffMode}`);
 
   if (isLoading) {
     return (
@@ -70,7 +72,10 @@ export function GitDiffViewer({ diff, isLoading, diffMode, onModeChange }: GitDi
           {diff.stat}
         </div>
       ) : null}
-      <pre className="skill-markdown-scroll min-h-0 flex-1 overflow-auto p-4 text-xs leading-relaxed">
+      <pre
+        className="skill-markdown-scroll min-h-0 flex-1 overflow-auto p-4 text-xs leading-relaxed"
+        ref={scrollRef}
+      >
         <DiffContent content={diff.diff} />
       </pre>
     </div>

@@ -6,6 +6,7 @@ import {
   type AgentConfigDraft,
   type AgentSelectionPreview,
 } from "../../lib/agent-selection";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 
 interface AgentSelectionSummaryProps {
   draft: AgentConfigDraft;
@@ -30,6 +31,7 @@ export function AgentSelectionSummary({
   const selectedDirectItems = selectedItems.filter((item) => item.isDirect);
   const hasSelectedItems = selectedItems.length > 0;
   const hasSelectedDirectItems = selectedDirectItems.length > 0;
+  const scrollRef = useRememberedScrollPosition(`agents:selection-summary:${draft.key}`);
 
   const togglePreviewSkillSelection = (skillId: string) => {
     setSelectedPreviewSkillIds((current) =>
@@ -134,7 +136,10 @@ export function AgentSelectionSummary({
         </button>
       </div>
 
-      <div className="skill-markdown-scroll max-h-48 space-y-1 overflow-y-auto pr-1">
+      <div
+        className="skill-markdown-scroll max-h-48 space-y-1 overflow-y-auto pr-1"
+        ref={scrollRef}
+      >
         {preview.items.length === 0 ? (
           <div className="text-xs text-slate-500">{t("agents.card.noEffectiveSkills")}</div>
         ) : (

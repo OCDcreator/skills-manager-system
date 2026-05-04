@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 
 interface ProjectAssignmentSummaryProps {
   title: string;
@@ -28,6 +29,7 @@ interface ProjectAssignmentSummaryProps {
 
 export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
   const { t } = useTranslation();
+  const scrollRef = useRememberedScrollPosition(`projects:summary:${props.title}`);
   const chipClassName =
     "rounded-full border border-slate-700/80 bg-slate-950/70 px-3 py-1 text-xs text-slate-200";
 
@@ -39,7 +41,10 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
           {props.selectedSkillCount} skills · {props.selectedAgentCount} agents
         </p>
       </div>
-      <div className="skill-markdown-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 text-sm">
+      <div
+        className="skill-markdown-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 text-sm"
+        ref={scrollRef}
+      >
         <section>
           <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
             {t("projects.summary.selectedSkillsTitle")}

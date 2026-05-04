@@ -16,6 +16,7 @@ import {
   getSceneEnabledSkillCount,
   isSceneSkillEnabled,
 } from "../../lib/scene-skill-order";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { SceneEntry } from "../../lib/scenes";
 
 export interface SceneCardProps {
@@ -79,6 +80,8 @@ export function SceneCard({
     () => skills.filter((skill) => !isSceneSkillEnabled(scene, skill.id)),
     [scene, skills],
   );
+  const skillsScrollRef = useRememberedScrollPosition(`scenes:card:${scene.id}:skills`);
+  const agentsScrollRef = useRememberedScrollPosition(`scenes:card:${scene.id}:agents`);
 
   const resetDragState = () => {
     setDraggedSkillId(null);
@@ -208,7 +211,7 @@ export function SceneCard({
                 {t("scenes.card.dragHint")}
               </span>
             </div>
-            <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+            <div className="max-h-48 space-y-2 overflow-y-auto pr-1" ref={skillsScrollRef}>
               {orderedEnabled.map((skill) => {
                 const isDropTarget =
                   dropTargetSkillId === skill.id && draggedSkillId !== skill.id;
@@ -276,7 +279,7 @@ export function SceneCard({
                 count: scene.enabledAgentKeys.length,
               })}
             </div>
-            <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+            <div className="max-h-48 space-y-2 overflow-y-auto pr-1" ref={agentsScrollRef}>
               {agents.map((agent) => {
                 const enabled = scene.enabledAgentKeys.includes(agent.key);
                 return (

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { toggleId, type AgentConfigDraft } from "../../lib/agent-selection";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { SceneEntry } from "../../lib/scenes";
 
 interface AgentSceneSelectorProps {
@@ -16,6 +17,7 @@ export function AgentSceneSelector({
 }: AgentSceneSelectorProps) {
   const { t } = useTranslation();
   const selected = useMemo(() => new Set(draft.selectedSceneIds), [draft.selectedSceneIds]);
+  const scrollRef = useRememberedScrollPosition(`agents:scene-selector:${draft.key}`);
 
   return (
     <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
@@ -27,7 +29,10 @@ export function AgentSceneSelector({
           {t("agents.card.selectedCount", { count: draft.selectedSceneIds.length })}
         </span>
       </div>
-      <div className="skill-markdown-scroll max-h-40 space-y-1 overflow-y-auto pr-1">
+      <div
+        className="skill-markdown-scroll max-h-40 space-y-1 overflow-y-auto pr-1"
+        ref={scrollRef}
+      >
         {scenes.length === 0 ? (
           <div className="text-xs text-slate-500">{t("agents.card.noScenes")}</div>
         ) : (

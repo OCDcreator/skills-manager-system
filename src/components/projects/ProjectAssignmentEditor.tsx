@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
 
 interface ProjectAssignmentEditorProps {
@@ -16,6 +17,8 @@ interface ProjectAssignmentEditorProps {
 
 export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
   const { t } = useTranslation();
+  const skillScrollRef = useRememberedScrollPosition("projects:editor:skills");
+  const agentScrollRef = useRememberedScrollPosition("projects:editor:agents");
   const panelClassName =
     "flex max-h-[clamp(22rem,calc(100vh-20rem),34rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60";
 
@@ -33,7 +36,10 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
               value={props.skillQuery}
             />
           </div>
-          <div className="skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3">
+          <div
+            className="skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3"
+            ref={skillScrollRef}
+          >
             {props.skills.map((skill) => (
               <label
                 className="flex items-start gap-3 rounded-xl border border-transparent px-2 py-2 text-sm text-slate-300 hover:border-slate-800 hover:bg-slate-900/70"
@@ -65,7 +71,10 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
               value={props.agentQuery}
             />
           </div>
-          <div className="skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3">
+          <div
+            className="skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3"
+            ref={agentScrollRef}
+          >
             {props.agents.map((agent) => (
               <label
                 className="flex items-center gap-3 rounded-xl border border-transparent px-2 py-2 text-sm text-slate-300 hover:border-slate-800 hover:bg-slate-900/70"

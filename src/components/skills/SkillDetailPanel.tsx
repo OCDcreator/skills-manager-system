@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppContext } from "../../context/AppContext";
 import { shortCommit } from "../../lib/external-sources";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { ExternalSourceWarning, SkillDocument, SkillSummary } from "../../lib/tauri";
 
 interface SkillDetailPanelProps {
@@ -72,6 +73,7 @@ export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPane
   const { t } = useTranslation();
   const { externalSources } = useAppContext();
   const [wrapFrontmatter, setWrapFrontmatter] = useState(true);
+  const scrollRef = useRememberedScrollPosition(`skills:detail:${skill?.id ?? "empty"}`);
   const basePanelClassName =
     "min-w-0 rounded-2xl border border-slate-800 bg-slate-900 p-6";
   const dockedPanelClassName =
@@ -204,7 +206,10 @@ export function SkillDetailPanel({ document, isEnabled, skill }: SkillDetailPane
         ) : null}
       </div>
 
-      <div className="skill-markdown-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-4">
+      <div
+        className="skill-markdown-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-4"
+        ref={scrollRef}
+      >
         {renderedDocument ? (
           <article
             className={`markdown-body skill-markdown-body min-w-0 break-words rounded-lg ${

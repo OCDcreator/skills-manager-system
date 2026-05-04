@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { SkillSummary } from "../../lib/tauri";
 import { truncateDescription } from "../../lib/skills/filters";
 
@@ -34,6 +35,7 @@ export function SkillList(props: SkillListProps) {
   const canEnableTargets = targetSkillIds.some((skillId) => disabledSkillIds.has(skillId));
   const canDisableTargets = targetSkillIds.some((skillId) => !disabledSkillIds.has(skillId));
   const isBusy = updatingSkillId !== null;
+  const scrollRef = useRememberedScrollPosition(`skills:list:${title}`);
 
   useEffect(() => {
     const visibleSkillIdSet = new Set(visibleSkillIds);
@@ -121,7 +123,10 @@ export function SkillList(props: SkillListProps) {
         </div>
       ) : null}
       {skills.length > 0 ? (
-        <div className="skill-markdown-scroll -mr-3 mt-3 min-h-0 overflow-y-auto pr-3">
+        <div
+          className="skill-markdown-scroll -mr-3 mt-3 min-h-0 overflow-y-auto pr-3"
+          ref={scrollRef}
+        >
           <div className="grid auto-rows-[13.5rem] gap-3 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
             {skills.map((skill) => {
               const isDisabled = disabledSkillIds.has(skill.id);

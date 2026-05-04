@@ -6,6 +6,7 @@ import {
   mergeAgentOrderWithInventory,
   resolveSortedAgentInventory,
 } from "../../lib/agent-order";
+import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { AgentInventoryItem, AgentKey } from "../../lib/tauri";
 import { AgentBrandIcon } from "./AgentBrandIcon";
 
@@ -32,6 +33,7 @@ export function AgentOrderModal({
   const [dropTargetKey, setDropTargetKey] = useState<AgentKey | null>(null);
   const draggedKeyRef = useRef<AgentKey | null>(null);
   const dragPointerIdRef = useRef<number | null>(null);
+  const scrollRef = useRememberedScrollPosition("agents:order-modal");
 
   const orderedAgents = useMemo(
     () => resolveSortedAgentInventory(agents, draftOrder),
@@ -137,7 +139,10 @@ export function AgentOrderModal({
           </button>
         </div>
 
-        <div className="skill-markdown-scroll min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">
+        <div
+          className="skill-markdown-scroll min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4"
+          ref={scrollRef}
+        >
           {sections.map((section) => (
             <section key={section.key}>
               <div className="mb-2 flex items-center justify-between gap-2">
