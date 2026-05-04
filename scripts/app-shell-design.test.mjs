@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import React from "react";
@@ -15,13 +16,53 @@ function readJson(relativePath) {
   return JSON.parse(readSource(relativePath));
 }
 
+function readCssBlock(source, selector, requiredPropertyName) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const matches = [...source.matchAll(new RegExp(`${escapedSelector}\\s*\\{([\\s\\S]*?)\\}`, "g"))];
+  const match = requiredPropertyName
+    ? matches.find((candidate) =>
+        new RegExp(`${requiredPropertyName}:\\s*[^;]+;`).test(candidate[1]),
+      )
+    : matches[0];
+  assert.ok(match, `missing CSS block ${selector}`);
+  return match[1];
+}
+
+function readCssDeclaration(block, propertyName) {
+  const match = block.match(new RegExp(`${propertyName}:\\s*([^;]+);`));
+  assert.ok(match, `missing CSS declaration ${propertyName}`);
+  return match[1].trim();
+}
+
+function remToPixels(value) {
+  const match = value.match(/^([0-9.]+)rem$/);
+  assert.ok(match, `expected rem value, got ${value}`);
+  return Number.parseFloat(match[1]) * 16;
+}
+
+function expandBoxValuePixels(value) {
+  const parts = value.split(/\s+/).map(remToPixels);
+  assert.ok(parts.length >= 1 && parts.length <= 4, `unexpected box value ${value}`);
+  const [top, right = top, bottom = top, left = right] = parts;
+  return { top, right, bottom, left };
+}
+
 async function loadRenderableAppShell() {
   let tempDir = "";
   const sourcePath = path.resolve("src/components/AppShell.tsx");
+  const reactModuleUrl = pathToFileURL(path.resolve("node_modules/react/index.js")).href;
   const source = readSource(sourcePath)
+    .replace(
+      'import type { PropsWithChildren } from "react";',
+      `import React from "${reactModuleUrl}";\ntype PropsWithChildren = { children?: React.ReactNode };`,
+    )
     .replace(
       'import { useTranslation } from "react-i18next";',
       'import { useTranslation } from "./mock-i18n.mjs";',
+    )
+    .replace(
+      /import \{\s*Bot,\s*Boxes,\s*FolderKanban,\s*GitBranch,\s*Library,\s*Settings,\s*Sparkles,\s*type LucideIcon,\s*\} from "lucide-react";/,
+      'import { Bot, Boxes, FolderKanban, GitBranch, Library, Settings, Sparkles } from "./mock-icons.mjs";\ntype LucideIcon = (props: Record<string, unknown>) => React.ReactElement;',
     )
     // Test-only union keeps AppShell independently transpirable; business source stays in AppContext.
     .replace(
@@ -37,9 +78,7 @@ async function loadRenderableAppShell() {
       'import { UnsavedChangesDialog } from "./mock-unsaved-dialog.mjs";',
     );
 
-  const tempRoot = path.resolve("node_modules/.cache");
-  fs.mkdirSync(tempRoot, { recursive: true });
-  tempDir = fs.mkdtempSync(path.join(tempRoot, "app-shell-design-test-"));
+  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "skills-manager-system-app-shell-"));
   fs.writeFileSync(
     path.join(tempDir, "mock-i18n.mjs"),
     'export function useTranslation() { return { t: (key) => key }; }\n',
@@ -52,18 +91,23 @@ async function loadRenderableAppShell() {
   );
   fs.writeFileSync(
     path.join(tempDir, "mock-project-assistant-launcher.mjs"),
-    'import React from "react";\nexport function ProjectAssistantLauncher() { return React.createElement("div", { "data-assistant-launcher": "true" }); }\n',
+    `import React from "${reactModuleUrl}";\nexport function ProjectAssistantLauncher() { return React.createElement("div", { "data-assistant-launcher": "true" }); }\n`,
     "utf8",
   );
   fs.writeFileSync(
     path.join(tempDir, "mock-unsaved-dialog.mjs"),
-    'import React from "react";\nexport function UnsavedChangesDialog({ pendingNavigation }) { return React.createElement("div", { "data-unsaved-dialog": "true" }, pendingNavigation?.targetView ?? "pending"); }\n',
+    `import React from "${reactModuleUrl}";\nexport function UnsavedChangesDialog({ pendingNavigation }) { return React.createElement("div", { "data-unsaved-dialog": "true" }, pendingNavigation?.targetView ?? "pending"); }\n`,
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(tempDir, "mock-icons.mjs"),
+    `import React from "${reactModuleUrl}";\nfunction Icon(props) { return React.createElement("svg", props); }\nexport const Bot = Icon;\nexport const Boxes = Icon;\nexport const FolderKanban = Icon;\nexport const GitBranch = Icon;\nexport const Library = Icon;\nexport const Settings = Icon;\nexport const Sparkles = Icon;\n`,
     "utf8",
   );
 
   const transpiled = ts.transpileModule(source, {
     compilerOptions: {
-      jsx: ts.JsxEmit.ReactJSX,
+      jsx: ts.JsxEmit.React,
       module: ts.ModuleKind.ESNext,
       target: ts.ScriptTarget.ES2020,
     },
@@ -183,6 +227,18 @@ test("AppShell navigation landmark labels are localized", () => {
   assert.doesNotMatch(componentSource, /mobile navigation/);
 });
 
+test("App lazy loading fallback is localized", () => {
+  const source = readSource("src/App.tsx");
+  const englishStrings = readJson("src/i18n/en.json");
+  const chineseStrings = readJson("src/i18n/zh.json");
+
+  assert.match(source, /import \{ useTranslation \} from "react-i18next";/);
+  assert.match(source, /t\("app\.loadingView"\)/);
+  assert.equal(typeof englishStrings["app.loadingView"], "string");
+  assert.equal(typeof chineseStrings["app.loadingView"], "string");
+  assert.doesNotMatch(source, /Loading view\.\.\./);
+});
+
 test("AppShell dispatches guarded navigation from rendered nav buttons", async () => {
   const { AppShell, cleanup, setMockContext } = await loadRenderableAppShell();
   const requestedViews = [];
@@ -265,6 +321,13 @@ test("foundation exposes the tinted neutral workbench palette and layout primiti
   assert.match(source, /\.app-shell\s*\{/);
   assert.match(source, /\.app-shell__sidebar\s*\{/);
   assert.match(source, /\.app-shell__mobile-header\s*\{/);
+  const mobileNavBlock = readCssBlock(source, ".app-shell__mobile-nav", "padding");
+  const mobileNavPadding = expandBoxValuePixels(readCssDeclaration(mobileNavBlock, "padding"));
+  const focusRingBufferPx = 5;
+  for (const [side, value] of Object.entries(mobileNavPadding)) {
+    assert.ok(value >= focusRingBufferPx, `mobile nav ${side} padding clips focus ring`);
+  }
+  assert.match(mobileNavBlock, /margin:\s*-[0-9.]+rem/);
   assert.match(source, /\.app-shell__nav-item\s*\{/);
   assert.match(source, /\.app-shell__nav-item:focus-visible\s*\{/);
   assert.match(source, /outline:\s*2px solid var\(--color-workbench-accent\)/);
@@ -279,4 +342,11 @@ test("foundation exposes the tinted neutral workbench palette and layout primiti
   assert.doesNotMatch(source, /letter-spacing:\s*-/);
   assert.doesNotMatch(source, /font-weight:\s*750/);
   assert.doesNotMatch(source, /#020617/);
+});
+
+test("AppShell render harness uses the system temp directory", () => {
+  const source = readSource("scripts/app-shell-design.test.mjs");
+
+  assert.match(source, /path\.join\(os\.tmpdir\(\), "skills-manager-system-app-shell-"\)/);
+  assert.doesNotMatch(source, /path\.resolve\("node_modules\/\.cache"\)/);
 });

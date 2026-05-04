@@ -1,6 +1,7 @@
 {
   "app.title": "Skills Manager System",
   "app.subtitle": "Browse and review your local skill repository",
+  "app.loadingView": "Loading view...",
   "app.nav.desktopLabel": "{{title}} desktop navigation",
   "app.nav.mobileLabel": "{{title}} mobile navigation",
   "nav.skills": "Skills",

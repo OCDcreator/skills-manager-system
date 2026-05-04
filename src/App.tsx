@@ -1,4 +1,5 @@
 import { Suspense, lazy } from "react";
+import { useTranslation } from "react-i18next";
 import { AppShell } from "./components/AppShell";
 import { AppProvider, useAppContext } from "./context/AppContext";
 import { SkillsView } from "./views/SkillsView";
@@ -25,9 +26,11 @@ const SettingsView = lazy(() =>
 );
 
 function ViewLoadingFallback() {
+  const { t } = useTranslation();
+
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-sm text-slate-400">
-      Loading view...
+      {t("app.loadingView")}
     </section>
   );
 }
