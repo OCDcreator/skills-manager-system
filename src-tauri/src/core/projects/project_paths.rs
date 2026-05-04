@@ -1,16 +1,29 @@
-use anyhow::{anyhow, Result};
-use std::path::Path;
+use anyhow::Result;
+
+use crate::core::platform_paths::normalize_portable_absolute_path;
 
 pub fn normalize_project_path(project_path: &str) -> Result<String> {
-    let project_path = project_path.trim();
-    if project_path.is_empty() {
-        return Err(anyhow!("Project path is required"));
+    normalize_portable_absolute_path(project_path, "Project path")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(windows)]
+    #[test]
+    fn normalize_project_path_uses_portable_slashes_on_windows() {
+        let normalized = normalize_project_path(r"  C:\Users\test\workspace\app\  ").unwrap();
+
+        assert_eq!(normalized, "C:/Users/test/workspace/app");
     }
 
-    let path = Path::new(project_path);
-    if !path.is_absolute() {
-        return Err(anyhow!("Project path must be absolute"));
-    }
+    #[cfg(windows)]
+    #[test]
+    fn normalize_project_path_coalesces_duplicate_windows_forms() {
+        let backslash = normalize_project_path(r"C:\Users\test\workspace\app").unwrap();
+        let slash = normalize_project_path("C:/Users/test/workspace/app/").unwrap();
 
-    Ok(project_path.to_string())
+        assert_eq!(backslash, slash);
+    }
 }

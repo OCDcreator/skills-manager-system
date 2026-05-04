@@ -11,7 +11,7 @@ Persists repo-scoped skill enable/disable state as app-local JSON keyed by a nor
 
 ```text
 Upstream: src-tauri/src/commands/skills.rs, src-tauri/src/core/scenes/manager.rs
-Downstream: serde_json, std::fs
+Downstream: serde_json, std::fs, src-tauri/src/core/platform_paths.rs
 ```
 
 ## Public Surface
@@ -21,11 +21,11 @@ Downstream: serde_json, std::fs
 | `SkillStateSnapshot` | Serializable disabled-ID snapshot returned to the frontend. |
 | `SkillStateStore` | Loads and updates repo-scoped persisted skill state. |
 | `build_repo_state_key` | Produces a normalized repo bucket key. |
-| `normalize_repo_path` | Converts repo paths to forward-slash normalized strings. |
+| `normalize_repo_path` | Converts repo paths to stable persisted keys, lowercasing only on Windows. |
 
 ## Core Logic
 
-The store keeps a JSON map of repository buckets and persists only disabled skill IDs, treating all discovered skills as enabled by default.
+The store keeps a JSON map of repository buckets and persists only disabled skill IDs, treating all discovered skills as enabled by default. Repo keys reuse `platform_paths`, then lowercase on Windows for case-insensitive matching while preserving non-Windows path characters.
 
 ## Data Flow
 

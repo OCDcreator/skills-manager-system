@@ -79,6 +79,7 @@ export interface AgentInventoryItem {
   selectedSceneIds: string[];
   excludedSkillIds: string[];
   skillsDirRule: string;
+  projectSkillsDirRule: string;
   detectDirRule: string;
   defaultSkillsDir: string;
   detectedSkillsDir: string | null;

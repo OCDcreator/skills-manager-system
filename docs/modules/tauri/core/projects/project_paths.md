@@ -12,4 +12,9 @@ Shared project-path normalization helpers reused by persistence and read-only in
 - trims incoming project paths
 - rejects empty paths
 - rejects non-absolute paths
+- persists paths with `/` separators and without redundant trailing separators
 - provides one normalization boundary so store and inspection stay aligned
+
+## Interactions
+
+Delegates the string format to `platform_paths`, then project store, inspection, and sync reuse the normalized value as the stable project key.

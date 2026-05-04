@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::core::platform_paths::portable_path_string;
+
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum AgentSyncMode {
@@ -44,7 +46,7 @@ impl SettingsStore {
 
     pub fn save_repo_path(&self, repo_path: Option<&Path>) -> Result<AppSettings> {
         let mut settings = self.load()?;
-        settings.repo_path = repo_path.map(|value| value.to_string_lossy().to_string());
+        settings.repo_path = repo_path.map(portable_path_string);
         self.save(&settings)
     }
 
@@ -66,7 +68,7 @@ impl SettingsStore {
     ) -> Result<AppSettings> {
         let mut settings = self.load()?;
         settings.assistant_working_directory = assistant_working_directory
-            .map(|value| value.to_string_lossy().to_string());
+            .map(portable_path_string);
         self.save(&settings)
     }
 
@@ -151,6 +153,24 @@ mod tests {
         assert_eq!(store.load().unwrap().assistant_working_directory, None);
     }
 
+    #[cfg(windows)]
+    #[test]
+    fn save_repo_path_persists_portable_separators() {
+        let dir = tempdir().unwrap();
+        let store = SettingsStore::new(dir.path().to_path_buf());
+
+        store
+            .save_repo_path(Some(Path::new(
+                r"C:\Users\test\Desktop\Write\custom-project\my-skills\",
+            )))
+            .unwrap();
+
+        assert_eq!(
+            store.load().unwrap().repo_path.as_deref(),
+            Some("C:/Users/test/Desktop/Write/custom-project/my-skills")
+        );
+    }
+
     #[test]
     fn save_agent_sync_mode_round_trips() {
         let dir = tempdir().unwrap();
@@ -205,6 +225,24 @@ mod tests {
             Some(
                 "C:/Users/test/AppData/Roaming/com.ocdcreator.skills-manager-system.dev"
             )
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn save_assistant_working_directory_persists_portable_separators() {
+        let dir = tempdir().unwrap();
+        let store = SettingsStore::new(dir.path().to_path_buf());
+
+        store
+            .save_assistant_working_directory(Some(Path::new(
+                r"C:\Users\test\AppData\Roaming\skills-manager-system\",
+            )))
+            .unwrap();
+
+        assert_eq!(
+            store.load().unwrap().assistant_working_directory.as_deref(),
+            Some("C:/Users/test/AppData/Roaming/skills-manager-system")
         );
     }
 

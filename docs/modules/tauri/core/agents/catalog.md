@@ -21,10 +21,11 @@ Downstream: none
 | `AgentCatalogEntry` | Static metadata describing one supported agent. |
 | `agent_catalog` | Returns the built-in phase-three catalog. |
 | `find_agent` | Looks up a supported agent key. |
+| `project_skills_dir_rule` | Returns the project-local skills directory rule for an agent. |
 
 ## Core Logic
 
-Stores the stable definitions for all supported agents, including display name plus skills-dir/detect-dir rules. Cursor shares `.claude/skills` with Claude Code. Kimi Code CLI resolves from the hidden home-directory pair `.kimi` and `.kimi/skills`. Goose and GitHub Copilot have project-only skills directories.
+Stores the stable definitions for all supported agents, including display name plus global skills-dir/detect-dir rules. `project_skills_dir_rule` separates project-local overlays from global config roots, so OpenCode uses `.config/opencode/skills` globally but `.opencode/skills` inside projects, and Cursor uses `.cursor/skills` inside projects instead of sharing Claude Code's manifest directory. Kimi Code CLI resolves from the hidden home-directory pair `.kimi` and `.kimi/skills`. Goose and GitHub Copilot have project-only skills directories.
 
 ## Data Flow
 

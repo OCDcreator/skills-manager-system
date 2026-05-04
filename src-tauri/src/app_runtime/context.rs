@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use std::path::{Path, PathBuf};
 
 use super::config_lock::{acquire_config_lock, ConfigLockError, ConfigLockGuard};
+use crate::core::platform_paths::portable_path_string;
 use crate::core::settings::{AgentSyncMode, AppSettings, SettingsStore};
 
 pub const PRODUCTION_APP_IDENTIFIER: &str = "com.ocdcreator.skills-manager-system";
@@ -103,7 +104,7 @@ pub fn tauri_app_config_dir(config_root: &Path, app_identifier: &str) -> PathBuf
 }
 
 pub fn normalize_output_path(path: &Path) -> String {
-    path.to_string_lossy().replace('\\', "/")
+    portable_path_string(path)
 }
 
 #[cfg(test)]
@@ -177,6 +178,14 @@ mod tests {
             normalized,
             "C:/Users/lt/Desktop/Write/custom-project/my-skills"
         );
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn unix_paths_preserve_backslash_filename_characters() {
+        let normalized = normalize_output_path(Path::new("/Users/lt/app\\name/"));
+
+        assert_eq!(normalized, "/Users/lt/app\\name");
     }
 
     #[test]

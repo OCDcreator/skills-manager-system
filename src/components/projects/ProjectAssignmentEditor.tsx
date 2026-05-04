@@ -88,7 +88,7 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
                 <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)] gap-0.5">
                   <span className="truncate font-medium text-slate-100">{agent.displayName}</span>
                   <span className="truncate text-xs text-slate-500">
-                    {agent.skillsDirRule}
+                    {agent.projectSkillsDirRule}
                   </span>
                 </span>
               </label>

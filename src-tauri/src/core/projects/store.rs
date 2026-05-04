@@ -38,8 +38,9 @@ impl ProjectConfigStore {
 
         let raw =
             fs::read_to_string(&path).with_context(|| format!("Failed to read {:?}", path))?;
-        serde_json::from_str::<ProjectConfigSnapshot>(&raw)
-            .with_context(|| format!("Failed to parse {:?}", path))
+        let snapshot = serde_json::from_str::<ProjectConfigSnapshot>(&raw)
+            .with_context(|| format!("Failed to parse {:?}", path))?;
+        normalize_snapshot(snapshot)
     }
 
     pub fn add_project(
@@ -142,81 +143,32 @@ fn normalize_display_name(project_path: &str, display_name: &str) -> String {
         .unwrap_or_else(|| project_path.to_string())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::tempdir;
+fn normalize_snapshot(snapshot: ProjectConfigSnapshot) -> Result<ProjectConfigSnapshot> {
+    let mut projects = BTreeMap::new();
 
-    #[test]
-    fn load_returns_defaults_when_missing() {
-        let dir = tempdir().unwrap();
-        let store = ProjectConfigStore::new(dir.path().to_path_buf());
-        let snapshot = store.load().unwrap();
-        assert!(snapshot.projects.is_empty());
+    for (stored_key, mut project) in snapshot.projects {
+        let path_seed = if project.project_path.trim().is_empty() {
+            stored_key.as_str()
+        } else {
+            project.project_path.as_str()
+        };
+        let normalized_path = normalize_project_path(path_seed)
+            .or_else(|_| normalize_project_path(&stored_key))?;
+
+        project.project_path = normalized_path.clone();
+        project.display_name = normalize_display_name(&normalized_path, &project.display_name);
+        if projects.contains_key(&normalized_path) {
+            return Err(anyhow!(
+                "Duplicate project entries normalize to '{}'; remove or merge legacy keys before continuing",
+                normalized_path
+            ));
+        }
+        projects.insert(normalized_path, project);
     }
 
-    #[test]
-    fn add_project_round_trips() {
-        let dir = tempdir().unwrap();
-        let store = ProjectConfigStore::new(dir.path().to_path_buf());
-        let project_path = dir.path().join("workspace/app");
-        let project_path = project_path.to_string_lossy().to_string();
-
-        let snapshot = store
-            .add_project(
-                &project_path,
-                "App",
-                vec!["custom:skill".to_string()],
-                vec!["codex".to_string()],
-            )
-            .unwrap();
-
-        assert_eq!(snapshot.projects[&project_path].display_name, "App");
-        assert_eq!(
-            snapshot.projects[&project_path].skill_ids,
-            vec!["custom:skill"]
-        );
-        assert_eq!(store.load().unwrap(), snapshot);
-    }
-
-    #[test]
-    fn add_project_rejects_duplicate_path() {
-        let dir = tempdir().unwrap();
-        let store = ProjectConfigStore::new(dir.path().to_path_buf());
-        let project_path = dir.path().join("workspace/app");
-        let project_path = project_path.to_string_lossy().to_string();
-
-        store
-            .add_project(&project_path, "App", Vec::new(), Vec::new())
-            .unwrap();
-
-        assert!(store
-            .add_project(&project_path, "App Again", Vec::new(), Vec::new())
-            .is_err());
-    }
-
-    #[test]
-    fn remove_project_deletes_entry() {
-        let dir = tempdir().unwrap();
-        let store = ProjectConfigStore::new(dir.path().to_path_buf());
-        let project_path = dir.path().join("workspace/app");
-        let project_path = project_path.to_string_lossy().to_string();
-
-        store
-            .add_project(&project_path, "App", Vec::new(), Vec::new())
-            .unwrap();
-
-        let snapshot = store.remove_project(&project_path).unwrap();
-        assert!(!snapshot.projects.contains_key(&project_path));
-    }
-
-    #[test]
-    fn normalize_project_path_accepts_trimmed_absolute_path() {
-        let temp = tempdir().unwrap();
-        let project_path = format!("  {}  ", temp.path().join("workspace/app").display());
-
-        let normalized = normalize_project_path(&project_path).unwrap();
-
-        assert_eq!(normalized, temp.path().join("workspace/app").display().to_string());
-    }
+    Ok(ProjectConfigSnapshot { projects })
 }
+
+#[cfg(test)]
+#[path = "store_tests.rs"]
+mod tests;

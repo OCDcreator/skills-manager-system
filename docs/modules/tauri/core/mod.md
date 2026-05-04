@@ -15,6 +15,7 @@ Declares backend core domains used by Tauri command modules.
 | `assistant` | Project assistant domain. |
 | `external_sources` | External GitHub source detection, caching, imports, and persistence. |
 | `git` | Git operations domain. |
+| `platform_paths` | Shared portable path-string normalization for persisted paths and DTOs. |
 | `projects` | Project assignment domain. |
 | `scenes` | Scene configuration domain. |
 | `settings` | Settings persistence domain. |
@@ -23,9 +24,9 @@ Declares backend core domains used by Tauri command modules.
 
 ## Core Logic
 
-This file stays declarative. It now exposes `terminal` as a first-class core
-domain so the embedded assistant PTY runtime stays separate from the older
-retrieval-oriented assistant code.
+This file stays declarative. It exposes shared infrastructure such as
+`platform_paths` beside feature domains so persistence and DTO code can reuse
+one cross-platform path boundary without adding helper logic to command files.
 
 ## Interactions
 

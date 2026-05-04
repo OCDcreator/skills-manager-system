@@ -17,7 +17,7 @@ Persists project assignment configuration to `project-config.json` in the app co
 
 ## Core Logic
 
-`ProjectConfigStore` provides atomic CRUD operations that load → mutate → save. Each method returns the full updated snapshot. The store now reuses shared path normalization from `project_paths.rs` so edit-mode persistence and read-only inspection stay aligned.
+`ProjectConfigStore` provides atomic CRUD operations that load → mutate → save. Each method returns the full updated snapshot. The store now reuses shared path normalization from `project_paths.rs` so edit-mode persistence and read-only inspection stay aligned. Loads also normalize legacy map keys and embedded `projectPath` values, which keeps older Windows `C:\...` entries editable/removable after the stored format switches to portable `/` separators. If two legacy entries normalize to the same project path, load returns an explicit migration conflict instead of silently overwriting one assignment.
 
 ## Interactions
 

@@ -2,6 +2,7 @@ pub mod agents;
 pub mod assistant;
 pub mod external_sources;
 pub mod git;
+pub mod platform_paths;
 pub mod projects;
 pub mod scenes;
 pub mod settings;

@@ -24,7 +24,17 @@ fn command_candidates(base_names: &[&str]) -> Vec<String> {
         return candidates;
     }
 
-    base_names.iter().map(|name| (*name).to_string()).collect()
+    let mut candidates = Vec::new();
+    for name in base_names {
+        candidates.push((*name).to_string());
+        if cfg!(target_os = "macos") {
+            candidates.push(format!("/opt/homebrew/bin/{name}"));
+            candidates.push(format!("/usr/local/bin/{name}"));
+            candidates.push(format!("/opt/homebrew/sbin/{name}"));
+            candidates.push(format!("/usr/local/sbin/{name}"));
+        }
+    }
+    candidates
 }
 
 fn program_candidates_for(cli_key: CliKey) -> Vec<String> {
@@ -95,7 +105,13 @@ mod tests {
             ]
         );
         #[cfg(not(windows))]
-        assert_eq!(spec.program_candidates, vec!["opencode".to_string()]);
+        {
+            assert_eq!(spec.program_candidates[0], "opencode");
+            #[cfg(target_os = "macos")]
+            assert!(spec
+                .program_candidates
+                .contains(&"/opt/homebrew/bin/opencode".to_string()));
+        }
         assert_eq!(spec.cols, 100);
         assert_eq!(spec.rows, 28);
     }
@@ -121,6 +137,22 @@ mod tests {
             ]
         );
         #[cfg(not(windows))]
-        assert_eq!(spec.program_candidates, vec!["codex".to_string()]);
+        {
+            assert_eq!(spec.program_candidates[0], "codex");
+            #[cfg(target_os = "macos")]
+            assert!(spec
+                .program_candidates
+                .contains(&"/opt/homebrew/bin/codex".to_string()));
+        }
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn non_windows_launcher_keeps_bare_candidate_first() {
+        let candidates = command_candidates(&["codex"]);
+
+        assert_eq!(candidates[0], "codex");
+        #[cfg(target_os = "macos")]
+        assert!(candidates.contains(&"/usr/local/bin/codex".to_string()));
     }
 }

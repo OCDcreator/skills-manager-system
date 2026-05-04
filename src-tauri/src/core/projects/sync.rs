@@ -4,13 +4,14 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::Path;
 
-use crate::core::agents::catalog::find_agent;
+use crate::core::agents::catalog::{find_agent, project_skills_dir_rule};
 use crate::core::agents::discovery::AgentSystemDirs;
 use crate::core::agents::sync::AgentApplyResult;
 use crate::core::agents::target_sync::{
     apply_desired_entries, build_desired_skill_entries, cleanup_managed_entries, DesiredSkillEntry,
     SyncMode,
 };
+use crate::core::platform_paths::portable_path_string;
 use crate::core::skills::scan::{scan_repo_skills, SkillSummary};
 
 use super::store::{ProjectAssignment, ProjectConfigStore};
@@ -81,13 +82,16 @@ fn apply_for_project(
     let desired_entries = build_desired_skill_entries(&enabled_skills);
     let mut results = Vec::new();
 
+    cleanup_retargeted_assignments(project, ledger)?;
+
     for agent_key in &project.agent_keys {
         let key = ledger_key(&project.project_path, agent_key);
         managed_keys.insert(key.clone());
 
         let result = match find_agent(agent_key) {
             Some(agent) => {
-                let target_dir = Path::new(&project.project_path).join(agent.skills_dir_rule);
+                let target_dir = Path::new(&project.project_path)
+                    .join(project_skills_dir_rule(agent));
                 let stats = apply_desired_entries(
                     &target_dir,
                     agent_key,
@@ -98,14 +102,14 @@ fn apply_for_project(
                     key,
                     ProjectSyncLedgerEntry {
                         agent_key: agent_key.clone(),
-                        target_dir: target_dir.to_string_lossy().to_string(),
+                        target_dir: portable_path_string(&target_dir),
                     },
                 );
 
                 AgentApplyResult {
                     key: agent_key.clone(),
                     display_name: agent.display_name.to_string(),
-                    target_dir: Some(target_dir.to_string_lossy().to_string()),
+                    target_dir: Some(portable_path_string(&target_dir)),
                     status: if stats.conflict_count > 0 {
                         crate::core::agents::sync::AgentApplyStatus::Partial
                     } else {
@@ -145,6 +149,32 @@ fn apply_for_project(
         enabled_skill_count: enabled_skills.len(),
         results,
     })
+}
+
+fn cleanup_retargeted_assignments(
+    project: &ProjectAssignment,
+    ledger: &mut ProjectSyncLedger,
+) -> Result<()> {
+    for agent_key in &project.agent_keys {
+        let key = ledger_key(&project.project_path, agent_key);
+        let Some(agent) = find_agent(agent_key) else {
+            continue;
+        };
+        let new_target_dir = Path::new(&project.project_path)
+            .join(project_skills_dir_rule(agent));
+        let new_target = portable_path_string(&new_target_dir);
+        let Some(previous) = ledger.assignments.get(&key) else {
+            continue;
+        };
+        if normalize_legacy_target_for_comparison(&previous.target_dir) == new_target {
+            continue;
+        }
+
+        cleanup_managed_entries(Path::new(&previous.target_dir), &previous.agent_key)?;
+        ledger.assignments.remove(&key);
+    }
+
+    Ok(())
 }
 
 fn select_project_skills(
@@ -221,3 +251,15 @@ fn save_ledger(config_dir: &Path, ledger: &ProjectSyncLedger) -> Result<()> {
 fn ledger_key(project_path: &str, agent_key: &str) -> String {
     format!("{}\n{}", project_path, agent_key)
 }
+
+fn normalize_legacy_target_for_comparison(target_dir: &str) -> String {
+    if cfg!(windows) {
+        target_dir.replace('\\', "/")
+    } else {
+        target_dir.to_string()
+    }
+}
+
+#[cfg(test)]
+#[path = "sync_tests.rs"]
+mod tests;

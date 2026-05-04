@@ -20,8 +20,8 @@ Builds the frontend-facing agent inventory snapshot by combining catalog metadat
 
 ## Core Logic
 
-Resolves path candidates from catalog rules, handles `.config/...` dual-candidate lookup, determines detected/default/effective paths, normalizes emitted path strings, scans the effective target directory for managed/unmanaged skill entries, and carries saved direct skills, scene IDs, exclusion IDs, plus serialized `skills_dir_rule` / `detect_dir_rule` values into the inventory payload shown by the editor. Hidden home-directory tools such as Kimi Code CLI therefore detect directly from `~/.kimi` and surface `~/.kimi/skills` as both the default and detected sync target when present.
+Resolves path candidates from catalog rules, handles `.config/...` dual-candidate lookup, determines detected/default/effective paths, normalizes emitted path strings through `platform_paths`, scans the effective target directory for managed/unmanaged skill entries, and carries saved direct skills, scene IDs, exclusion IDs, serialized global `skills_dir_rule` / `detect_dir_rule` values, plus the separate `project_skills_dir_rule` into the inventory payload shown by the editor. Hidden home-directory tools such as Kimi Code CLI therefore detect directly from `~/.kimi` and surface `~/.kimi/skills` as both the default and detected sync target when present.
 
 ## Interactions
 
-Must stay aligned with the built-in rules in `catalog.rs`, persisted config in `config.rs`, target inventory scanning in `target_inventory.rs`, frontend DTOs in `src/lib/tauri.ts`, and sync orchestration in `sync.rs`.
+Must stay aligned with the built-in rules in `catalog.rs`, persisted config in `config.rs`, target inventory scanning in `target_inventory.rs`, frontend DTOs in `src/lib/tauri.ts`, project-local inspection/sync, and global sync orchestration in `sync.rs`.

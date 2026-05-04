@@ -89,6 +89,14 @@ pub fn find_agent(key: &str) -> Option<&'static AgentCatalogEntry> {
     agent_catalog().iter().find(|agent| agent.key == key)
 }
 
+pub fn project_skills_dir_rule(agent: &AgentCatalogEntry) -> &'static str {
+    match agent.key {
+        "opencode" => ".opencode/skills",
+        "cursor" => ".cursor/skills",
+        _ => agent.skills_dir_rule,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -114,5 +122,17 @@ mod tests {
                 "windsurf",
             ]
         );
+    }
+
+    #[test]
+    fn project_local_rules_can_differ_from_global_rules() {
+        let opencode = find_agent("opencode").unwrap();
+        let cursor = find_agent("cursor").unwrap();
+        let claude = find_agent("claude_code").unwrap();
+
+        assert_eq!(opencode.skills_dir_rule, ".config/opencode/skills");
+        assert_eq!(project_skills_dir_rule(opencode), ".opencode/skills");
+        assert_eq!(project_skills_dir_rule(cursor), ".cursor/skills");
+        assert_eq!(project_skills_dir_rule(claude), ".claude/skills");
     }
 }

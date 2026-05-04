@@ -18,5 +18,6 @@ Read-only inspection module for the Projects workbench.
 ## Responsibilities
 
 - reuses shared path normalization
-- resolves static agent rules from the catalog
+- resolves project-local agent target rules from the catalog
 - reports unsupported agent keys without mutating stored configuration
+- emits marker and target paths in the shared portable path-string format

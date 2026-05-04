@@ -2,7 +2,8 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use crate::core::agents::catalog::{agent_catalog, find_agent};
+use crate::core::agents::catalog::{agent_catalog, find_agent, project_skills_dir_rule};
+use crate::core::platform_paths::portable_path_string;
 
 use super::project_paths::normalize_project_path;
 
@@ -50,13 +51,13 @@ pub fn inspect_project_assignment_path(
         };
 
         let marker_dir = Path::new(&normalized_path).join(agent.detect_dir_rule);
-        let target_dir = Path::new(&normalized_path).join(agent.skills_dir_rule);
+        let target_dir = Path::new(&normalized_path).join(project_skills_dir_rule(agent));
 
         agents.push(ProjectPathInspectionAgentResult {
             agent_key: agent.key.to_string(),
             display_name: agent.display_name.to_string(),
-            marker_dir: marker_dir.to_string_lossy().to_string(),
-            target_dir: target_dir.to_string_lossy().to_string(),
+            marker_dir: portable_path_string(&marker_dir),
+            target_dir: portable_path_string(&target_dir),
             marker_exists: marker_dir.exists(),
             target_exists: target_dir.exists(),
         });
@@ -88,7 +89,10 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(result.normalized_path, project_path.to_string_lossy());
+        assert_eq!(
+            result.normalized_path,
+            project_path.to_string_lossy().replace('\\', "/")
+        );
         assert_eq!(result.unsupported_agent_keys, Vec::<String>::new());
         assert_eq!(result.agents.len(), 1);
         assert!(result.agents[0].marker_exists);
@@ -108,5 +112,21 @@ mod tests {
         .unwrap();
 
         assert_eq!(result.unsupported_agent_keys, vec!["unknown_agent".to_string()]);
+    }
+
+    #[test]
+    fn inspect_path_uses_project_local_agent_rules() {
+        let temp = tempdir().unwrap();
+        let project_path = temp.path().join("app");
+        fs::create_dir_all(&project_path).unwrap();
+
+        let result = inspect_project_assignment_path(
+            project_path.to_string_lossy().as_ref(),
+            &["opencode".to_string(), "cursor".to_string()],
+        )
+        .unwrap();
+
+        assert!(result.agents[0].target_dir.ends_with("/app/.opencode/skills"));
+        assert!(result.agents[1].target_dir.ends_with("/app/.cursor/skills"));
     }
 }

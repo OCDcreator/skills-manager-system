@@ -2,7 +2,9 @@ use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+use crate::core::platform_paths::normalize_portable_absolute_path;
 
 use super::catalog::find_agent;
 
@@ -139,17 +141,7 @@ fn validate_agent_key(key: &str) -> Result<()> {
 }
 
 fn normalize_path_override(path: &str) -> Result<String> {
-    let trimmed = path.trim();
-    if trimmed.is_empty() {
-        return Err(anyhow!("Path override is required"));
-    }
-
-    let candidate = Path::new(trimmed);
-    if !candidate.is_absolute() {
-        return Err(anyhow!("Path override must be absolute"));
-    }
-
-    Ok(candidate.to_string_lossy().to_string())
+    normalize_portable_absolute_path(path, "Path override")
 }
 
 fn normalize_optional_path_override(path: Option<&str>) -> Result<Option<String>> {
@@ -206,6 +198,7 @@ mod tests {
             .unwrap();
 
         let snapshot = store.load().unwrap();
+        let expected_override = override_str.replace('\\', "/");
         assert_eq!(
             snapshot
                 .agents
@@ -213,7 +206,7 @@ mod tests {
                 .unwrap()
                 .path_override
                 .as_deref(),
-            Some(override_str.as_str())
+            Some(expected_override.as_str())
         );
 
         store.clear_agent_path_override("codex").unwrap();
@@ -226,6 +219,29 @@ mod tests {
                 .path_override
                 .as_deref(),
             None
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn path_override_persists_portable_windows_slashes() {
+        let dir = tempdir().unwrap();
+        let store = AgentConfigStore::new(dir.path().to_path_buf());
+
+        store
+            .set_agent_path_override("codex", r" C:\Users\test\.codex\skills\ ")
+            .unwrap();
+
+        assert_eq!(
+            store
+                .load()
+                .unwrap()
+                .agents
+                .get("codex")
+                .unwrap()
+                .path_override
+                .as_deref(),
+            Some("C:/Users/test/.codex/skills")
         );
     }
 

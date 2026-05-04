@@ -14,6 +14,7 @@ interface ProjectAssignmentSummaryProps {
     key: string;
     displayName: string;
     skillsDirRule: string;
+    projectSkillsDirRule: string;
   }>;
   duplicatePath: boolean;
   unsupportedAgentKeys: string[];
@@ -77,7 +78,7 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
                 >
                   <div className="font-medium text-slate-100">{agent.displayName}</div>
                   <div className="mt-0.5 truncate text-xs text-slate-500">
-                    {agent.skillsDirRule}
+                    {agent.projectSkillsDirRule}
                   </div>
                 </div>
               ))}

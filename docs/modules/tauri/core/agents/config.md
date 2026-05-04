@@ -17,7 +17,7 @@ Persists per-agent sync configuration separately from `settings.json`.
 
 ## Core Logic
 
-Validates supported agent keys, reads/writes `agent-config.json`, toggles enabled flags, stores absolute override paths, normalizes ID arrays, and supports whole-entry saves for the agent editor.
+Validates supported agent keys, reads/writes `agent-config.json`, toggles enabled flags, stores absolute override paths, normalizes ID arrays, and supports whole-entry saves for the agent editor. Path overrides go through `platform_paths` so manually entered Windows and macOS paths persist with `/` separators and no redundant trailing separator.
 
 ## Interactions
 

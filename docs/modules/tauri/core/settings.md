@@ -21,4 +21,4 @@ Owns persistence for app settings stored in `settings.json` under the Tauri app 
 
 ## Core Logic
 
-Uses serde defaults so older `settings.json` files that only contain `repoPath` still load cleanly, defaulting `agentSyncMode` to `copy` and `agentOrder` to an empty array.
+Uses serde defaults so older `settings.json` files that only contain `repoPath` still load cleanly, defaulting `agentSyncMode` to `copy` and `agentOrder` to an empty array. Saved repo paths and assistant working directories are serialized through `platform_paths` so Windows and macOS share the same slash-normalized, trailing-separator-trimmed format.

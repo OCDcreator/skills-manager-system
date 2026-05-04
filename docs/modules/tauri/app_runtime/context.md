@@ -22,12 +22,12 @@ Downstream: src-tauri/src/app_runtime/config_lock.rs, src-tauri/src/core/setting
 | `AppRuntimeContext` | Shared runtime snapshot for command handlers. |
 | `active_app_identifier` | Picks the production vs dev Tauri identifier. |
 | `tauri_app_config_dir` | Recreates the Tauri-style app config path from the identifier. |
-| `normalize_output_path` | Forces forward slashes for JSON-facing paths. |
+| `normalize_output_path` | Emits platform-portable JSON-facing paths through the shared path formatter. |
 | `acquire_config_lock` / `with_config_lock` | Wraps mutation-ready writes in the shared advisory lock. |
 
 ## Core Logic
 
-The context resolves the config root from `dirs::config_dir()` unless `--config-dir` is supplied, joins that root with the active app identifier, and reads persisted settings from the same files used by the desktop app. Repo-path lookup always prefers the CLI override over saved settings. Lock methods delegate to `config_lock.rs` so future mutation commands can coordinate writes without pulling Tauri runtime types into the CLI.
+The context resolves the config root from `dirs::config_dir()` unless `--config-dir` is supplied, joins that root with the active app identifier, and reads persisted settings from the same files used by the desktop app. Repo-path lookup always prefers the CLI override over saved settings. Output paths reuse `platform_paths` so Windows paths use portable separators while non-Windows filenames containing backslashes are preserved. Lock methods delegate to `config_lock.rs` so future mutation commands can coordinate writes without pulling Tauri runtime types into the CLI.
 
 ## Data Flow
 

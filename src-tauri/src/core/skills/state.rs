@@ -4,6 +4,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::core::platform_paths::portable_path_string;
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct SkillStateSnapshot {
@@ -121,7 +123,7 @@ pub fn build_repo_state_key(repo_path: &Path) -> Result<String> {
 }
 
 pub fn normalize_repo_path(path: &Path) -> String {
-    let normalized = path.to_string_lossy().replace('\\', "/");
+    let normalized = portable_path_string(path);
 
     if cfg!(windows) {
         normalized.to_lowercase()
@@ -236,6 +238,14 @@ mod tests {
             snapshot.disabled_skill_ids,
             vec!["custom:a-skill".to_string(), "external:z-skill".to_string()]
         );
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn normalize_repo_path_preserves_backslash_filename_characters_on_unix() {
+        let normalized = normalize_repo_path(Path::new("/Users/lt/app\\name/"));
+
+        assert_eq!(normalized, "/Users/lt/app\\name");
     }
 
     #[test]
