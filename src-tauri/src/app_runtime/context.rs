@@ -168,6 +168,7 @@ mod tests {
         assert_eq!(context.current_repo_path().unwrap(), Some(override_repo));
     }
 
+    #[cfg(windows)]
     #[test]
     fn windows_paths_normalize_to_forward_slashes() {
         let normalized = normalize_output_path(Path::new(

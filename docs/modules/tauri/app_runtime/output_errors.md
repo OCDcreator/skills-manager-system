@@ -29,3 +29,5 @@ The exit-code mapping follows the approved CLI design: `0` for success, `8` for 
 ## Interactions
 
 Any command-specific error mapping should create `CliCommandError` values here rather than inventing ad hoc JSON in command modules.
+
+Tests keep Windows lock-path separator assertions behind a Windows-only guard so Unix hosts preserve backslashes according to platform path semantics.

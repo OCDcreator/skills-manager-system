@@ -40,3 +40,5 @@ The production/dev identifiers must stay aligned with `src-tauri/tauri.conf.json
 ## Change Notes
 
 Keep this layer environment-focused. Do not move scene/project/git business rules here; the runtime should only resolve execution context and shared filesystem concerns.
+
+Windows separator normalization tests are scoped to Windows because non-Windows platforms treat backslashes as ordinary filename characters.

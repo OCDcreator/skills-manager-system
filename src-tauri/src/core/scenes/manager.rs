@@ -203,6 +203,9 @@ mod tests {
         let scene_store = SceneConfigStore::new(config_dir.clone());
         scene_store.create_scene("focus", "Focus", "").unwrap();
         scene_store
+            .set_scene_skills("focus", vec!["custom:alpha".to_string()])
+            .unwrap();
+        scene_store
             .set_scene_agents("focus", vec!["codex".to_string()])
             .unwrap();
 

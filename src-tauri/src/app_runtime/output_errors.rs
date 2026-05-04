@@ -184,6 +184,7 @@ mod tests {
         );
     }
 
+    #[cfg(windows)]
     #[test]
     fn config_lock_conflict_maps_to_state_conflict() {
         let error = CliCommandError::from_config_lock(ConfigLockError::already_held(

@@ -20,4 +20,4 @@ Loads the target scene, computes its currently unselected skill count from the l
 
 ## Tests
 
-Includes regressions for explicit-empty new scenes, legacy/selected scene sync behavior, folder-name target entries, and symlink/copy mode application after the per-agent sync redesign.
+Includes regressions for explicit-empty new scenes, legacy/selected scene sync behavior, folder-name target entries, and symlink/copy mode application after the per-agent sync redesign. The Unix symlink-mode regression now selects a concrete scene skill before applying the scene so the assertion verifies link mode rather than empty-scene behavior.
