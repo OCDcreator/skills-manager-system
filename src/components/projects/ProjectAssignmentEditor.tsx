@@ -1,16 +1,25 @@
 import { useTranslation } from "react-i18next";
 import { useRememberedScrollPosition } from "../../lib/scroll-memory";
+import type {
+  ProjectAgentStatusFilter,
+} from "../../lib/project-draft";
+import type { SkillPathSummary, SkillPathFilter } from "../../lib/skills/filters";
 import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
 
 interface ProjectAssignmentEditorProps {
   skills: SkillSummary[];
   agents: AgentInventoryItem[];
+  skillPathSummaries: SkillPathSummary[];
   selectedSkillIds: string[];
   selectedAgentKeys: string[];
   skillQuery: string;
   agentQuery: string;
+  skillPathFilter: SkillPathFilter;
+  agentStatusFilter: ProjectAgentStatusFilter;
   onSkillQueryChange: (value: string) => void;
   onAgentQueryChange: (value: string) => void;
+  onSkillPathFilterChange: (value: SkillPathFilter) => void;
+  onAgentStatusFilterChange: (value: ProjectAgentStatusFilter) => void;
   onToggleSkill: (skillId: string) => void;
   onToggleAgent: (agentKey: string) => void;
 }
@@ -21,6 +30,12 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
   const agentScrollRef = useRememberedScrollPosition("projects:editor:agents");
   const panelClassName =
     "flex max-h-[clamp(22rem,calc(100vh-20rem),34rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60";
+  const filterPillClass = (active: boolean) =>
+    `rounded-full border px-2 py-1 transition ${
+      active
+        ? "border-sky-500/60 bg-sky-500/15 text-sky-100"
+        : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
+    }`;
 
   return (
     <section className="grid min-h-0 gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
@@ -35,6 +50,20 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
               onChange={(event) => props.onSkillQueryChange(event.target.value)}
               value={props.skillQuery}
             />
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-400">
+              {props.skillPathSummaries.map((summary) => (
+                <button
+                  className={filterPillClass(props.skillPathFilter === summary.key)}
+                  key={summary.key}
+                  onClick={() => props.onSkillPathFilterChange(summary.key)}
+                  type="button"
+                >
+                  {summary.key === "all"
+                    ? t("projects.editor.allPaths", { count: summary.count })
+                    : `${summary.key} · ${summary.count}`}
+                </button>
+              ))}
+            </div>
           </div>
           <div
             className="skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3"
@@ -55,6 +84,9 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
                   <span className="block overflow-hidden text-xs text-slate-500 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
                     {skill.description}
                   </span>
+                  <span className="mt-1 block truncate text-[11px] text-slate-600">
+                    {skill.relativePath}
+                  </span>
                 </span>
               </label>
             ))}
@@ -70,6 +102,22 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
               onChange={(event) => props.onAgentQueryChange(event.target.value)}
               value={props.agentQuery}
             />
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-400">
+              {(["all", "enabled", "disabled"] as const).map((status) => (
+                <button
+                  className={filterPillClass(props.agentStatusFilter === status)}
+                  key={status}
+                  onClick={() => props.onAgentStatusFilterChange(status)}
+                  type="button"
+                >
+                  {status === "all"
+                    ? t("projects.editor.allAgents")
+                    : status === "enabled"
+                      ? t("projects.editor.enabledAgents")
+                      : t("projects.editor.disabledAgents")}
+                </button>
+              ))}
+            </div>
           </div>
           <div
             className="skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3"
@@ -90,6 +138,17 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
                   <span className="truncate text-xs text-slate-500">
                     {agent.projectSkillsDirRule}
                   </span>
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-1 text-[10px] ${
+                    agent.enabled
+                      ? "bg-emerald-500/10 text-emerald-200"
+                      : "bg-slate-800 text-slate-400"
+                  }`}
+                >
+                  {agent.enabled
+                    ? t("projects.editor.enabledAgents")
+                    : t("projects.editor.disabledAgents")}
                 </span>
               </label>
             ))}

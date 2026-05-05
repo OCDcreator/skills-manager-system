@@ -57,3 +57,8 @@ automation/**/*.pyc
 
 # Claude Code local state
 .claude/
+
+# Project-local AI skill installs
+.agents/
+.cursor/
+.gemini/

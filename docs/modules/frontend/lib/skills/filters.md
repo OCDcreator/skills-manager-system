@@ -5,7 +5,7 @@
 
 ## Overview
 
-Provides pure frontend helpers for skill source summaries, status summaries, search/source/status filtering, grouping, and description truncation.
+Provides pure frontend helpers for skill source summaries, status summaries, path-bucket summaries, search/source/status filtering, grouping, and description truncation.
 
 ## Import Relationships
 
@@ -23,8 +23,11 @@ Downstream: src/lib/tauri.ts
 | `SkillStatusFilter` | Union of supported status filter keys. |
 | `SourceSummary` | Count payload used by filter controls. |
 | `StatusSummary` | Count payload used by status filter controls. |
+| `SkillPathFilter` / `SkillPathSummary` | Top-level relative-path filter key plus count payload for path pills. |
 | `buildSourceSummaries` | Counts all, custom, and external skills. |
 | `buildStatusSummaries` | Counts all, enabled, and disabled skills. |
+| `buildSkillPathSummaries` | Counts top-level path buckets such as `custom` and `external`. |
+| `matchesSkillPathFilter` | Checks whether a skill belongs to the active top-level path bucket. |
 | `filterSkills` | Applies source, status, and text filtering. |
 | `groupSkills` | Splits skills into custom and external arrays. |
 | `resolveVisibleSources` | Expands the current source filter into the source sections that should render. |
@@ -32,11 +35,11 @@ Downstream: src/lib/tauri.ts
 
 ## Core Logic
 
-Filtering trims and lowercases the search term, applies source and status filters, then matches against skill name, description, or relative path. Status summaries are derived from the joined disabled-ID set supplied by the view layer, while visible-source resolution keeps the list rail in sync with the chosen source tab.
+Filtering trims and lowercases the search term, applies source and status filters, then matches against skill name, description, or relative path. Path summaries are derived from the first segment of each `relativePath`, which keeps filters tied to repository structure instead of duplicating separate hard-coded source enums in every chooser.
 
 ## Data Flow
 
-`SkillSummary[]` values from Tauri plus the disabled-ID set from `AppContext` are transformed into view-ready arrays and counts.
+`SkillSummary[]` values from Tauri plus the disabled-ID set from `AppContext` are transformed into view-ready arrays and counts. The agent direct-skill chooser and the Projects workbench reuse the same path-bucket helpers so `custom` / `external` filtering behaves consistently across pages.
 
 ## Interactions
 

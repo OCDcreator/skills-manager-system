@@ -112,7 +112,8 @@ test('Agent selection summary turns status pills into selectable filters', () =>
 
   assert.match(summarySource, /activeFilter/);
   assert.match(summarySource, /preview\.items\.filter\(\(item\) =>/);
-  assert.match(summarySource, /item\.willSync/);
+  assert.match(summarySource, /item\.needsSync/);
+  assert.match(summarySource, /item\.isSynced/);
   assert.match(summarySource, /item\.isGloballyDisabled/);
   assert.match(summarySource, /item\.isExcluded/);
   assert.match(summarySource, /type="button"/);
@@ -133,6 +134,48 @@ test('Agent skill selector keeps the selected-only toggle beside the search fiel
   assert.match(selectorSource, /selected\.has\(skill\.id\)/);
   assert.match(i18nEn, /"agents\.card\.selectedOnly"/);
   assert.match(i18nZh, /"agents\.card\.selectedOnly"/);
+});
+
+test('Agent selection summary distinguishes synced skills from pending sync items', () => {
+  const summarySource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSelectionSummary.tsx'),
+    'utf8',
+  );
+  const helperSource = fs.readFileSync(path.resolve('src/lib/agent-selection.ts'), 'utf8');
+  const sectionSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentTargetsSection.tsx'),
+    'utf8',
+  );
+  const i18nEn = fs.readFileSync(path.resolve('src/i18n/en.json'), 'utf8');
+  const i18nZh = fs.readFileSync(path.resolve('src/i18n/zh.json'), 'utf8');
+
+  assert.match(helperSource, /targetSkillEntries: AgentTargetSkillEntry\[\]/);
+  assert.match(helperSource, /isSynced:/);
+  assert.match(helperSource, /needsSync:/);
+  assert.match(helperSource, /syncedCount:/);
+  assert.match(sectionSource, /agent\.targetSkillEntries/);
+  assert.match(summarySource, /agents\.card\.syncedCount/);
+  assert.match(summarySource, /agents\.card\.synced/);
+  assert.match(i18nEn, /"agents\.card\.syncedCount"/);
+  assert.match(i18nZh, /"agents\.card\.synced"/);
+});
+
+test('Agent skill selector exposes path-based filter pills for skill directories', () => {
+  const selectorSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSkillSelector.tsx'),
+    'utf8',
+  );
+  const filterSource = fs.readFileSync(path.resolve('src/lib/skills/filters.ts'), 'utf8');
+  const i18nEn = fs.readFileSync(path.resolve('src/i18n/en.json'), 'utf8');
+  const i18nZh = fs.readFileSync(path.resolve('src/i18n/zh.json'), 'utf8');
+
+  assert.match(selectorSource, /pathFilter/);
+  assert.match(selectorSource, /buildSkillPathSummaries/);
+  assert.match(selectorSource, /matchesSkillPathFilter/);
+  assert.match(filterSource, /export function buildSkillPathSummaries/);
+  assert.match(filterSource, /export function matchesSkillPathFilter/);
+  assert.match(i18nEn, /"agents\.card\.allPaths"/);
+  assert.match(i18nZh, /"agents\.card\.allPaths"/);
 });
 
 test('Agent global skill list exposes batch target actions in selection mode', () => {

@@ -2,6 +2,11 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toggleId, type AgentConfigDraft } from "../../lib/agent-selection";
 import { useRememberedScrollPosition } from "../../lib/scroll-memory";
+import {
+  buildSkillPathSummaries,
+  matchesSkillPathFilter,
+  type SkillPathFilter,
+} from "../../lib/skills/filters";
 import type { SkillSummary } from "../../lib/tauri";
 
 interface AgentSkillSelectorProps {
@@ -20,12 +25,17 @@ export function AgentSkillSelector({
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const [pathFilter, setPathFilter] = useState<SkillPathFilter>("all");
   const disabled = useMemo(() => new Set(disabledSkillIds), [disabledSkillIds]);
   const selected = useMemo(() => new Set(draft.selectedSkillIds), [draft.selectedSkillIds]);
+  const pathSummaries = useMemo(() => buildSkillPathSummaries(skills), [skills]);
   const filteredSkills = useMemo(() => {
     const lowered = search.trim().toLowerCase();
     return skills.filter((skill) => {
       if (showSelectedOnly && !selected.has(skill.id)) {
+        return false;
+      }
+      if (!matchesSkillPathFilter(skill, pathFilter)) {
         return false;
       }
       if (!lowered) {
@@ -36,8 +46,14 @@ export function AgentSkillSelector({
         .toLowerCase()
         .includes(lowered);
     });
-  }, [search, selected, showSelectedOnly, skills]);
+  }, [pathFilter, search, selected, showSelectedOnly, skills]);
   const scrollRef = useRememberedScrollPosition(`agents:skill-selector:${draft.key}`);
+  const pathButtonClass = (key: SkillPathFilter) =>
+    `rounded-full border px-2 py-1 transition ${
+      pathFilter === key
+        ? "border-sky-500/60 bg-sky-500/15 text-sky-100"
+        : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
+    }`;
 
   const toggleSkill = (skillId: string) => {
     const nextSelected = toggleId(draft.selectedSkillIds, skillId);
@@ -79,6 +95,20 @@ export function AgentSkillSelector({
         >
           {t("agents.card.selectedOnly")}
         </button>
+      </div>
+      <div className="flex flex-wrap gap-2 text-[11px] text-slate-400">
+        {pathSummaries.map((summary) => (
+          <button
+            className={pathButtonClass(summary.key)}
+            key={summary.key}
+            onClick={() => setPathFilter(summary.key)}
+            type="button"
+          >
+            {summary.key === "all"
+              ? t("agents.card.allPaths", { count: summary.count })
+              : `${summary.key} · ${summary.count}`}
+          </button>
+        ))}
       </div>
       <div
         className="skill-markdown-scroll max-h-56 space-y-1 overflow-y-auto pr-1"

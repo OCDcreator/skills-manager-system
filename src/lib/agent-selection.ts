@@ -1,6 +1,11 @@
 import { isSceneSkillEnabled } from "./scene-skill-order";
 import type { SceneEntry } from "./scenes";
-import type { AgentConfigurationInput, AgentInventoryItem, SkillSummary } from "./tauri";
+import type {
+  AgentConfigurationInput,
+  AgentInventoryItem,
+  AgentTargetSkillEntry,
+  SkillSummary,
+} from "./tauri";
 
 export interface AgentConfigDraft {
   key: string;
@@ -17,12 +22,14 @@ export interface AgentSkillPreviewItem {
   sceneNames: string[];
   isExcluded: boolean;
   isGloballyDisabled: boolean;
-  willSync: boolean;
+  isSynced: boolean;
+  needsSync: boolean;
 }
 
 export interface AgentSelectionPreview {
   items: AgentSkillPreviewItem[];
   syncCount: number;
+  syncedCount: number;
   excludedCount: number;
   globallyDisabledCount: number;
 }
@@ -73,9 +80,15 @@ export function resolveAgentSelectionPreview(
   skills: SkillSummary[],
   globallyDisabledSkillIds: string[],
   scenes: Record<string, SceneEntry>,
+  targetSkillEntries: AgentTargetSkillEntry[],
 ): AgentSelectionPreview {
   const disabled = new Set(globallyDisabledSkillIds);
   const excluded = new Set(draft.excludedSkillIds);
+  const syncedSkillIds = new Set(
+    targetSkillEntries
+      .filter((entry) => entry.managed && entry.skillId)
+      .map((entry) => entry.skillId as string),
+  );
   const contributions = new Map<string, { direct: boolean; sceneNames: Set<string> }>();
 
   for (const skillId of draft.selectedSkillIds) {
@@ -107,13 +120,15 @@ export function resolveAgentSelectionPreview(
         sceneNames: [...entry.sceneNames],
         isExcluded,
         isGloballyDisabled,
-        willSync: !isExcluded && !isGloballyDisabled,
+        isSynced: !isExcluded && !isGloballyDisabled && syncedSkillIds.has(skill.id),
+        needsSync: !isExcluded && !isGloballyDisabled && !syncedSkillIds.has(skill.id),
       };
     });
 
   return {
     items,
-    syncCount: items.filter((item) => item.willSync).length,
+    syncCount: items.filter((item) => item.needsSync).length,
+    syncedCount: items.filter((item) => item.isSynced).length,
     excludedCount: items.filter((item) => item.isExcluded).length,
     globallyDisabledCount: items.filter((item) => item.isGloballyDisabled).length,
   };

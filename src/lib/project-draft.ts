@@ -1,5 +1,11 @@
 import type { ProjectAssignment, ProjectPathInspection } from "./projects";
+import {
+  matchesSkillPathFilter,
+  type SkillPathFilter,
+} from "./skills/filters";
 import type { AgentInventoryItem, SkillSummary } from "./tauri";
+
+export type ProjectAgentStatusFilter = "all" | "enabled" | "disabled";
 
 export interface ProjectDraft {
   mode: "create" | "edit";
@@ -42,20 +48,72 @@ export function isProjectDraftDirty(
   );
 }
 
-export function filterProjectSkills(skills: SkillSummary[], query: string) {
+export function filterProjectSkills(
+  skills: SkillSummary[],
+  query: string,
+  pathFilter: SkillPathFilter = "all",
+) {
   const needle = query.trim().toLowerCase();
-  if (!needle) return skills;
-  return skills.filter((skill) =>
-    `${skill.name} ${skill.description}`.toLowerCase().includes(needle),
-  );
+  return skills.filter((skill) => {
+    if (!matchesSkillPathFilter(skill, pathFilter)) {
+      return false;
+    }
+
+    if (!needle) {
+      return true;
+    }
+
+    return `${skill.name} ${skill.description} ${skill.relativePath}`
+      .toLowerCase()
+      .includes(needle);
+  });
 }
 
-export function filterProjectAgents(agents: AgentInventoryItem[], query: string) {
+export function filterProjectAgents(
+  agents: AgentInventoryItem[],
+  query: string,
+  statusFilter: ProjectAgentStatusFilter = "all",
+) {
   const needle = query.trim().toLowerCase();
-  if (!needle) return agents;
-  return agents.filter((agent) =>
-    `${agent.displayName} ${agent.key}`.toLowerCase().includes(needle),
-  );
+  return agents.filter((agent) => {
+    if (statusFilter === "enabled" && !agent.enabled) {
+      return false;
+    }
+
+    if (statusFilter === "disabled" && agent.enabled) {
+      return false;
+    }
+
+    if (!needle) {
+      return true;
+    }
+
+    return `${agent.displayName} ${agent.key} ${agent.projectSkillsDirRule}`
+      .toLowerCase()
+      .includes(needle);
+  });
+}
+
+export function sortProjectAgentsForEditor(
+  agents: AgentInventoryItem[],
+  selectedAgentKeys: string[],
+  prioritizeSelected: boolean,
+) {
+  if (!prioritizeSelected || selectedAgentKeys.length === 0) {
+    return agents;
+  }
+
+  const selected = new Set(selectedAgentKeys);
+  return [...agents].sort((left, right) => {
+    const leftSelected = selected.has(left.key);
+    const rightSelected = selected.has(right.key);
+
+    if (leftSelected !== rightSelected) {
+      return leftSelected ? -1 : 1;
+    }
+
+    return 0;
+  });
 }
 
 export function applyProjectPathToDraft(draft: ProjectDraft, projectPath: string) {

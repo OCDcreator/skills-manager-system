@@ -3,6 +3,7 @@ import type { SkillSummary } from "../tauri";
 export type SourceFilter = "all" | "custom" | "external";
 export type VisibleSource = Exclude<SourceFilter, "all">;
 export type SkillStatusFilter = "all" | "enabled" | "disabled";
+export type SkillPathFilter = "all" | string;
 
 export interface SourceSummary {
   key: SourceFilter;
@@ -11,6 +12,11 @@ export interface SourceSummary {
 
 export interface StatusSummary {
   key: SkillStatusFilter;
+  count: number;
+}
+
+export interface SkillPathSummary {
+  key: SkillPathFilter;
   count: number;
 }
 
@@ -37,6 +43,41 @@ export function buildStatusSummaries(
     { key: "enabled", count: enabled },
     { key: "disabled", count: disabled },
   ];
+}
+
+export function buildSkillPathSummaries(skills: SkillSummary[]): SkillPathSummary[] {
+  const counts = new Map<string, number>();
+  const priority = new Map([
+    ["custom", 0],
+    ["external", 1],
+  ]);
+
+  for (const skill of skills) {
+    const key = getSkillPathKey(skill);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  const orderedKeys = [...counts.keys()].sort((left, right) => {
+    const leftPriority = priority.get(left) ?? 99;
+    const rightPriority = priority.get(right) ?? 99;
+    if (leftPriority !== rightPriority) {
+      return leftPriority - rightPriority;
+    }
+    return left.localeCompare(right);
+  });
+
+  return [
+    { key: "all", count: skills.length },
+    ...orderedKeys.map((key) => ({ key, count: counts.get(key) ?? 0 })),
+  ];
+}
+
+export function matchesSkillPathFilter(skill: SkillSummary, pathFilter: SkillPathFilter) {
+  if (pathFilter === "all") {
+    return true;
+  }
+
+  return getSkillPathKey(skill) === pathFilter;
 }
 
 export function filterSkills(
@@ -95,4 +136,9 @@ export function truncateDescription(description: string, maxLength = 100) {
   }
 
   return `${description.slice(0, maxLength - 1)}…`;
+}
+
+function getSkillPathKey(skill: SkillSummary) {
+  const [firstSegment] = skill.relativePath.split(/[\\/]/).filter(Boolean);
+  return firstSegment ?? skill.relativePath;
 }

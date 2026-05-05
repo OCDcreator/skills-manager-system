@@ -15,6 +15,7 @@ test("project draft helper exports the expected pure helpers", () => {
   assert.match(source, /export function isProjectDraftDirty/);
   assert.match(source, /export function filterProjectSkills/);
   assert.match(source, /export function filterProjectAgents/);
+  assert.match(source, /export function sortProjectAgentsForEditor/);
   assert.match(source, /export function applyProjectPathToDraft/);
   assert.match(source, /export function applyProjectDisplayNameToDraft/);
   assert.match(source, /export function buildProjectSummary/);
@@ -93,4 +94,22 @@ test("project draft auto-fills display names until the user edits them", () => {
   assert.match(viewSource, /applyProjectDisplayNameToDraft/);
   assert.match(helperSource, /displayNameManuallyEdited: true/);
   assert.match(viewSource, /displayNameManuallyEdited: true/);
+});
+
+test("project draft filters skills by path and agents by enabled state", () => {
+  const helperSource = fs.readFileSync(sourcePath, "utf8");
+
+  assert.match(helperSource, /matchesSkillPathFilter/);
+  assert.match(helperSource, /skill\.relativePath/);
+  assert.match(helperSource, /projectSkillsDirRule/);
+  assert.match(helperSource, /statusFilter === "enabled"/);
+  assert.match(helperSource, /statusFilter === "disabled"/);
+});
+
+test("project draft can sort selected agents ahead of unselected ones while editing", () => {
+  const helperSource = fs.readFileSync(sourcePath, "utf8");
+
+  assert.match(helperSource, /selectedAgentKeys/);
+  assert.match(helperSource, /selected\.has\(left\.key\)/);
+  assert.match(helperSource, /prioritizeSelected/);
 });

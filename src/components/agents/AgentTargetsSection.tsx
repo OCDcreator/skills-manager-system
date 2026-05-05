@@ -87,6 +87,7 @@ export function AgentTargetsSection({
           skills,
           disabledSkillIds,
           sceneConfig?.scenes ?? {},
+          agent.targetSkillEntries,
         );
 
         return (

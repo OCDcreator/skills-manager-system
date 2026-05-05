@@ -30,6 +30,10 @@ test("project assignment editor caps panel height and uses the shared markdown s
   assert.match(source, /overflow-hidden rounded-2xl border border-slate-800 bg-slate-950\/60/);
   assert.match(source, /\[-webkit-line-clamp:2\]/);
   assert.match(source, /min-\[1380px\]:grid-cols-\[minmax\(0,7fr\)_minmax\(18rem,5fr\)\]/);
+  assert.match(source, /projects\.editor\.allPaths/);
+  assert.match(source, /projects\.editor\.allAgents/);
+  assert.match(source, /projectSkillsDirRule/);
+  assert.match(source, /skill\.relativePath/);
 });
 
 test("project assignment summary stays scrollable but no longer owns the save button", () => {
@@ -71,6 +75,9 @@ test("projects view keeps the right summary as a natural sticky inspector", () =
   assert.match(source, /scanResult\.skills,/);
   assert.match(source, /selectedSkills=\{summary\.selectedSkills\}/);
   assert.match(source, /selectedAgents=\{summary\.selectedAgents\}/);
+  assert.match(source, /sortProjectAgentsForEditor/);
+  assert.match(source, /skillPathFilter/);
+  assert.match(source, /agentStatusFilter/);
   assert.match(source, /min-\[1380px\]:sticky min-\[1380px\]:top-8 min-\[1380px\]:self-start/);
   assert.doesNotMatch(source, /min-\[1380px\]:absolute min-\[1380px\]:inset-0/);
 });

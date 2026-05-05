@@ -14,7 +14,7 @@ interface AgentSelectionSummaryProps {
   onDraftChange: (draft: AgentConfigDraft) => void;
 }
 
-type PreviewFilter = "all" | "will-sync" | "excluded" | "global-ignored";
+type PreviewFilter = "all" | "will-sync" | "synced" | "excluded" | "global-ignored";
 
 export function AgentSelectionSummary({
   draft,
@@ -31,7 +31,8 @@ export function AgentSelectionSummary({
   const filteredItems = useMemo(
     () =>
       preview.items.filter((item) => {
-        if (activeFilter === "will-sync") return item.willSync;
+        if (activeFilter === "will-sync") return item.needsSync;
+        if (activeFilter === "synced") return item.isSynced;
         if (activeFilter === "excluded") return item.isExcluded;
         if (activeFilter === "global-ignored") return item.isGloballyDisabled;
         return true;
@@ -138,6 +139,16 @@ export function AgentSelectionSummary({
         </button>
         <button
           className={filterButtonClass(
+            "synced",
+            "border-cyan-500/50 bg-cyan-500/15 text-cyan-100",
+          )}
+          onClick={() => toggleFilter("synced")}
+          type="button"
+        >
+          {t("agents.card.syncedCount", { count: preview.syncedCount })}
+        </button>
+        <button
+          className={filterButtonClass(
             "excluded",
             "border-amber-500/50 bg-amber-500/15 text-amber-100",
           )}
@@ -215,13 +226,17 @@ export function AgentSelectionSummary({
                 </span>
                 <span
                   className={`rounded px-1.5 py-0.5 text-[10px] ${
-                    item.willSync
+                    item.needsSync
                       ? "bg-emerald-500/10 text-emerald-200"
-                      : "bg-slate-800 text-slate-400"
+                      : item.isSynced
+                        ? "bg-cyan-500/10 text-cyan-200"
+                        : "bg-slate-800 text-slate-400"
                   }`}
                 >
-                  {item.willSync
+                  {item.needsSync
                     ? t("agents.card.willSync")
+                    : item.isSynced
+                      ? t("agents.card.synced")
                     : item.isGloballyDisabled
                       ? t("agents.card.globalDisabled")
                       : t("agents.card.excluded")}
