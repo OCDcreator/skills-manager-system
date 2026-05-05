@@ -1,0 +1,8 @@
+# Syncthing ignore patterns for skills-manager-system
+.gitnexus
+.opencode/opencode.json
+.git/hooks/pre-commit
+.stfolder
+.stignore.local
+.DS_Store
+Thumbs.db

@@ -40,3 +40,14 @@ automation/runtime/
 automation/**/__pycache__/
 automation/**/*.pyc
 .gitnexus
+
+# Platform-specific OpenCode MCP config
+# Use .opencode/opencode.json.<platform> as template
+.opencode/opencode.json
+
+# Local git hooks (platform-specific paths)
+.git/hooks/pre-commit
+
+# Syncthing internal files
+.stfolder
+.stignore.local

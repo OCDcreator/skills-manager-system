@@ -2,12 +2,9 @@
 /**
  * update-gitnexus.mjs
  *
- * Rebuilds the GitNexus index using WSL (required because LadybugDB
- * WAL is incompatible with Windows native filesystem).
- *
- * Supports GITNEXUS_WSL_DISTRO env var (default: Ubuntu).
- *
- * Usage: node scripts/update-gitnexus.mjs [--force]
+ * Rebuilds the GitNexus index.
+ * On macOS/Linux: runs natively.
+ * On Windows: uses WSL (LadybugDB WAL incompatibility).
  */
 
 import { execSync } from "child_process";
@@ -15,44 +12,38 @@ import { resolve } from "path";
 
 const REPO_ROOT = resolve(".");
 const FORCE = process.argv.includes("--force");
-const DISTRO = process.env.GITNEXUS_WSL_DISTRO || "Ubuntu";
+const IS_WINDOWS = process.platform === "win32";
 
 function main() {
   const forceFlag = FORCE ? " --force" : "";
 
-  // Convert Windows path to WSL path safely
-  let wslPath;
-  try {
-    wslPath = execSync(
-      `wsl -d ${DISTRO} -e wslpath -u "${REPO_ROOT}"`,
-      { encoding: "utf-8" }
-    ).trim();
-  } catch {
-    console.error(`❌ Failed to convert path to WSL format. Is WSL ${DISTRO} installed?`);
-    process.exit(1);
-  }
+  if (IS_WINDOWS) {
+    const DISTRO = process.env.GITNEXUS_WSL_DISTRO || "Ubuntu";
+    let wslPath;
+    try {
+      wslPath = execSync(
+        `wsl -d ${DISTRO} -e wslpath -u "${REPO_ROOT}"`,
+        { encoding: "utf-8" }
+      ).trim();
+    } catch {
+      console.error(`❌ Failed to convert path to WSL format.`);
+      process.exit(1);
+    }
 
-  console.log(`🔄 Updating GitNexus index via WSL (${DISTRO})...`);
-  console.log(`   WSL path: ${wslPath}`);
-
-  try {
+    console.log(`🔄 Updating GitNexus index via WSL (${DISTRO})...`);
     execSync(
-      `wsl -d ${DISTRO} -e bash -lc "cd ${escapeShellArg(wslPath)} && npx -y gitnexus@1.6.3 analyze${forceFlag}"`,
+      `wsl -d ${DISTRO} -e bash -lc "cd '${wslPath.replace(/'/g, "'\"'\"'")}' && npx -y gitnexus@1.6.3 analyze${forceFlag}"`,
       { stdio: "inherit", cwd: REPO_ROOT }
     );
-    console.log("✅ GitNexus index updated successfully");
-  } catch (err) {
-    console.error("❌ Failed to update GitNexus index");
-    console.error("   Make sure WSL Ubuntu is installed and gitnexus is available in WSL");
-    process.exit(1);
+  } else {
+    console.log("🔄 Updating GitNexus index...");
+    execSync(
+      `npx -y gitnexus@1.6.3 analyze${forceFlag}`,
+      { stdio: "inherit", cwd: REPO_ROOT }
+    );
   }
-}
 
-/**
- * Escape a string for safe use in bash single-quoted strings.
- */
-function escapeShellArg(arg) {
-  return "'" + arg.replace(/'/g, "'\"'\"'") + "'";
+  console.log("✅ GitNexus index updated successfully");
 }
 
 main();
