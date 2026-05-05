@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type {
   ProjectAgentStatusFilter,
+  ProjectSkillSelectionFilter,
 } from "../../lib/project-draft";
 import type { SkillPathSummary, SkillPathFilter } from "../../lib/skills/filters";
 import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
@@ -15,10 +16,12 @@ interface ProjectAssignmentEditorProps {
   skillQuery: string;
   agentQuery: string;
   skillPathFilter: SkillPathFilter;
+  skillSelectionFilter: ProjectSkillSelectionFilter;
   agentStatusFilter: ProjectAgentStatusFilter;
   onSkillQueryChange: (value: string) => void;
   onAgentQueryChange: (value: string) => void;
   onSkillPathFilterChange: (value: SkillPathFilter) => void;
+  onSkillSelectionFilterChange: (value: ProjectSkillSelectionFilter) => void;
   onAgentStatusFilterChange: (value: ProjectAgentStatusFilter) => void;
   onToggleSkill: (skillId: string) => void;
   onToggleAgent: (agentKey: string) => void;
@@ -61,6 +64,22 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
                   {summary.key === "all"
                     ? t("projects.editor.allPaths", { count: summary.count })
                     : `${summary.key} · ${summary.count}`}
+                </button>
+              ))}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-400">
+              {(["all", "selected", "unselected"] as const).map((status) => (
+                <button
+                  className={filterPillClass(props.skillSelectionFilter === status)}
+                  key={status}
+                  onClick={() => props.onSkillSelectionFilterChange(status)}
+                  type="button"
+                >
+                  {status === "all"
+                    ? t("projects.editor.allSkills")
+                    : status === "selected"
+                      ? t("projects.editor.selectedSkills")
+                      : t("projects.editor.unselectedSkills")}
                 </button>
               ))}
             </div>

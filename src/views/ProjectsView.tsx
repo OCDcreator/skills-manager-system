@@ -16,6 +16,7 @@ import {
   sortProjectAgentsForEditor,
   suggestProjectDisplayName,
   type ProjectAgentStatusFilter,
+  type ProjectSkillSelectionFilter,
   type ProjectDraft,
 } from "../lib/project-draft";
 import * as projectsApi from "../lib/projects";
@@ -36,6 +37,8 @@ export function ProjectsView() {
   const [skillQuery, setSkillQuery] = useState("");
   const [agentQuery, setAgentQuery] = useState("");
   const [skillPathFilter, setSkillPathFilter] = useState<SkillPathFilter>("all");
+  const [skillSelectionFilter, setSkillSelectionFilter] =
+    useState<ProjectSkillSelectionFilter>("all");
   const [agentStatusFilter, setAgentStatusFilter] =
     useState<ProjectAgentStatusFilter>("all");
   const [sessionProjectApplyFeedback, setSessionProjectApplyFeedback] = useState<
@@ -101,6 +104,8 @@ export function ProjectsView() {
     scanResult.skills,
     skillQuery,
     skillPathFilter,
+    skillSelectionFilter,
+    draft.selectedSkillIds,
   );
   const visibleAgents = sortProjectAgentsForEditor(
     filterProjectAgents(sortedAgentInventory, agentQuery, agentStatusFilter),
@@ -137,6 +142,7 @@ export function ProjectsView() {
     setSkillQuery("");
     setAgentQuery("");
     setSkillPathFilter("all");
+    setSkillSelectionFilter("all");
     setAgentStatusFilter("all");
   };
 
@@ -266,7 +272,7 @@ export function ProjectsView() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
+      <div className="grid gap-6 min-[1380px]:items-stretch min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
         <div className="space-y-4">
           <ProjectIdentityPanel
             canBrowseProjectPath={draft.mode === "create"}
@@ -301,12 +307,14 @@ export function ProjectsView() {
             onAgentQueryChange={setAgentQuery}
             onAgentStatusFilterChange={setAgentStatusFilter}
             onSkillPathFilterChange={setSkillPathFilter}
+            onSkillSelectionFilterChange={setSkillSelectionFilter}
             onSkillQueryChange={setSkillQuery}
             onToggleAgent={toggleAgent}
             onToggleSkill={toggleSkill}
             selectedAgentKeys={draft.selectedAgentKeys}
             selectedSkillIds={draft.selectedSkillIds}
             skillPathFilter={skillPathFilter}
+            skillSelectionFilter={skillSelectionFilter}
             skillPathSummaries={skillPathSummaries}
             skillQuery={skillQuery}
             skills={visibleSkills}

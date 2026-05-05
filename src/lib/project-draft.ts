@@ -6,6 +6,7 @@ import {
 import type { AgentInventoryItem, SkillSummary } from "./tauri";
 
 export type ProjectAgentStatusFilter = "all" | "enabled" | "disabled";
+export type ProjectSkillSelectionFilter = "all" | "selected" | "unselected";
 
 export interface ProjectDraft {
   mode: "create" | "edit";
@@ -52,10 +53,21 @@ export function filterProjectSkills(
   skills: SkillSummary[],
   query: string,
   pathFilter: SkillPathFilter = "all",
+  selectionFilter: ProjectSkillSelectionFilter = "all",
+  selectedSkillIds: string[] = [],
 ) {
   const needle = query.trim().toLowerCase();
+  const selectedSkillIdSet = new Set(selectedSkillIds);
   return skills.filter((skill) => {
     if (!matchesSkillPathFilter(skill, pathFilter)) {
+      return false;
+    }
+
+    const isSelected = selectedSkillIdSet.has(skill.id);
+    if (selectionFilter === "selected" && !isSelected) {
+      return false;
+    }
+    if (selectionFilter === "unselected" && isSelected) {
       return false;
     }
 

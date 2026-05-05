@@ -35,7 +35,7 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
     "rounded-full border border-slate-700/80 bg-slate-950/70 px-3 py-1 text-xs text-slate-200";
 
   return (
-    <aside className="flex max-h-[clamp(22rem,calc(100vh-13rem),34rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80">
+    <aside className="flex h-full min-h-0 max-h-[clamp(22rem,calc(100vh-13rem),34rem)] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 min-[1380px]:h-[calc(100vh-8rem)]">
       <div className="border-b border-slate-800 px-4 py-4">
         <h3 className="text-base font-semibold text-slate-100">{props.title}</h3>
         <p className="mt-2 text-sm text-slate-400">
@@ -51,12 +51,16 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
             {t("projects.summary.selectedSkillsTitle")}
           </div>
           {props.selectedSkills.length ? (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {props.selectedSkills.map((skill) => (
-                <span className={chipClassName} key={skill.id} title={skill.description}>
-                  {skill.name}
-                </span>
-              ))}
+            <div className="mt-2 rounded-xl border border-slate-800 bg-slate-950/50 p-2">
+              <div className="skill-markdown-scroll max-h-28 overflow-y-auto pr-1">
+                <div className="flex flex-wrap gap-2">
+                  {props.selectedSkills.map((skill) => (
+                    <span className={chipClassName} key={skill.id} title={skill.description}>
+                      {skill.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <p className="mt-2 text-xs text-slate-500">
@@ -111,26 +115,28 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
           <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
             {t("projects.summary.targetsTitle")}
           </div>
-          <div className="mt-2 space-y-2">
-            {props.inspectionTargets.map((target) => (
-              <div
-                className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3"
-                key={target.agentKey}
-              >
-                <div className="font-medium text-slate-100">{target.agentKey}</div>
-                <div className="mt-1 break-all text-xs text-slate-400">{target.targetDir}</div>
-                <div className="mt-2 text-xs text-slate-500">
-                  {t("projects.summary.markerStatus")}:{" "}
-                  {target.markerExists
-                    ? t("projects.summary.present")
-                    : t("projects.summary.missing")}{" "}
-                  · {t("projects.summary.targetStatus")}:{" "}
-                  {target.targetExists
-                    ? t("projects.summary.present")
-                    : t("projects.summary.missing")}
+          <div className="mt-2 rounded-xl border border-slate-800 bg-slate-950/50 p-2">
+            <div className="skill-markdown-scroll max-h-44 space-y-2 overflow-y-auto pr-1">
+              {props.inspectionTargets.map((target) => (
+                <div
+                  className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3"
+                  key={target.agentKey}
+                >
+                  <div className="font-medium text-slate-100">{target.agentKey}</div>
+                  <div className="mt-1 break-all text-xs text-slate-400">{target.targetDir}</div>
+                  <div className="mt-2 text-xs text-slate-500">
+                    {t("projects.summary.markerStatus")}:{" "}
+                    {target.markerExists
+                      ? t("projects.summary.present")
+                      : t("projects.summary.missing")}{" "}
+                    · {t("projects.summary.targetStatus")}:{" "}
+                    {target.targetExists
+                      ? t("projects.summary.present")
+                      : t("projects.summary.missing")}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
         {props.disabledSelectedSkillIds.length ? (
