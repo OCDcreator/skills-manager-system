@@ -51,3 +51,5 @@ automation/**/*.pyc
 # Syncthing internal files
 .stfolder
 .stignore.local
+
+# Codex local config (platform-specific).ncodex/config.toml

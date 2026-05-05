@@ -310,9 +310,9 @@ lean-ctx cache clear && cd . && cd ..
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **skills-manager-system** (5882 symbols, 10428 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **skills-manager-system** (5937 symbols, 10484 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
-> If any GitNexus tool warns the index is stale, run `npm run update:gitnexus` first (uses WSL because LadybugDB WAL is incompatible with Windows native filesystem).
+> If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
 ## Always Do
 
@@ -338,45 +338,15 @@ This project is indexed by GitNexus as **skills-manager-system** (5882 symbols, 
 | `gitnexus://repo/skills-manager-system/processes` | All execution flows |
 | `gitnexus://repo/skills-manager-system/process/{name}` | Step-by-step execution trace |
 
-## Skills (Project-Level)
+## CLI
 
 | Task | Read this skill file |
 |------|---------------------|
-| Understand architecture / "How does X work?" | `.opencode/skills/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.opencode/skills/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.opencode/skills/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.opencode/skills/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.opencode/skills/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.opencode/skills/gitnexus-cli/SKILL.md` |
-| PR review / "Review this PR" | `.opencode/skills/gitnexus-pr-review/SKILL.md` |
-
-## Update Constraint — CRITICAL
-
-**After every code change that modifies source files, the GitNexus index MUST be updated.**
-
-The `npm run verify` gate includes `check:gitnexus-freshness` which fails if the index is older than the latest git commit.
-
-### How to Update
-
-```bash
-# Preferred: project script (handles WSL automatically)
-npm run update:gitnexus
-
-# Manual WSL (if script fails — run from bash inside WSL)
-cd /mnt/c/Users/lt/Desktop/Write/custom-project/skills-manager-system && npx gitnexus analyze
-
-# Force full re-index
-npm run update:gitnexus -- --force
-```
-
-### When to Update
-
-| Scenario | Action |
-|----------|--------|
-| Before starting work on a new feature | Run `npm run update:gitnexus` if index is stale |
-| After modifying any source file | Run `npm run update:gitnexus` before committing |
-| Before running `npm run verify` | verify auto-checks freshness, update if needed |
-| After `git pull` / `git merge` | Run `npm run update:gitnexus` |
-| Index corrupted or stale warnings | Run `npm run update:gitnexus -- --force` |
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
+| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
+| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
+| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
+| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
