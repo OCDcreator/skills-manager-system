@@ -39,3 +39,4 @@ temp/
 automation/runtime/
 automation/**/__pycache__/
 automation/**/*.pyc
+.gitnexus

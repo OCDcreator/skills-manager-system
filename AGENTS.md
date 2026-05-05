@@ -260,3 +260,123 @@ cargo build --manifest-path src-tauri/Cargo.toml --no-default-features --feature
   - `node scripts/check-module-doc-diff.mjs --range <base>...HEAD`
 - `check-module-doc-diff` 默认会把 `<base>...HEAD` 与当前工作区（staged / unstaged / untracked）一起纳入校验，避免“文档已写但尚未提交”或“改了源码但本地还没补文档”漏检
 - 需要定位当前分支必须更新哪些文档时，运行 `node scripts/list-module-doc-targets-from-diff.mjs --range <base>...HEAD`
+
+<!-- lean-ctx:start -->
+# lean-ctx — Directory Context Compression
+
+lean-ctx compresses the current directory's code into a compact context cache, allowing the AI to "remember" what it was working on when you switch directories.
+
+## How It Works
+
+lean-ctx hooks into your shell's `cd` command. Every time you change directories:
+1. **On exit** (leaving a dir): Compresses the directory's code into a cache file
+2. **On enter** (entering a dir): Decompresses the cache back into the AI context
+
+This means you can work on Project A, `cd` to Project B, and when you `cd` back to Project A, the AI still remembers the full context without re-reading all files.
+
+## Usage
+
+### Interactive Commands (in terminal)
+
+```bash
+lean-ctx              # Start MCP server (stdio)
+lean-ctx cache stats  # Show cache status for current dir
+lean-ctx cache clear  # Clear cache for current dir
+lean-ctx doctor       # Run diagnostics (12 checks)
+lean-ctx read <file>  # Read file with compression
+```
+
+### In OpenCode / AI Conversations
+
+lean-ctx exposes MCP tools for context management. The AI can use them to read compressed context, manage cache, or analyze directory structure. Tool names are prefixed by the MCP server name (e.g., `lean-ctx/read`, `lean-ctx/cache_clear`).
+
+### Shell Hook Activation
+
+The hook was injected into your PowerShell profile. If not active:
+```powershell
+. $PROFILE
+```
+
+Or restart your terminal.
+
+### When to Update
+
+lean-ctx **auto-updates** on every `cd` — no manual action needed. But if you make significant changes within a session and want to force a refresh, ask the AI to re-read the directory context using lean-ctx MCP tools, or run:
+```bash
+lean-ctx cache clear && cd . && cd ..
+```
+<!-- lean-ctx:end -->
+
+<!-- gitnexus:start -->
+# GitNexus — Code Intelligence
+
+This project is indexed by GitNexus as **skills-manager-system** (5882 symbols, 10428 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+
+> If any GitNexus tool warns the index is stale, run `npm run update:gitnexus` first (uses WSL because LadybugDB WAL is incompatible with Windows native filesystem).
+
+## Always Do
+
+- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
+- **MUST run `gitnexus_detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows.
+- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
+- When exploring unfamiliar code, use `gitnexus_query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
+- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `gitnexus_context({name: "symbolName"})`.
+
+## Never Do
+
+- NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
+- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
+- NEVER rename symbols with find-and-replace — use `gitnexus_rename` which understands the call graph.
+- NEVER commit changes without running `gitnexus_detect_changes()` to check affected scope.
+
+## Resources
+
+| Resource | Use for |
+|----------|---------|
+| `gitnexus://repo/skills-manager-system/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/skills-manager-system/clusters` | All functional areas |
+| `gitnexus://repo/skills-manager-system/processes` | All execution flows |
+| `gitnexus://repo/skills-manager-system/process/{name}` | Step-by-step execution trace |
+
+## Skills (Project-Level)
+
+| Task | Read this skill file |
+|------|---------------------|
+| Understand architecture / "How does X work?" | `.opencode/skills/gitnexus-exploring/SKILL.md` |
+| Blast radius / "What breaks if I change X?" | `.opencode/skills/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?" | `.opencode/skills/gitnexus-debugging/SKILL.md` |
+| Rename / extract / split / refactor | `.opencode/skills/gitnexus-refactoring/SKILL.md` |
+| Tools, resources, schema reference | `.opencode/skills/gitnexus-guide/SKILL.md` |
+| Index, status, clean, wiki CLI commands | `.opencode/skills/gitnexus-cli/SKILL.md` |
+| PR review / "Review this PR" | `.opencode/skills/gitnexus-pr-review/SKILL.md` |
+
+## Update Constraint — CRITICAL
+
+**After every code change that modifies source files, the GitNexus index MUST be updated.**
+
+The `npm run verify` gate includes `check:gitnexus-freshness` which fails if the index is older than the latest git commit.
+
+### How to Update
+
+```bash
+# Preferred: project script (handles WSL automatically)
+npm run update:gitnexus
+
+# Manual WSL (if script fails — run from bash inside WSL)
+cd /mnt/c/Users/lt/Desktop/Write/custom-project/skills-manager-system && npx gitnexus analyze
+
+# Force full re-index
+npm run update:gitnexus -- --force
+```
+
+### When to Update
+
+| Scenario | Action |
+|----------|--------|
+| Before starting work on a new feature | Run `npm run update:gitnexus` if index is stale |
+| After modifying any source file | Run `npm run update:gitnexus` before committing |
+| Before running `npm run verify` | verify auto-checks freshness, update if needed |
+| After `git pull` / `git merge` | Run `npm run update:gitnexus` |
+| Index corrupted or stale warnings | Run `npm run update:gitnexus -- --force` |
+
+<!-- gitnexus:end -->

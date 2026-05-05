@@ -8,6 +8,9 @@
     "check:module-docs:coverage": "node scripts/check-module-doc-coverage.mjs",
     "check:module-docs:diff": "node scripts/check-module-doc-diff.mjs",
     "check:module-docs": "npm run check:module-docs:coverage && npm run check:module-docs:diff",
+    "check:gitnexus-freshness": "node scripts/check-gitnexus-freshness.mjs",
+    "check:lean-ctx": "node scripts/check-lean-ctx.mjs",
+    "update:gitnexus": "node scripts/update-gitnexus.mjs",
     "test:architecture": "node --test scripts/check-architecture.test.mjs",
     "test:git-layout": "node --test scripts/git-layout.test.mjs",
     "test:agent-layout": "node --test scripts/agent-layout.test.mjs",
@@ -29,7 +32,7 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
     "tauri:build": "tauri build",
-    "verify": "npm run check:module-docs && npm run check:architecture && npm run test:architecture && npm run test:git-layout && npm run test:agent-layout && npm run test:agent-brand-icon && npm run test:bundle-splitting && npm run test:assistant-layout && npm run test:assistant-terminal && npm run test:agent-order && npm run test:skills-filters && npm run test:project-draft && npm run test:project-assignment-layout && npm run test:scroll-memory && npm run test:external-sources-ui && npm run test:app-shell-design && npm run build && cargo check --manifest-path src-tauri/Cargo.toml && cargo test --manifest-path src-tauri/Cargo.toml"
+    "verify": "npm run check:gitnexus-freshness && npm run check:lean-ctx && npm run check:module-docs && npm run check:architecture && npm run test:architecture && npm run test:git-layout && npm run test:agent-layout && npm run test:agent-brand-icon && npm run test:bundle-splitting && npm run test:assistant-layout && npm run test:assistant-terminal && npm run test:agent-order && npm run test:skills-filters && npm run test:project-draft && npm run test:project-assignment-layout && npm run test:scroll-memory && npm run test:external-sources-ui && npm run test:app-shell-design && npm run build && cargo check --manifest-path src-tauri/Cargo.toml && cargo test --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.10.1",
