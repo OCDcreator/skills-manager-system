@@ -16,6 +16,7 @@ const IS_WINDOWS = process.platform === "win32";
 
 function main() {
   const forceFlag = FORCE ? " --force" : "";
+  const skipAgentsMdFlag = " --skip-agents-md";
 
   if (IS_WINDOWS) {
     const DISTRO = process.env.GITNEXUS_WSL_DISTRO || "Ubuntu";
@@ -32,13 +33,13 @@ function main() {
 
     console.log(`🔄 Updating GitNexus index via WSL (${DISTRO})...`);
     execSync(
-      `wsl -d ${DISTRO} -e bash -lc "cd '${wslPath.replace(/'/g, "'\"'\"'")}' && npx -y gitnexus@1.6.3 analyze${forceFlag}"`,
+      `wsl -d ${DISTRO} -e bash -lc "cd '${wslPath.replace(/'/g, "'\"'\"'")}' && npx -y gitnexus@1.6.3 analyze${forceFlag}${skipAgentsMdFlag}"`,
       { stdio: "inherit", cwd: REPO_ROOT }
     );
   } else {
     console.log("🔄 Updating GitNexus index...");
     execSync(
-      `npx -y gitnexus@1.6.3 analyze${forceFlag}`,
+      `npx -y gitnexus@1.6.3 analyze${forceFlag}${skipAgentsMdFlag}`,
       { stdio: "inherit", cwd: REPO_ROOT }
     );
   }
