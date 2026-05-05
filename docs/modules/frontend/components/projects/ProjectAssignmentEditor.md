@@ -13,8 +13,8 @@ Main left-column editor for project assignment drafts. Renders searchable multi-
 - renders skill toggles with two-line-clamped descriptions plus visible relative-path labels
 - renders compact agent toggles with `projectSkillsDirRule` hints, not global sync paths
 - forwards local query and toggle events back to `ProjectsView`
-- renders path-bucket pills for skills and enabled-state pills for agents so the workbench can be narrowed without typing
-- renders an additional skill-selection filter row (`all / selected / unselected`) to quickly isolate already-picked or remaining skills
+- renders path-bucket pills and selected-state pills on one compact skill-filter row so the workbench can be narrowed without typing
+- renders agent enabled-state pills separately for agent filtering
 - caps the two chooser panes with viewport-aware maximum heights so their content scrolls instead of stretching the page
 - uses the shared `skill-markdown-scroll` surface for both chooser scroll areas
 - remembers each chooser pane's scroll position independently across remounts

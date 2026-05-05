@@ -53,7 +53,7 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
               onChange={(event) => props.onSkillQueryChange(event.target.value)}
               value={props.skillQuery}
             />
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-400">
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
               {props.skillPathSummaries.map((summary) => (
                 <button
                   className={filterPillClass(props.skillPathFilter === summary.key)}
@@ -66,8 +66,6 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
                     : `${summary.key} · ${summary.count}`}
                 </button>
               ))}
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-400">
               {(["all", "selected", "unselected"] as const).map((status) => (
                 <button
                   className={filterPillClass(props.skillSelectionFilter === status)}

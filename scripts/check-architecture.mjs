@@ -13,8 +13,11 @@ const SOURCE_EXTENSIONS = new Set([
 ]);
 
 const EXCLUDED_DIRECTORIES = new Set([
+  '.agents',
+  '.claude',
   '.git',
   '.next',
+  '.opencode',
   '.turbo',
   '.vscode',
   'build',

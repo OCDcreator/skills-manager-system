@@ -320,7 +320,7 @@ export function ProjectsView() {
             skills={visibleSkills}
           />
         </div>
-        <div className="min-h-0 min-[1380px]:sticky min-[1380px]:top-8 min-[1380px]:self-start">
+        <div className="min-h-0 min-[1380px]:sticky min-[1380px]:top-8 min-[1380px]:relative min-[1380px]:self-stretch">
           <ProjectAssignmentSummary
             disabledSelectedSkillIds={summary.disabledSelectedSkillIds}
             duplicatePath={duplicatePath}

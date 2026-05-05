@@ -31,6 +31,8 @@ test("project assignment editor caps panel height and uses the shared markdown s
   assert.match(source, /\[-webkit-line-clamp:2\]/);
   assert.match(source, /min-\[1380px\]:grid-cols-\[minmax\(0,7fr\)_minmax\(18rem,5fr\)\]/);
   assert.match(source, /projects\.editor\.allPaths/);
+  assert.match(source, /mt-3 flex flex-wrap items-center gap-2 text-\[11px\] text-slate-400[\s\S]*projects\.editor\.allPaths[\s\S]*projects\.editor\.allSkills/);
+  assert.doesNotMatch(source, /mt-2 flex flex-wrap gap-2 text-\[11px\] text-slate-400/);
   assert.match(source, /projects\.editor\.allAgents/);
   assert.match(source, /projectSkillsDirRule/);
   assert.match(source, /skill\.relativePath/);
@@ -40,7 +42,11 @@ test("project assignment summary stays scrollable but no longer owns the save bu
   const source = fs.readFileSync(summaryPath, "utf8");
 
   assert.match(source, /max-h-\[clamp\([^,]+,calc\(100vh-[^,]+,[^\]]+\)\]/);
-  assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 text-sm/);
+  assert.match(source, /min-\[1380px\]:absolute min-\[1380px\]:inset-0 min-\[1380px\]:max-h-none/);
+  assert.match(source, /min-\[1380px\]:max-h-none/);
+  assert.match(source, /skill-markdown-scroll flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 text-sm/);
+  assert.match(source, /<section className="flex min-h-0 flex-1 flex-col">/);
+  assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-2 overflow-y-auto pr-1/);
   assert.doesNotMatch(source, /saveLabel/);
   assert.doesNotMatch(source, /onSave/);
   assert.doesNotMatch(source, /t\("projects\.summary\.saving"\)/);
@@ -78,6 +84,6 @@ test("projects view keeps the right summary as a natural sticky inspector", () =
   assert.match(source, /sortProjectAgentsForEditor/);
   assert.match(source, /skillPathFilter/);
   assert.match(source, /agentStatusFilter/);
-  assert.match(source, /min-\[1380px\]:sticky min-\[1380px\]:top-8 min-\[1380px\]:self-start/);
-  assert.doesNotMatch(source, /min-\[1380px\]:absolute min-\[1380px\]:inset-0/);
+  assert.match(source, /min-\[1380px\]:sticky min-\[1380px\]:top-8 min-\[1380px\]:relative min-\[1380px\]:self-stretch/);
+  assert.match(fs.readFileSync(summaryPath, "utf8"), /min-\[1380px\]:absolute min-\[1380px\]:inset-0/);
 });

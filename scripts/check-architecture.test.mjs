@@ -90,6 +90,27 @@ test('allows explicit domain modules and ignores i18n payload files', () => {
   );
 });
 
+test('ignores local agent skill cache directories', () => {
+  const root = createWorkspace({
+    '.claude/skills/impeccable/scripts/live-browser.js': repeatLine('export const value = 1;', 900),
+    '.opencode/skills/impeccable/scripts/live-server.mjs': repeatLine('export const value = 1;', 900),
+    '.agents/skills/impeccable/scripts/live-wrap.mjs': repeatLine('export const value = 1;', 900),
+    'src/lib/git-status.ts': [
+      'export function getGitStatusLabel() {',
+      "  return 'clean';",
+      '}',
+    ].join('\n'),
+  });
+
+  const result = runArchitectureCheck(root);
+
+  assert.equal(result.errors.length, 0);
+  assert.equal(result.filesScanned, 1);
+  assert(
+    result.warnings.every((issue) => !issue.file.startsWith('.')),
+  );
+});
+
 test('allows thin rust boundary files for mod.rs and tauri main entry', () => {
   const root = createWorkspace({
     'src-tauri/src/core/skills/mod.rs': 'pub mod scan;\n',
