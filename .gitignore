@@ -43,7 +43,9 @@ automation/**/*.pyc
 
 # AI tool configs (platform-specific)
 .opencode/
+.opencode/**
 .codex/
+.codex/**
 
 # Local git hooks (platform-specific paths)
 .git/hooks/pre-commit
@@ -52,11 +54,9 @@ automation/**/*.pyc
 .stfolder
 .stignore.local
 
-# Codex local config (platform-specific)
-.codex/config.toml
-
 # Claude Code local state
 .claude/
+.claude/**
 
 # Project-local AI skill installs
 .agents/
