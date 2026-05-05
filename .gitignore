@@ -41,9 +41,9 @@ automation/**/__pycache__/
 automation/**/*.pyc
 .gitnexus
 
-# Platform-specific OpenCode MCP config
-# Use .opencode/opencode.json.<platform> as template
-.opencode/opencode.json
+# AI tool configs (platform-specific)
+.opencode/
+.codex/
 
 # Local git hooks (platform-specific paths)
 .git/hooks/pre-commit
@@ -52,4 +52,8 @@ automation/**/*.pyc
 .stfolder
 .stignore.local
 
-# Codex local config (platform-specific).ncodex/config.toml
+# Codex local config (platform-specific)
+.codex/config.toml
+
+# Claude Code local state
+.claude/
