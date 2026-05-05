@@ -1,0 +1,9 @@
+# Codex project-level MCP configuration for skills-manager-system (macOS)
+# This file is local-only (not committed to git).
+
+[mcp_servers.lean-ctx]
+command = "lean-ctx"
+
+[mcp_servers.gitnexus]
+command = "npx"
+args = ["-y", "gitnexus@latest", "mcp"]
