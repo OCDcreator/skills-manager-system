@@ -21,6 +21,22 @@ pub struct ProjectAgentAssignment {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
+pub enum ProjectApplyFreshness {
+    Current,
+    Stale,
+    NeverApplied,
+    Unsupported,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectAgentApplyStatus {
+    pub apply_status: ProjectApplyFreshness,
+    pub last_applied_at: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct ProjectAssignment {
     pub project_path: String,
     pub display_name: String,
@@ -32,6 +48,8 @@ pub struct ProjectAssignment {
     pub skill_ids: Vec<String>,
     #[serde(default)]
     pub agent_keys: Vec<String>,
+    #[serde(default, skip_serializing)]
+    pub apply_statuses: BTreeMap<String, ProjectAgentApplyStatus>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
@@ -105,6 +123,7 @@ impl ProjectConfigStore {
                     unsupported_agent_keys,
                     skill_ids: Vec::new(),
                     agent_keys: Vec::new(),
+                    apply_statuses: BTreeMap::new(),
                 },
             );
             Ok(())

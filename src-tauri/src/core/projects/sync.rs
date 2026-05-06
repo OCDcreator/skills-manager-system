@@ -1,7 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 use std::path::Path;
 
 use crate::core::agents::catalog::{find_agent, project_skills_dir_rule};
@@ -12,28 +11,22 @@ use crate::core::agents::selection::{
 };
 use crate::core::agents::sync::AgentApplyResult;
 use crate::core::agents::target_sync::{
-    apply_desired_entries, build_desired_skill_entries, cleanup_managed_entries, DesiredSkillEntry,
-    SyncMode,
+    apply_desired_entries, build_desired_skill_entries, DesiredSkillEntry, SyncMode,
 };
 use crate::core::platform_paths::portable_path_string;
 use crate::core::settings::{AgentSyncMode, SettingsStore};
 
-use super::store::{ProjectAgentAssignment, ProjectAssignment, ProjectConfigStore};
-
-const PROJECT_LEDGER_FILE_NAME: &str = "project-sync-ledger.json";
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-struct ProjectSyncLedger {
-    assignments: BTreeMap<String, ProjectSyncLedgerEntry>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-struct ProjectSyncLedgerEntry {
-    agent_key: String,
-    target_dir: String,
-}
+use super::apply_status::{project_apply_statuses, project_resolution_hash};
+use super::store::{
+    ProjectAgentApplyStatus, ProjectAgentAssignment, ProjectApplyFreshness, ProjectAssignment,
+    ProjectConfigSnapshot, ProjectConfigStore,
+};
+use super::sync_ledger::{
+    cleanup_retargeted_assignments, cleanup_stale_assignments, ledger_key, load_ledger,
+    save_ledger, ProjectSyncLedger, ProjectSyncLedgerEntry,
+};
+#[cfg(test)]
+use super::sync_ledger::normalize_legacy_target_for_comparison;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -41,6 +34,7 @@ pub struct ProjectAssignmentApplyResult {
     pub project_path: String,
     pub display_name: String,
     pub enabled_skill_count: usize,
+    pub apply_statuses: BTreeMap<String, ProjectAgentApplyStatus>,
     pub results: Vec<AgentApplyResult>,
 }
 
@@ -90,6 +84,30 @@ pub fn apply_project_assignments(
     })
 }
 
+pub fn attach_project_apply_statuses(
+    config_dir: &Path,
+    repo_path: &Path,
+    system_dirs: &AgentSystemDirs,
+    mut snapshot: ProjectConfigSnapshot,
+) -> Result<ProjectConfigSnapshot> {
+    let inventory = load_agent_inventory(config_dir, system_dirs)?;
+    let agents = inventory
+        .agents
+        .into_iter()
+        .map(|agent| (agent.key.clone(), agent))
+        .collect::<BTreeMap<_, _>>();
+    let skill_context = load_skill_selection_context(config_dir, repo_path)?;
+    let sync_mode = load_project_sync_mode(config_dir)?;
+    let ledger = load_ledger(config_dir)?;
+
+    for project in snapshot.projects.values_mut() {
+        project.apply_statuses =
+            project_apply_statuses(project, &agents, &skill_context, sync_mode, &ledger);
+    }
+
+    Ok(snapshot)
+}
+
 fn apply_for_project(
     project: &ProjectAssignment,
     agents: &BTreeMap<String, AgentInventoryItem>,
@@ -99,6 +117,7 @@ fn apply_for_project(
     managed_keys: &mut BTreeSet<String>,
 ) -> Result<ProjectAssignmentApplyResult> {
     let mut results = Vec::new();
+    let mut apply_statuses = BTreeMap::new();
     let mut enabled_skill_ids = BTreeSet::new();
 
     cleanup_retargeted_assignments(project, ledger)?;
@@ -111,6 +130,13 @@ fn apply_for_project(
             Some(agent) => {
                 let Some(global_agent) = agents.get(agent_key) else {
                     ledger.assignments.remove(&key);
+                    apply_statuses.insert(
+                        agent_key.clone(),
+                        ProjectAgentApplyStatus {
+                            apply_status: ProjectApplyFreshness::Unsupported,
+                            last_applied_at: None,
+                        },
+                    );
                     results.push(unsupported_agent_result(agent_key));
                     continue;
                 };
@@ -128,6 +154,14 @@ fn apply_for_project(
                     project_agent,
                     skill_context,
                 );
+                let resolution_hash = project_resolution_hash(
+                    project,
+                    agent_key,
+                    project_agent,
+                    &project_result,
+                    project_skills_dir_rule(agent),
+                    sync_mode,
+                );
                 let enabled_skills = project_result
                     .entries
                     .into_iter()
@@ -141,11 +175,21 @@ fn apply_for_project(
                 let stats =
                     apply_desired_entries(&target_dir, agent_key, &desired_entries, sync_mode)?;
                 let warnings = format_diagnostics(&project_result.diagnostics);
+                let applied_at = current_unix_timestamp();
                 ledger.assignments.insert(
-                    key,
+                    key.clone(),
                     ProjectSyncLedgerEntry {
                         agent_key: agent_key.clone(),
                         target_dir: portable_path_string(&target_dir),
+                        resolution_hash,
+                        applied_at,
+                    },
+                );
+                apply_statuses.insert(
+                    agent_key.clone(),
+                    ProjectAgentApplyStatus {
+                        apply_status: ProjectApplyFreshness::Current,
+                        last_applied_at: Some(applied_at),
                     },
                 );
 
@@ -171,6 +215,13 @@ fn apply_for_project(
             }
             None => {
                 ledger.assignments.remove(&key);
+                apply_statuses.insert(
+                    agent_key.clone(),
+                    ProjectAgentApplyStatus {
+                        apply_status: ProjectApplyFreshness::Unsupported,
+                        last_applied_at: None,
+                    },
+                );
                 unsupported_agent_result(agent_key)
             }
         };
@@ -182,53 +233,9 @@ fn apply_for_project(
         project_path: project.project_path.clone(),
         display_name: project.display_name.clone(),
         enabled_skill_count: enabled_skill_ids.len(),
+        apply_statuses,
         results,
     })
-}
-
-fn cleanup_retargeted_assignments(
-    project: &ProjectAssignment,
-    ledger: &mut ProjectSyncLedger,
-) -> Result<()> {
-    for agent_key in &project.agent_keys {
-        let key = ledger_key(&project.project_path, agent_key);
-        let Some(agent) = find_agent(agent_key) else {
-            continue;
-        };
-        let new_target_dir = Path::new(&project.project_path).join(project_skills_dir_rule(agent));
-        let new_target = portable_path_string(&new_target_dir);
-        let Some(previous) = ledger.assignments.get(&key) else {
-            continue;
-        };
-        if normalize_legacy_target_for_comparison(&previous.target_dir) == new_target {
-            continue;
-        }
-
-        cleanup_managed_entries(Path::new(&previous.target_dir), &previous.agent_key)?;
-        ledger.assignments.remove(&key);
-    }
-
-    Ok(())
-}
-
-fn cleanup_stale_assignments(
-    ledger: &mut ProjectSyncLedger,
-    managed_keys: &BTreeSet<String>,
-) -> Result<()> {
-    let stale_keys: Vec<String> = ledger
-        .assignments
-        .keys()
-        .filter(|key| !managed_keys.contains(*key))
-        .cloned()
-        .collect();
-
-    for key in stale_keys {
-        if let Some(entry) = ledger.assignments.remove(&key) {
-            cleanup_managed_entries(Path::new(&entry.target_dir), &entry.agent_key)?;
-        }
-    }
-
-    Ok(())
 }
 
 fn unsupported_agent_result(agent_key: &str) -> AgentApplyResult {
@@ -242,6 +249,10 @@ fn unsupported_agent_result(agent_key: &str) -> AgentApplyResult {
         conflict_count: 0,
         message: format!("Unsupported agent key '{}'.", agent_key),
     }
+}
+
+fn current_unix_timestamp() -> i64 {
+    time::OffsetDateTime::now_utc().unix_timestamp()
 }
 
 fn load_project_sync_mode(config_dir: &Path) -> Result<SyncMode> {
@@ -285,34 +296,10 @@ fn push_warning(warnings: &mut Vec<String>, label: &str, ids: &[String]) {
     if !ids.is_empty() { warnings.push(format!("{label}: {}", ids.join(", "))); }
 }
 
-fn load_ledger(config_dir: &Path) -> Result<ProjectSyncLedger> {
-    let path = config_dir.join(PROJECT_LEDGER_FILE_NAME);
-    if !path.exists() {
-        return Ok(ProjectSyncLedger::default());
-    }
-
-    let raw = fs::read_to_string(&path)?;
-    Ok(serde_json::from_str(&raw)?)
-}
-
-fn save_ledger(config_dir: &Path, ledger: &ProjectSyncLedger) -> Result<()> {
-    fs::create_dir_all(config_dir)?;
-    fs::write(config_dir.join(PROJECT_LEDGER_FILE_NAME), serde_json::to_string_pretty(ledger)?)?;
-    Ok(())
-}
-
-fn ledger_key(project_path: &str, agent_key: &str) -> String {
-    format!("{}\n{}", project_path, agent_key)
-}
-
-fn normalize_legacy_target_for_comparison(target_dir: &str) -> String {
-    if cfg!(windows) {
-        target_dir.replace('\\', "/")
-    } else {
-        target_dir.to_string()
-    }
-}
-
 #[cfg(test)]
 #[path = "sync_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "sync_status_tests.rs"]
+mod status_tests;

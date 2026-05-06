@@ -6,8 +6,7 @@ use crate::core::agents::selection::{
     resolve_project_agent_skill_selection,
 };
 use crate::core::agents::sync::{apply_agent_sync, AgentApplyStatus};
-use crate::core::projects::store::ProjectAgentAssignment;
-use crate::core::projects::store::ProjectConfigStore;
+use crate::core::projects::store::{ProjectAgentAssignment, ProjectConfigStore};
 use crate::core::scenes::config::SceneConfigStore;
 use crate::core::settings::{AgentSyncMode, SettingsStore};
 use crate::core::skills::scan::SkillSummary;
@@ -432,6 +431,8 @@ fn project_sync_cleans_legacy_target_when_project_rule_changes() {
             ProjectSyncLedgerEntry {
                 agent_key: "opencode".to_string(),
                 target_dir: old_target.to_string_lossy().to_string(),
+                resolution_hash: String::new(),
+                applied_at: 0,
             },
         )]),
     };

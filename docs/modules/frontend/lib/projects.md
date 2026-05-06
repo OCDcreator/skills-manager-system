@@ -12,8 +12,9 @@ Frontend API types and Tauri invoke wrappers for project-assignment operations.
 | Export | Purpose |
 |---|---|
 | `ProjectAssignment` / `ProjectAgentAssignment` / `ProjectConfigSnapshot` | Frontend types for stored per-agent project assignments. |
+| `ProjectAgentApplyStatus` / `ProjectApplyFreshness` | Frontend apply-freshness DTOs for saved project cards. |
 | `ProjectPathInspection` / `ProjectPathInspectionAgentResult` | Read-only inspection payload for draft paths. |
-| `ProjectApplyResult` | Per-project apply result including display name and per-agent outcomes. |
+| `ProjectApplyResult` | Per-project apply result including display name, apply freshness, and per-agent outcomes. |
 | `ApplyProjectAssignmentsResponse` | Aggregate payload returned by `apply_project_assignments`. |
 | `getProjectConfig` / `addProject` / `updateProject` / `removeProject` | Legacy-compatible CRUD wrappers. |
 | `addProjectWithAgents` / `updateProjectWithAgents` | Per-agent project-layer CRUD wrappers that preserve project scenes and project-local exclusions. |

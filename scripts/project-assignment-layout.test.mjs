@@ -8,6 +8,7 @@ const editorPath = path.resolve("src/components/projects/ProjectAssignmentEditor
 const workbenchPath = path.resolve("src/components/projects/ProjectLayerWorkbench.tsx");
 const summaryPath = path.resolve("src/components/projects/ProjectAssignmentSummary.tsx");
 const projectsViewPath = path.resolve("src/views/ProjectsView.tsx");
+const projectCardPath = path.resolve("src/components/projects/ProjectCard.tsx");
 
 test("project assignment layout keeps the save action beside the display name field", () => {
   const source = fs.readFileSync(identityPanelPath, "utf8");
@@ -105,4 +106,17 @@ test("projects view keeps the right summary as a natural sticky inspector", () =
   assert.match(source, /agentStatusFilter/);
   assert.match(workbenchSource, /min-\[1380px\]:sticky min-\[1380px\]:top-8 min-\[1380px\]:relative min-\[1380px\]:self-stretch/);
   assert.match(fs.readFileSync(summaryPath, "utf8"), /min-\[1380px\]:absolute min-\[1380px\]:inset-0/);
+});
+
+test("project cards surface apply freshness per project agent", () => {
+  const source = fs.readFileSync(projectCardPath, "utf8");
+  const enSource = fs.readFileSync(path.resolve("src/i18n/en.json"), "utf8");
+  const zhSource = fs.readFileSync(path.resolve("src/i18n/zh.json"), "utf8");
+
+  assert.match(source, /project\.applyStatuses\?\.\[agentKey\]\?\.applyStatus/);
+  assert.match(source, /projects\.card\.applyStatus\.\$\{status\}/);
+  assert.match(source, /neverApplied/);
+  assert.match(source, /unsupported/);
+  assert.match(enSource, /projects\.card\.applyStatus\.stale/);
+  assert.match(zhSource, /projects\.card\.applyStatus\.neverApplied/);
 });

@@ -16,7 +16,7 @@ Focused tests for project-local assignment deployment.
 - verifies saved copy mode and includes a non-Windows apply-level directory symlink regression
 - verifies OpenCode uses `.opencode/skills` for project-local assignment
 - verifies Cursor and Claude Code use independent project-local target directories
-- verifies legacy ledger target directories are cleaned when project-local rules change
+- verifies legacy ledger target directories are cleaned when project-local rules change, including legacy entries that predate resolution hashes
 
 ## Interactions
 

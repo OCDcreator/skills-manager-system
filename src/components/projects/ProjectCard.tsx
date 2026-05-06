@@ -33,6 +33,13 @@ export function ProjectCard({
     (count, [, assignment]) => count + assignment.excludedSkillIds.length,
     0,
   );
+  const statusEntries = [
+    ...new Set([
+      ...agentEntries.map(([agentKey]) => agentKey),
+      ...legacyAgentKeys,
+      ...(project.unsupportedAgentKeys ?? []),
+    ]),
+  ].sort();
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
@@ -71,6 +78,26 @@ export function ProjectCard({
         </span>
       </div>
 
+      {statusEntries.length ? (
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          {statusEntries.map((agentKey) => {
+            const status =
+              project.applyStatuses?.[agentKey]?.applyStatus ??
+              (project.unsupportedAgentKeys?.includes(agentKey)
+                ? "unsupported"
+                : "neverApplied");
+            return (
+              <span
+                className={`rounded-full border px-2.5 py-1 ${statusClassName(status)}`}
+                key={agentKey}
+              >
+                {agentKey}: {t(`projects.card.applyStatus.${status}`)}
+              </span>
+            );
+          })}
+        </div>
+      ) : null}
+
       <div className="mt-4 flex items-center gap-2">
         <button
           className="rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700"
@@ -94,4 +121,17 @@ export function ProjectCard({
       ) : null}
     </div>
   );
+}
+
+function statusClassName(status: string) {
+  if (status === "current") {
+    return "border-emerald-800 bg-emerald-950/50 text-emerald-200";
+  }
+  if (status === "stale") {
+    return "border-amber-800 bg-amber-950/50 text-amber-200";
+  }
+  if (status === "unsupported") {
+    return "border-rose-800 bg-rose-950/50 text-rose-200";
+  }
+  return "border-slate-700 bg-slate-950/70 text-slate-300";
 }

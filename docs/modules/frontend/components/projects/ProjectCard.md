@@ -5,7 +5,7 @@
 
 ## Overview
 
-Saved-project management card showing per-agent layer counts, edit/delete actions, and session-scoped apply feedback.
+Saved-project management card showing per-agent layer counts, per-agent apply freshness, edit/delete actions, and session-scoped apply feedback.
 
 ## Props
 
@@ -21,3 +21,4 @@ Saved-project management card showing per-agent layer counts, edit/delete action
 
 - Used by `SavedProjectsSection.tsx` to render each saved project below the main workbench
 - Reads both the new per-agent assignment shape and legacy flat compatibility fields while saved configs migrate
+- Shows `current`, `stale`, `never applied`, or `unsupported` status for each configured project agent based on the backend ledger annotation

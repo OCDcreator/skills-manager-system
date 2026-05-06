@@ -5,6 +5,7 @@ export interface ProjectAssignment {
   displayName: string;
   agents: Record<string, ProjectAgentAssignment>;
   unsupportedAgentKeys: string[];
+  applyStatuses: Record<string, ProjectAgentApplyStatus>;
   skillIds?: string[];
   agentKeys?: string[];
 }
@@ -13,6 +14,17 @@ export interface ProjectAgentAssignment {
   selectedSkillIds: string[];
   selectedSceneIds: string[];
   excludedSkillIds: string[];
+}
+
+export type ProjectApplyFreshness =
+  | "current"
+  | "stale"
+  | "neverApplied"
+  | "unsupported";
+
+export interface ProjectAgentApplyStatus {
+  applyStatus: ProjectApplyFreshness;
+  lastAppliedAt: number | null;
 }
 
 export interface ProjectConfigSnapshot {
@@ -30,6 +42,7 @@ export interface ProjectApplyResult {
   projectPath: string;
   displayName: string;
   enabledSkillCount: number;
+  applyStatuses: Record<string, ProjectAgentApplyStatus>;
   results: ProjectAgentResult[];
 }
 

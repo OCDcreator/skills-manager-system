@@ -11,7 +11,7 @@ Thin Tauri command wrappers for project assignment operations. Maps core results
 
 | Command | Purpose |
 |---|---|
-| `get_project_config` | Load current project config snapshot |
+| `get_project_config` | Load current project config snapshot with transient apply freshness when repo context is available |
 | `add_project` | Register a new project with skills/agents |
 | `add_project_with_agents` | Register a new project with per-agent skills/scenes/exclusions |
 | `update_project` | Modify project skill/agent assignments |
