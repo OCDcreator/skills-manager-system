@@ -1,4 +1,5 @@
 use super::*;
+use std::collections::BTreeMap;
 use tempfile::tempdir;
 
 #[test]
@@ -27,10 +28,186 @@ fn add_project_round_trips() {
 
     assert_eq!(snapshot.projects[&project_path].display_name, "App");
     assert_eq!(
-        snapshot.projects[&project_path].skill_ids,
+        snapshot.projects[&project_path].agents["codex"].selected_skill_ids,
         vec!["custom:skill"]
     );
     assert_eq!(store.load().unwrap(), snapshot);
+}
+
+#[test]
+fn loads_legacy_flat_project_as_per_agent_entries() {
+    let temp = tempfile::tempdir().unwrap();
+    let config_dir = temp.path().join("config");
+    std::fs::create_dir_all(&config_dir).unwrap();
+    std::fs::write(
+        config_dir.join("project-config.json"),
+        r#"{
+  "projects": {
+    "C:/repo/app": {
+      "projectPath": "C:/repo/app",
+      "displayName": "App",
+      "skillIds": ["custom:alpha"],
+      "agentKeys": ["codex", "unknown-agent"]
+    }
+  }
+}"#,
+    )
+    .unwrap();
+
+    let snapshot = ProjectConfigStore::new(config_dir).load().unwrap();
+    let project = snapshot.projects.get("C:/repo/app").unwrap();
+
+    assert_eq!(
+        project.agents["codex"].selected_skill_ids,
+        vec!["custom:alpha"]
+    );
+    assert_eq!(
+        project.agents["codex"].selected_scene_ids,
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        project.agents["codex"].excluded_skill_ids,
+        Vec::<String>::new()
+    );
+    assert_eq!(project.unsupported_agent_keys, vec!["unknown-agent"]);
+}
+
+#[test]
+fn saves_per_agent_project_entries_sorted_and_deduped() {
+    let temp = tempfile::tempdir().unwrap();
+    let store = ProjectConfigStore::new(temp.path().join("config"));
+
+    store
+        .add_project_with_agents(
+            "C:/repo/app",
+            "App",
+            BTreeMap::from([(
+                "codex".to_string(),
+                ProjectAgentAssignment {
+                    selected_skill_ids: vec![
+                        "custom:beta".into(),
+                        "custom:alpha".into(),
+                        "custom:alpha".into(),
+                    ],
+                    selected_scene_ids: vec!["focus".into()],
+                    excluded_skill_ids: vec!["custom:beta".into()],
+                },
+            )]),
+        )
+        .unwrap();
+
+    let entry = &store.load().unwrap().projects["C:/repo/app"].agents["codex"];
+    assert_eq!(
+        entry.selected_skill_ids,
+        vec!["custom:alpha", "custom:beta"]
+    );
+    assert_eq!(entry.selected_scene_ids, vec!["focus"]);
+    assert_eq!(entry.excluded_skill_ids, vec!["custom:beta"]);
+}
+
+#[test]
+fn loads_new_format_project_without_flat_compat_fields() {
+    let temp = tempfile::tempdir().unwrap();
+    let config_dir = temp.path().join("config");
+    std::fs::create_dir_all(&config_dir).unwrap();
+    std::fs::write(
+        config_dir.join("project-config.json"),
+        r#"{
+  "projects": {
+    "C:/repo/app": {
+      "projectPath": "C:/repo/app",
+      "displayName": "App",
+      "agents": {
+        "codex": {
+          "selectedSkillIds": ["custom:alpha"],
+          "selectedSceneIds": ["focus"],
+          "excludedSkillIds": []
+        }
+      },
+      "unsupportedAgentKeys": []
+    }
+  }
+}"#,
+    )
+    .unwrap();
+
+    let snapshot = ProjectConfigStore::new(config_dir).load().unwrap();
+    let project = snapshot.projects.get("C:/repo/app").unwrap();
+
+    assert_eq!(project.skill_ids, vec!["custom:alpha"]);
+    assert_eq!(project.agent_keys, vec!["codex"]);
+}
+
+#[test]
+fn serializes_flat_compat_fields_for_current_readers() {
+    let temp = tempfile::tempdir().unwrap();
+    let store = ProjectConfigStore::new(temp.path().join("config"));
+
+    store
+        .add_project_with_agents(
+            "C:/repo/app",
+            "App",
+            BTreeMap::from([(
+                "codex".to_string(),
+                ProjectAgentAssignment {
+                    selected_skill_ids: vec!["custom:beta".into(), "custom:alpha".into()],
+                    selected_scene_ids: vec!["focus".into()],
+                    excluded_skill_ids: Vec::new(),
+                },
+            )]),
+        )
+        .unwrap();
+
+    let value = serde_json::to_value(store.load().unwrap()).unwrap();
+    let project = &value["projects"]["C:/repo/app"];
+
+    assert_eq!(
+        project["skillIds"],
+        serde_json::json!(["custom:alpha", "custom:beta"])
+    );
+    assert_eq!(project["agentKeys"], serde_json::json!(["codex"]));
+    assert!(project["agents"].is_object());
+}
+
+#[test]
+fn update_project_agents_preserves_unsupported_legacy_agent_keys() {
+    let temp = tempfile::tempdir().unwrap();
+    let config_dir = temp.path().join("config");
+    std::fs::create_dir_all(&config_dir).unwrap();
+    std::fs::write(
+        config_dir.join("project-config.json"),
+        r#"{
+  "projects": {
+    "C:/repo/app": {
+      "projectPath": "C:/repo/app",
+      "displayName": "App",
+      "skillIds": ["custom:alpha"],
+      "agentKeys": ["codex", "unknown-agent"]
+    }
+  }
+}"#,
+    )
+    .unwrap();
+
+    let store = ProjectConfigStore::new(config_dir);
+    store
+        .update_project_agents(
+            "C:/repo/app",
+            None,
+            Some(BTreeMap::from([(
+                "codex".to_string(),
+                ProjectAgentAssignment {
+                    selected_skill_ids: vec!["custom:beta".into()],
+                    selected_scene_ids: Vec::new(),
+                    excluded_skill_ids: Vec::new(),
+                },
+            )])),
+        )
+        .unwrap();
+
+    let project = &store.load().unwrap().projects["C:/repo/app"];
+    assert_eq!(project.unsupported_agent_keys, vec!["unknown-agent"]);
+    assert_eq!(project.agent_keys, vec!["codex", "unknown-agent"]);
 }
 
 #[test]
@@ -106,7 +283,9 @@ fn load_normalizes_legacy_windows_project_keys() {
     let store = ProjectConfigStore::new(dir.path().to_path_buf());
     let snapshot = store.load().unwrap();
 
-    assert!(snapshot.projects.contains_key("C:/Users/test/workspace/app"));
+    assert!(snapshot
+        .projects
+        .contains_key("C:/Users/test/workspace/app"));
     assert_eq!(
         snapshot.projects["C:/Users/test/workspace/app"].project_path,
         "C:/Users/test/workspace/app"
@@ -148,7 +327,5 @@ fn load_rejects_legacy_project_keys_that_normalize_to_the_same_path() {
     let store = ProjectConfigStore::new(dir.path().to_path_buf());
     let error = store.load().unwrap_err().to_string();
 
-    assert!(error.contains(
-        "Duplicate project entries normalize to 'C:/Users/test/workspace/app'"
-    ));
+    assert!(error.contains("Duplicate project entries normalize to 'C:/Users/test/workspace/app'"));
 }
