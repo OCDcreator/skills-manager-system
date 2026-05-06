@@ -19,7 +19,7 @@ Scans the configured `my-skills` repository and builds sorted skill summaries, i
 
 ## Core Logic
 
-The base scan still reads only first-level custom skills, recursively walks `external/`, ignores noise directories, canonicalizes relative paths, and sorts by skill id. The new enrichment pass looks for `.skills-manager-source.json` inside external skill directories, parses that manifest, matches it against persisted import records, and attaches `managed_source` metadata when the mirror is healthy. If manifest and import records drift, the skill still scans as external but carries `integrity: mismatch`.
+The base scan still reads only first-level custom skills, recursively walks `external/`, ignores noise directories, canonicalizes relative paths, and sorts by skill id. The new enrichment pass looks for `.skills-manager-source.json` inside external skill directories, parses that manifest, matches it against persisted import records, and attaches `managed_source` metadata when the mirror is healthy. If manifest and import records drift, the skill still scans as external but carries `integrity: mismatch`. Desktop startup now normally routes through `cache.rs`, which preserves these same traversal and DTO rules while avoiding repeated metadata parsing for unchanged entries.
 
 ## Interactions
 

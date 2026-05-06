@@ -21,6 +21,11 @@ function errorMessageFrom(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
+async function loadDisabledSkillIds() {
+  const state = await api.getSkillState();
+  return state.disabledSkillIds;
+}
+
 export function AppProvider({ children }: PropsWithChildren) {
   const [activeView, setActiveViewState] = useState<AppView>("skills");
   const [repoPath, setRepoPath] = useState<string | null>(null);
@@ -45,9 +50,7 @@ export function AppProvider({ children }: PropsWithChildren) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigation = useNavigationGuardState(activeView, setActiveViewState);
   const { agentOrder, sortedAgentInventory, refreshAgentOrder, saveAgentOrder } = useAgentOrderState({
-    agentInventory,
-    errorMessageFrom,
-    setErrorMessage,
+    agentInventory, errorMessageFrom, setErrorMessage,
   });
 
   useEffect(() => {
@@ -66,13 +69,22 @@ export function AppProvider({ children }: PropsWithChildren) {
 
     setIsLoading(true);
     try {
+      const cachedResponse = await api.loadCachedSkills();
+      if (cachedResponse) {
+        setScanResult(cachedResponse);
+        try {
+          setDisabledSkillIds(await loadDisabledSkillIds());
+        } catch {
+          setDisabledSkillIds([]);
+        }
+      }
+
       const response = await api.scanSkills();
       setScanResult(response);
       let nextError: string | null = null;
       const currentSelectedSkillId = selectedSkillIdRef.current;
       try {
-        const state = await api.getSkillState();
-        setDisabledSkillIds(state.disabledSkillIds);
+        setDisabledSkillIds(await loadDisabledSkillIds());
       } catch (error) {
         setDisabledSkillIds([]);
         nextError = errorMessageFrom(error);
@@ -342,9 +354,11 @@ export function AppProvider({ children }: PropsWithChildren) {
       try {
         const savedPath = await api.getRepoPath();
         setRepoPath(savedPath);
+        if (!savedPath) {
+          setIsLoading(false);
+        }
       } catch (error) {
         setErrorMessage(errorMessageFrom(error));
-      } finally {
         setIsLoading(false);
       }
     })();
@@ -416,52 +430,16 @@ export function AppProvider({ children }: PropsWithChildren) {
       cancelNavigation: navigation.cancelNavigation,
     }),
     [
-      activeView,
-      repoPath,
-      scanResult,
-      selectedSkill,
-      selectedDocument,
-      disabledSkillIds,
-      agentOrder,
-      agentInventory,
-      sortedAgentInventory,
-      lastAgentApplyResult,
-      externalSources,
-      isLoading,
-      isLoadingAgents,
-      isLoadingExternalSources,
-      isSavingPath,
-      isApplyingAgentSync,
-      isAddingExternalSource,
-      updatingSkillId,
-      updatingAgentKey,
-      updatingExternalSourceId,
-      updatingExternalImportId,
-      errorMessage,
-      navigation.pendingNavigation,
-      navigation.setActiveView,
-      refreshSkills,
-      refreshAgents,
-      refreshExternalSources,
-      saveRepoPath,
-      selectSkill,
-      setSkillEnabled,
-      setAgentEnabled,
-      setAgentPathOverride,
-      clearAgentPathOverride,
-      saveAgentConfiguration,
-      saveAgentOrder,
-      applyAgentSync,
-      addExternalSource,
-      fetchExternalSource,
-      importExternalVariant,
-      updateExternalImport,
-      removeExternalSource,
-      repairExternalImport,
-      navigation.registerNavigationGuard,
-      navigation.confirmNavigationSave,
-      navigation.confirmNavigationDiscard,
-      navigation.cancelNavigation,
+      activeView, repoPath, scanResult, selectedSkill, selectedDocument, disabledSkillIds,
+      agentOrder, agentInventory, sortedAgentInventory, lastAgentApplyResult, externalSources,
+      isLoading, isLoadingAgents, isLoadingExternalSources, isSavingPath, isApplyingAgentSync,
+      isAddingExternalSource, updatingSkillId, updatingAgentKey, updatingExternalSourceId,
+      updatingExternalImportId, errorMessage, navigation.pendingNavigation, navigation.setActiveView,
+      refreshSkills, refreshAgents, refreshExternalSources, saveRepoPath, selectSkill, setSkillEnabled,
+      setAgentEnabled, setAgentPathOverride, clearAgentPathOverride, saveAgentConfiguration,
+      saveAgentOrder, applyAgentSync, addExternalSource, fetchExternalSource, importExternalVariant,
+      updateExternalImport, removeExternalSource, repairExternalImport, navigation.registerNavigationGuard,
+      navigation.confirmNavigationSave, navigation.confirmNavigationDiscard, navigation.cancelNavigation,
     ],
   );
 

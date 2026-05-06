@@ -215,6 +215,9 @@ export const setAgentOrder = (agentOrder: AgentKey[]) =>
 
 export const scanSkills = () => invoke<ScanSkillsResponse>("scan_skills");
 
+export const loadCachedSkills = () =>
+  invoke<ScanSkillsResponse | null>("load_cached_skills");
+
 export const getSkillDocument = (relativePath: string) =>
   invoke<SkillDocument>("get_skill_document", { relativePath });
 

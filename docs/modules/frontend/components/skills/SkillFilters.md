@@ -22,7 +22,7 @@ Downstream: src/lib/skills/filters.ts, src/i18n/index.ts
 
 ## Core Logic
 
-The component receives current search text, selected source/status filters, source/status counts, and refresh state. It renders a search input, refresh button, and one button per filter summary. Source and status filters share one compact wrapping row, with each group keeping its label inline with its filter pills instead of stacking the groups vertically.
+The component receives current search text, selected source/status filters, source/status counts, refresh state, and first-scan loading state. It renders a search input, refresh button, and one button per filter summary. During the first scan it labels counts as scanning instead of showing the empty initial snapshot as zero. Source and status filters share one compact wrapping row, with each group keeping its label inline with its filter pills instead of stacking the groups vertically.
 
 ## Data Flow
 

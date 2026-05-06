@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 use walkdir::{DirEntry, WalkDir};
 
@@ -11,7 +11,7 @@ use super::identity::{
 use super::managed_scan::enrich_managed_external_skills;
 use super::metadata::parse_skill_metadata;
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ManagedSourceInfo {
     pub kind: String,
@@ -23,7 +23,7 @@ pub struct ManagedSourceInfo {
     pub integrity: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct SkillSummary {
     pub id: String,
@@ -36,7 +36,7 @@ pub struct SkillSummary {
     pub managed_source: Option<ManagedSourceInfo>,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ScanSkillsResponse {
     pub skills: Vec<SkillSummary>,
@@ -239,8 +239,11 @@ mod tests {
     #[test]
     fn scan_external_managed_path_keeps_external_source_type() {
         let repo = tempdir().unwrap();
-        fs::create_dir_all(repo.path().join("external/managed/github/owner__repo/codex/skill"))
-            .unwrap();
+        fs::create_dir_all(
+            repo.path()
+                .join("external/managed/github/owner__repo/codex/skill"),
+        )
+        .unwrap();
         fs::write(
             repo.path()
                 .join("external/managed/github/owner__repo/codex/skill/SKILL.md"),
@@ -312,8 +315,7 @@ mod tests {
                         import_id: "imp_01".to_string(),
                         external_source_id: "src_01".to_string(),
                         agent_key: "codex".to_string(),
-                        upstream_variant_path: "dist/agents/.agents/skills/impeccable"
-                            .to_string(),
+                        upstream_variant_path: "dist/agents/.agents/skills/impeccable".to_string(),
                         pinned_commit: "abc123".to_string(),
                         pinned_variant_fingerprint: Some("sha256:1234".to_string()),
                         skill_id: "external:managed/github/owner__repo/codex/impeccable"
@@ -398,8 +400,7 @@ mod tests {
                         import_id: "imp_01".to_string(),
                         external_source_id: "src_01".to_string(),
                         agent_key: "codex".to_string(),
-                        upstream_variant_path: "dist/agents/.agents/skills/impeccable"
-                            .to_string(),
+                        upstream_variant_path: "dist/agents/.agents/skills/impeccable".to_string(),
                         pinned_commit: "abc123".to_string(),
                         pinned_variant_fingerprint: Some("sha256:1234".to_string()),
                         skill_id: "external:managed/github/owner__repo/codex/impeccable"

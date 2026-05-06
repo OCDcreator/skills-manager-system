@@ -152,6 +152,42 @@ test("SkillsView batches source-window enablement through the existing setSkillE
   assert.match(source, /onSetManyEnabled=\{handleSetManySkillsEnabled\}/);
 });
 
+test("SkillsView keeps the first empty scan snapshot in loading state", () => {
+  const source = fs.readFileSync(path.resolve("src/views/SkillsView.tsx"), "utf8");
+
+  assert.match(source, /isInitialSkillLoad = isLoading && scanResult\.skills\.length === 0/);
+  assert.match(source, /isInitialLoading=\{isInitialSkillLoad\}/);
+  assert.match(source, /isLoading=\{isInitialSkillLoad\}/);
+  assert.match(source, /skills\.detail\.loadingInitial/);
+});
+
+test("Skill browser loading UI does not present initial zero counts as empty results", () => {
+  const filtersSource = fs.readFileSync(path.resolve("src/components/skills/SkillFilters.tsx"), "utf8");
+  const listSource = fs.readFileSync(path.resolve("src/components/skills/SkillList.tsx"), "utf8");
+
+  assert.match(filtersSource, /isInitialLoading/);
+  assert.match(filtersSource, /skills\.loadingShort/);
+  assert.match(filtersSource, /skills\.refreshing/);
+  assert.match(listSource, /role="status"/);
+  assert.match(listSource, /skills\.loadingBody/);
+  assert.match(listSource, /isLoading \? \(/);
+});
+
+test("AppContext loads cached skills before refreshing the scan", () => {
+  const contextSource = fs.readFileSync(path.resolve("src/context/AppContext.tsx"), "utf8");
+  const tauriSource = fs.readFileSync(path.resolve("src/lib/tauri.ts"), "utf8");
+  const commandSource = fs.readFileSync(path.resolve("src-tauri/src/commands/skills.rs"), "utf8");
+  const libSource = fs.readFileSync(path.resolve("src-tauri/src/lib.rs"), "utf8");
+
+  assert.match(tauriSource, /loadCachedSkills/);
+  assert.match(tauriSource, /load_cached_skills/);
+  assert.match(contextSource, /api\.loadCachedSkills\(\)[\s\S]*api\.scanSkills\(\)/);
+  assert.match(commandSource, /load_cached_skills/);
+  assert.match(commandSource, /load_cached_repo_skills_with_external_sources/);
+  assert.match(commandSource, /scan_repo_skills_cached_with_external_sources/);
+  assert.match(libSource, /commands::skills::load_cached_skills/);
+});
+
 test('SkillList renders managed/manual badges without introducing a third source bucket', () => {
   const source = fs.readFileSync(path.resolve('src/components/skills/SkillList.tsx'), 'utf8');
 

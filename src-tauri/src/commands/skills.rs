@@ -2,8 +2,11 @@ use std::path::Path;
 use tauri::Manager;
 
 use crate::core::settings::SettingsStore;
+use crate::core::skills::cache::{
+    load_cached_repo_skills_with_external_sources, scan_repo_skills_cached_with_external_sources,
+};
 use crate::core::skills::documents::{read_skill_document, SkillDocument};
-use crate::core::skills::scan::{scan_repo_skills_with_external_sources, ScanSkillsResponse};
+use crate::core::skills::scan::ScanSkillsResponse;
 use crate::core::skills::state::{SkillStateSnapshot, SkillStateStore};
 
 fn load_repo_path(app: &tauri::AppHandle) -> Result<String, String> {
@@ -28,7 +31,19 @@ pub fn scan_skills(app: tauri::AppHandle) -> Result<ScanSkillsResponse, String> 
         .app_config_dir()
         .map_err(|error| error.to_string())?;
 
-    scan_repo_skills_with_external_sources(Path::new(&repo_path), &config_dir)
+    scan_repo_skills_cached_with_external_sources(Path::new(&repo_path), &config_dir)
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn load_cached_skills(app: tauri::AppHandle) -> Result<Option<ScanSkillsResponse>, String> {
+    let repo_path = load_repo_path(&app)?;
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())?;
+
+    load_cached_repo_skills_with_external_sources(Path::new(&repo_path), &config_dir)
         .map_err(|error| error.to_string())
 }
 

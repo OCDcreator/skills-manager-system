@@ -13,11 +13,13 @@ interface SkillListProps {
   onSelect: (skill: SkillSummary) => void;
   onSetManyEnabled: (skillIds: string[], enabled: boolean) => Promise<void>;
   onToggleEnabled: (skillId: string, enabled: boolean) => Promise<void>;
+  isLoading: boolean;
 }
 
 export function SkillList(props: SkillListProps) {
   const {
     disabledSkillIds,
+    isLoading,
     onSelect,
     onSetManyEnabled,
     onToggleEnabled,
@@ -77,7 +79,9 @@ export function SkillList(props: SkillListProps) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{title}</h3>
-            <span className="text-xs text-slate-500">{skills.length}</span>
+            <span className="text-xs text-slate-500">
+              {isLoading ? t("skills.loadingShort") : skills.length}
+            </span>
             {isSelectionMode ? (
               <span className="text-xs text-slate-500">
                 {t("skills.bulk.selectedCount", { count: selectedSkillIds.length })}
@@ -117,7 +121,18 @@ export function SkillList(props: SkillListProps) {
           </div>
         ) : null}
       </header>
-      {skills.length === 0 ? (
+      {isLoading ? (
+        <div
+          className="mt-3 rounded-xl border border-dashed border-slate-700 px-4 py-6 text-sm text-slate-400"
+          role="status"
+        >
+          <div className="mb-2 flex items-center gap-2 text-slate-200">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-sky-300" />
+            {t("skills.loading")}
+          </div>
+          <p className="text-slate-500">{t("skills.loadingBody")}</p>
+        </div>
+      ) : skills.length === 0 ? (
         <div className="mt-3 rounded-xl border border-dashed border-slate-700 px-4 py-6 text-sm text-slate-500">
           {t("skills.empty")}
         </div>

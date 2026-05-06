@@ -24,6 +24,8 @@ runtime. It also wires both the dialog and opener plugins into the desktop
 runtime, bootstraps the assistant terminal config workspace on startup, and
 manages a shared `core::terminal::session::TerminalState` so the floating
 assistant can launch, drain, resize, and stop a single PTY-backed session.
+The skills command registration includes both `load_cached_skills` for immediate
+startup hydration and `scan_skills` for the subsequent incremental refresh.
 
 ## Interactions
 

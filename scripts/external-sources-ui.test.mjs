@@ -153,10 +153,11 @@ test("Tauri production config keeps macOS bundle and CSP settings explicit", () 
   assert.equal(config.bundle.macOS.minimumSystemVersion, "11.0");
 });
 
-test("scan_skills desktop command enriches scan payloads with managed external source metadata", () => {
+test("scan_skills desktop command keeps managed-source enrichment on the cached scan path", () => {
   const source = readIfExists("src-tauri/src/commands/skills.rs");
 
-  assert.match(source, /scan_repo_skills_with_external_sources/);
+  assert.match(source, /scan_repo_skills_cached_with_external_sources/);
+  assert.match(source, /load_cached_repo_skills_with_external_sources/);
   assert.doesNotMatch(source, /scan_repo_skills\(Path::new\(&repo_path\)\)/);
 });
 

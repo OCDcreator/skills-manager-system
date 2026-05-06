@@ -22,7 +22,7 @@ Downstream: src/components/skills/*, src/context/AppContext.tsx, src/lib/skills/
 
 ## Core Logic
 
-The view reads app state from context, owns local search/source/status filter state, memoizes the disabled-ID set plus filtered/grouped skills, visible source sections, and filter summaries, renders setup prompts when no repo path exists, and passes selection, refresh, row-toggle, and source-window bulk enablement callbacks to child components. Its responsive layout keeps the detail panel docked on the right for wide windows, shows both source sections side by side only for the `all` source filter, and lets a single selected source section expand to the full list rail width.
+The view reads app state from context, owns local search/source/status filter state, memoizes the disabled-ID set plus filtered/grouped skills, visible source sections, and filter summaries, renders setup prompts when no repo path exists, and passes selection, refresh, row-toggle, and source-window bulk enablement callbacks to child components. During the first saved-repo scan it treats the empty scan snapshot as a loading state instead of a real no-match result, forwarding that state to the filter toolbar, source lists, and detail placeholder. Its responsive layout keeps the detail panel docked on the right for wide windows, shows both source sections side by side only for the `all` source filter, and lets a single selected source section expand to the full list rail width.
 
 The selected-skill detail rail is now split into two paths:
 

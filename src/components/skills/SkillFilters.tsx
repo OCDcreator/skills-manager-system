@@ -17,11 +17,13 @@ interface SkillFiltersProps {
   statusSummaries: StatusSummary[];
   onRefresh: () => Promise<void>;
   isRefreshing: boolean;
+  isInitialLoading: boolean;
 }
 
 export function SkillFilters(props: SkillFiltersProps) {
   const {
     isRefreshing,
+    isInitialLoading,
     onRefresh,
     onSearchChange,
     onSourceFilterChange,
@@ -33,6 +35,8 @@ export function SkillFilters(props: SkillFiltersProps) {
     statusSummaries,
   } = props;
   const { t } = useTranslation();
+  const formatSummaryCount = (count: number) =>
+    isInitialLoading ? t("skills.loadingShort") : count;
 
   return (
     <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-4">
@@ -50,7 +54,7 @@ export function SkillFilters(props: SkillFiltersProps) {
           title={t("tooltip.skills.refresh")}
           type="button"
         >
-          {t("skills.refresh")}
+          {isRefreshing ? t("skills.refreshing") : t("skills.refresh")}
         </button>
       </div>
 
@@ -71,7 +75,7 @@ export function SkillFilters(props: SkillFiltersProps) {
               title={t("tooltip.skills.filter")}
               type="button"
             >
-              {t(`skills.source.${summary.key}`)} ({summary.count})
+              {t(`skills.source.${summary.key}`)} ({formatSummaryCount(summary.count)})
             </button>
           ))}
         </div>
@@ -92,7 +96,7 @@ export function SkillFilters(props: SkillFiltersProps) {
               title={t("tooltip.skills.statusFilter")}
               type="button"
             >
-              {t(`skills.status.${summary.key}`)} ({summary.count})
+              {t(`skills.status.${summary.key}`)} ({formatSummaryCount(summary.count)})
             </button>
           ))}
         </div>

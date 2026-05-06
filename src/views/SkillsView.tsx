@@ -78,6 +78,7 @@ export function SkillsView() {
   const selectedSkillEnabled = selectedSkill
     ? !disabledSkillIdSet.has(selectedSkill.id)
     : true;
+  const isInitialSkillLoad = isLoading && scanResult.skills.length === 0;
 
   async function handleSetManySkillsEnabled(skillIds: string[], enabled: boolean) {
     for (const skillId of skillIds) {
@@ -108,6 +109,7 @@ export function SkillsView() {
               statusFilter={statusFilter}
               summaries={summaries}
               statusSummaries={statusSummaries}
+              isInitialLoading={isInitialSkillLoad}
             />
 
             {scanResult.warnings.length > 0 ? (
@@ -134,6 +136,7 @@ export function SkillsView() {
                   onSelect={(skill) => void selectSkill(skill)}
                   onSetManyEnabled={handleSetManySkillsEnabled}
                   onToggleEnabled={setSkillEnabled}
+                  isLoading={isInitialSkillLoad}
                   selectedSkillId={selectedSkill?.id ?? null}
                   skills={grouped[source]}
                   title={
@@ -156,7 +159,9 @@ export function SkillsView() {
               />
             </Suspense>
           ) : (
-            <SkillDetailPlaceholder message={t("skills.selectPrompt")} />
+            <SkillDetailPlaceholder
+              message={isInitialSkillLoad ? t("skills.detail.loadingInitial") : t("skills.selectPrompt")}
+            />
           )}
         </div>
       )}
