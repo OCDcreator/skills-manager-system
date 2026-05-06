@@ -6,8 +6,8 @@ use tempfile::tempdir;
 use crate::core::agents::config::AgentConfigStore;
 use crate::core::agents::discovery::{load_agent_inventory, AgentInventoryItem, AgentSystemDirs};
 use crate::core::agents::selection::{
-    load_skill_selection_context, resolve_agent_skill_selection, SkillResolutionResult,
-    SkillSelectionContext,
+    load_skill_selection_context, resolve_agent_skill_selection, resolve_agent_skills,
+    SkillResolutionResult, SkillSelectionContext,
 };
 use crate::core::agents::sync::{apply_agent_sync, apply_agent_sync_for_agent};
 use crate::core::agents::target_sync::SyncMode;
@@ -138,6 +138,42 @@ fn global_resolution_reports_missing_scene_references() {
         result.diagnostics.missing_scene_ids,
         vec!["missing-scene".to_string()]
     );
+}
+
+#[test]
+fn global_resolution_reports_missing_legacy_disabled_scene_skills() {
+    let fixture = SyncFixture::new();
+    fixture.create_skill("custom/alpha");
+    fs::write(
+        fixture.config_dir.path().join("scene-config.json"),
+        r#"{
+  "scenes": {
+    "legacy": {
+      "id": "legacy",
+      "name": "Legacy",
+      "description": "",
+      "disabledSkillIds": ["custom:missing"],
+      "enabledAgentKeys": [],
+      "skillOrder": []
+    }
+  },
+  "activeSceneId": null
+}"#,
+    )
+    .unwrap();
+    fixture.configure_agent("codex", vec![], vec!["legacy".to_string()], vec![]);
+
+    let context = fixture.load_selection_context();
+    let agent = fixture.agent_inventory_item("codex");
+    let result = resolve_agent_skill_selection(&agent, &context);
+    let wrapper_skills = resolve_agent_skills(&agent, &context);
+
+    assert_eq!(
+        result.diagnostics.missing_skill_ids,
+        vec!["custom:missing".to_string()]
+    );
+    assert_eq!(wrapper_skills.len(), 1);
+    assert_eq!(wrapper_skills[0].id, "custom:alpha");
 }
 
 #[test]

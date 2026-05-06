@@ -2,7 +2,7 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use crate::core::scenes::config::{SceneConfigStore, SceneEntry};
+use crate::core::scenes::config::{SceneConfigStore, SceneEntry, SceneSkillSelectionMode};
 use crate::core::skills::scan::{scan_repo_skills, SkillSummary};
 use crate::core::skills::state::SkillStateStore;
 
@@ -215,7 +215,12 @@ fn add_scene_skill_references(
         }
     }
 
-    for skill_id in &scene.selected_skill_ids {
+    let stale_reference_ids = match scene.skill_selection_mode {
+        SceneSkillSelectionMode::AllExceptDisabled => &scene.disabled_skill_ids,
+        SceneSkillSelectionMode::OnlySelected => &scene.selected_skill_ids,
+    };
+
+    for skill_id in stale_reference_ids {
         if !skill_lookup.contains_key(skill_id.as_str()) {
             diagnostics.missing_skill_ids.push(skill_id.clone());
         }
