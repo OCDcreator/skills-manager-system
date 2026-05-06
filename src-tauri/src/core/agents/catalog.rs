@@ -28,20 +28,20 @@ const AGENT_CATALOG: [AgentCatalogEntry; 12] = [
     AgentCatalogEntry {
         key: "cursor",
         display_name: "Cursor",
-        skills_dir_rule: ".claude/skills",
+        skills_dir_rule: ".cursor/skills",
         detect_dir_rule: ".cursor",
     },
     AgentCatalogEntry {
         key: "amp",
         display_name: "Amp",
-        skills_dir_rule: ".config/amp/skills",
-        detect_dir_rule: ".config/amp",
+        skills_dir_rule: ".config/agents/skills",
+        detect_dir_rule: ".config/agents",
     },
     AgentCatalogEntry {
         key: "kilo_code",
         display_name: "Kilo Code",
-        skills_dir_rule: ".kilo/skills",
-        detect_dir_rule: ".kilo",
+        skills_dir_rule: ".kilocode/skills",
+        detect_dir_rule: ".kilocode",
     },
     AgentCatalogEntry {
         key: "kimi",
@@ -52,13 +52,13 @@ const AGENT_CATALOG: [AgentCatalogEntry; 12] = [
     AgentCatalogEntry {
         key: "roo_code",
         display_name: "Roo Code",
-        skills_dir_rule: ".roo/rules",
+        skills_dir_rule: ".roo/skills",
         detect_dir_rule: ".roo",
     },
     AgentCatalogEntry {
         key: "goose",
         display_name: "Goose",
-        skills_dir_rule: ".config/goose",
+        skills_dir_rule: ".config/goose/skills",
         detect_dir_rule: ".config/goose",
     },
     AgentCatalogEntry {
@@ -70,13 +70,13 @@ const AGENT_CATALOG: [AgentCatalogEntry; 12] = [
     AgentCatalogEntry {
         key: "github_copilot",
         display_name: "GitHub Copilot",
-        skills_dir_rule: ".copilot",
+        skills_dir_rule: ".copilot/skills",
         detect_dir_rule: ".copilot",
     },
     AgentCatalogEntry {
         key: "windsurf",
         display_name: "Windsurf",
-        skills_dir_rule: ".codeium/windsurf",
+        skills_dir_rule: ".codeium/windsurf/skills",
         detect_dir_rule: ".codeium/windsurf",
     },
 ];
@@ -134,5 +134,28 @@ mod tests {
         assert_eq!(project_skills_dir_rule(opencode), ".opencode/skills");
         assert_eq!(project_skills_dir_rule(cursor), ".cursor/skills");
         assert_eq!(project_skills_dir_rule(claude), ".claude/skills");
+    }
+
+    #[test]
+    fn global_rules_match_reference_project_except_kimi() {
+        let expected = [
+            ("cursor", ".cursor/skills", ".cursor"),
+            ("amp", ".config/agents/skills", ".config/agents"),
+            ("kilo_code", ".kilocode/skills", ".kilocode"),
+            ("roo_code", ".roo/skills", ".roo"),
+            ("goose", ".config/goose/skills", ".config/goose"),
+            ("github_copilot", ".copilot/skills", ".copilot"),
+            ("windsurf", ".codeium/windsurf/skills", ".codeium/windsurf"),
+        ];
+
+        for (key, skills_dir_rule, detect_dir_rule) in expected {
+            let agent = find_agent(key).expect("agent should exist");
+            assert_eq!(agent.skills_dir_rule, skills_dir_rule, "{key} skills dir");
+            assert_eq!(agent.detect_dir_rule, detect_dir_rule, "{key} detect dir");
+        }
+
+        let kimi = find_agent("kimi").expect("kimi should exist");
+        assert_eq!(kimi.skills_dir_rule, ".kimi/skills");
+        assert_eq!(kimi.detect_dir_rule, ".kimi");
     }
 }

@@ -25,7 +25,7 @@ Downstream: none
 
 ## Core Logic
 
-Stores the stable definitions for all supported agents, including display name plus global skills-dir/detect-dir rules. `project_skills_dir_rule` separates project-local overlays from global config roots, so OpenCode uses `.config/opencode/skills` globally but `.opencode/skills` inside projects, and Cursor uses `.cursor/skills` inside projects instead of sharing Claude Code's manifest directory. Kimi Code CLI resolves from the hidden home-directory pair `.kimi` and `.kimi/skills`. Goose and GitHub Copilot have project-only skills directories.
+Stores the stable definitions for all supported agents, including display name plus global skills-dir/detect-dir rules. The built-in rules mirror the reference skills-manager adapter paths for shared agents, except Kimi Code CLI intentionally keeps the documented hidden home-directory pair `.kimi` and `.kimi/skills`. `project_skills_dir_rule` separates project-local overlays from global config roots, so OpenCode uses `.config/opencode/skills` globally but `.opencode/skills` inside projects.
 
 ## Data Flow
 
