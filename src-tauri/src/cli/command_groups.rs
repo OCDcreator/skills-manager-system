@@ -149,6 +149,12 @@ pub enum ProjectsCommand {
         skill_ids: Vec<String>,
         #[arg(long = "agent")]
         agent_keys: Vec<String>,
+        #[arg(long = "agent-skill", value_name = "AGENT=SKILL_ID")]
+        agent_skill_ids: Vec<String>,
+        #[arg(long = "agent-scene", value_name = "AGENT=SCENE_ID")]
+        agent_scene_ids: Vec<String>,
+        #[arg(long = "agent-exclude", value_name = "AGENT=SKILL_ID")]
+        agent_excluded_skill_ids: Vec<String>,
     },
     Update {
         project_path: PathBuf,
@@ -158,6 +164,12 @@ pub enum ProjectsCommand {
         skill_ids: Vec<String>,
         #[arg(long = "agent")]
         agent_keys: Vec<String>,
+        #[arg(long = "agent-skill", value_name = "AGENT=SKILL_ID")]
+        agent_skill_ids: Vec<String>,
+        #[arg(long = "agent-scene", value_name = "AGENT=SCENE_ID")]
+        agent_scene_ids: Vec<String>,
+        #[arg(long = "agent-exclude", value_name = "AGENT=SKILL_ID")]
+        agent_excluded_skill_ids: Vec<String>,
     },
     Remove {
         project_path: PathBuf,

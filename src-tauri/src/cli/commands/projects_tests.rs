@@ -6,6 +6,7 @@ use super::projects::{apply_with_system_dirs, run};
 use crate::app_runtime::{AppRuntimeContext, AppRuntimeOptions, CliStatus};
 use crate::cli::args::ProjectsCommand;
 use crate::core::agents::discovery::AgentSystemDirs;
+use crate::core::projects::project_paths::normalize_project_path;
 
 fn test_context(config_dir: PathBuf, repo_dir: Option<PathBuf>) -> AppRuntimeContext {
     AppRuntimeContext::from_options_with_parts(
@@ -17,6 +18,10 @@ fn test_context(config_dir: PathBuf, repo_dir: Option<PathBuf>) -> AppRuntimeCon
         PathBuf::from("/unused"),
         crate::app_runtime::DEVELOPMENT_APP_IDENTIFIER,
     )
+}
+
+fn project_key(path: &std::path::Path) -> String {
+    normalize_project_path(path.to_string_lossy().as_ref()).unwrap()
 }
 
 #[test]
@@ -32,6 +37,9 @@ fn projects_add_update_list_and_remove_round_trip() {
             display_name: "App".to_string(),
             skill_ids: vec!["custom:alpha".to_string()],
             agent_keys: vec!["codex".to_string()],
+            agent_skill_ids: Vec::new(),
+            agent_scene_ids: Vec::new(),
+            agent_excluded_skill_ids: Vec::new(),
         },
     );
     assert_eq!(added.response.status, CliStatus::Success);
@@ -40,7 +48,7 @@ fn projects_add_update_list_and_remove_round_trip() {
     assert!(listed.response.data.unwrap()["projectConfig"]["projects"]
         .as_object()
         .unwrap()
-        .contains_key(project_dir.to_string_lossy().as_ref()));
+        .contains_key(project_key(&project_dir).as_str()));
 
     let updated = run(
         &context,
@@ -49,11 +57,14 @@ fn projects_add_update_list_and_remove_round_trip() {
             display_name: Some("App+".to_string()),
             skill_ids: vec!["custom:beta".to_string()],
             agent_keys: vec!["codex".to_string()],
+            agent_skill_ids: Vec::new(),
+            agent_scene_ids: Vec::new(),
+            agent_excluded_skill_ids: Vec::new(),
         },
     );
     assert_eq!(
-        updated.response.data.unwrap()["projectConfig"]["projects"]
-            [project_dir.to_string_lossy().as_ref()]["displayName"]
+        updated.response.data.unwrap()["projectConfig"]["projects"][project_key(&project_dir)]
+            ["displayName"]
             .as_str(),
         Some("App+")
     );
@@ -90,6 +101,9 @@ fn projects_apply_uses_full_snapshot_without_path_argument() {
             display_name: "A".to_string(),
             skill_ids: vec!["custom:alpha".to_string()],
             agent_keys: vec!["codex".to_string()],
+            agent_skill_ids: Vec::new(),
+            agent_scene_ids: Vec::new(),
+            agent_excluded_skill_ids: Vec::new(),
         },
     );
     run(
@@ -99,6 +113,9 @@ fn projects_apply_uses_full_snapshot_without_path_argument() {
             display_name: "B".to_string(),
             skill_ids: vec!["custom:beta".to_string()],
             agent_keys: vec!["codex".to_string()],
+            agent_skill_ids: Vec::new(),
+            agent_scene_ids: Vec::new(),
+            agent_excluded_skill_ids: Vec::new(),
         },
     );
 
@@ -114,4 +131,67 @@ fn projects_apply_uses_full_snapshot_without_path_argument() {
     assert_eq!(result.response.status, CliStatus::Success);
     assert!(project_a.join(".codex/skills/alpha/SKILL.md").exists());
     assert!(project_b.join(".codex/skills/beta/SKILL.md").exists());
+}
+
+#[test]
+fn projects_add_accepts_per_agent_project_layers() {
+    let temp = tempdir().unwrap();
+    let project_dir = temp.path().join("workspace/app");
+    let context = test_context(temp.path().join("config"), None);
+
+    let added = run(
+        &context,
+        &ProjectsCommand::Add {
+            project_path: project_dir.clone(),
+            display_name: "App".to_string(),
+            skill_ids: vec!["custom:legacy".to_string()],
+            agent_keys: vec!["codex".to_string()],
+            agent_skill_ids: vec!["opencode=custom:direct".to_string()],
+            agent_scene_ids: vec!["codex=focus".to_string()],
+            agent_excluded_skill_ids: vec!["codex=custom:legacy".to_string()],
+        },
+    );
+
+    assert_eq!(added.response.status, CliStatus::Success);
+    let project =
+        &added.response.data.unwrap()["projectConfig"]["projects"][project_key(&project_dir)];
+    assert_eq!(
+        project["agents"]["codex"]["selectedSkillIds"],
+        serde_json::json!(["custom:legacy"])
+    );
+    assert_eq!(
+        project["agents"]["codex"]["selectedSceneIds"],
+        serde_json::json!(["focus"])
+    );
+    assert_eq!(
+        project["agents"]["codex"]["excludedSkillIds"],
+        serde_json::json!(["custom:legacy"])
+    );
+    assert_eq!(
+        project["agents"]["opencode"]["selectedSkillIds"],
+        serde_json::json!(["custom:direct"])
+    );
+}
+
+#[test]
+fn projects_update_rejects_invalid_per_agent_pair() {
+    let temp = tempdir().unwrap();
+    let project_dir = temp.path().join("workspace/app");
+    let context = test_context(temp.path().join("config"), None);
+
+    let result = run(
+        &context,
+        &ProjectsCommand::Update {
+            project_path: project_dir,
+            display_name: None,
+            skill_ids: Vec::new(),
+            agent_keys: Vec::new(),
+            agent_skill_ids: Vec::new(),
+            agent_scene_ids: vec!["focus".to_string()],
+            agent_excluded_skill_ids: Vec::new(),
+        },
+    );
+
+    assert_eq!(result.response.status, CliStatus::Error);
+    assert_eq!(result.response.error.unwrap().code, "invalid_project_path");
 }

@@ -23,7 +23,7 @@ Downstream: src-tauri/src/cli/args.rs, src-tauri/src/cli/command_groups.rs, src-
 
 ## Core Logic
 
-The module keeps command adapters thin by centralizing only two concerns: translating root flags into `AppRuntimeOptions` and routing parsed settings, skills, agents, scenes, projects, and git subcommands to the correct command module. It also wires focused CLI command tests into the same nested command namespace. If config-dir resolution fails before a runtime exists, it still emits a structured bootstrap error.
+The module keeps command adapters thin by centralizing only two concerns: translating root flags into `AppRuntimeOptions` and routing parsed settings, skills, agents, scenes, projects, and git subcommands to the correct command module. It also wires focused CLI command tests and private command-domain helpers into the same nested command namespace. If config-dir resolution fails before a runtime exists, it still emits a structured bootstrap error.
 
 ## Interactions
 

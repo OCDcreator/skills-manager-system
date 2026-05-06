@@ -181,4 +181,40 @@ mod tests {
 
         assert_eq!(error.kind(), clap::error::ErrorKind::UnknownArgument);
     }
+
+    #[test]
+    fn parses_project_layer_flags() {
+        let args = CliArgs::try_parse_from([
+            "skills-manager",
+            "projects",
+            "add",
+            "/tmp/app",
+            "--agent",
+            "codex",
+            "--skill",
+            "custom:legacy",
+            "--agent-scene",
+            "codex=focus",
+            "--agent-skill",
+            "opencode=custom:direct",
+            "--agent-exclude",
+            "codex=custom:legacy",
+        ])
+        .unwrap();
+
+        assert_eq!(
+            args.command,
+            RootCommand::Projects {
+                command: ProjectsCommand::Add {
+                    project_path: PathBuf::from("/tmp/app"),
+                    display_name: String::new(),
+                    skill_ids: vec!["custom:legacy".to_string()],
+                    agent_keys: vec!["codex".to_string()],
+                    agent_skill_ids: vec!["opencode=custom:direct".to_string()],
+                    agent_scene_ids: vec!["codex=focus".to_string()],
+                    agent_excluded_skill_ids: vec!["codex=custom:legacy".to_string()],
+                },
+            }
+        );
+    }
 }

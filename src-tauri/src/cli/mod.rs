@@ -9,6 +9,7 @@ pub mod commands {
     pub mod git;
     #[cfg(test)]
     mod git_tests;
+    mod project_agent_args;
     pub mod projects;
     #[cfg(test)]
     mod projects_tests;

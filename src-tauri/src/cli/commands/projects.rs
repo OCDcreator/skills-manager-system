@@ -10,6 +10,8 @@ use crate::core::agents::sync::AgentApplyStatus;
 use crate::core::projects::store::{ProjectConfigSnapshot, ProjectConfigStore};
 use crate::core::projects::sync::{apply_project_assignments, ApplyProjectAssignmentsResponse};
 
+use super::project_agent_args::build_layered_agent_map;
+
 pub fn run(context: &AppRuntimeContext, command: &ProjectsCommand) -> CliRunResult {
     match command {
         ProjectsCommand::List => list(context),
@@ -18,17 +20,31 @@ pub fn run(context: &AppRuntimeContext, command: &ProjectsCommand) -> CliRunResu
             display_name,
             skill_ids,
             agent_keys,
+            agent_skill_ids,
+            agent_scene_ids,
+            agent_excluded_skill_ids,
         } => mutate_config(
             context,
             "projects add",
             Some(project_path.as_path()),
-            |store| {
-                store.add_project(
+            |store| match build_layered_agent_map(
+                agent_keys,
+                skill_ids,
+                agent_skill_ids,
+                agent_scene_ids,
+                agent_excluded_skill_ids,
+            )? {
+                Some(agents) => store.add_project_with_agents(
+                    &project_path.to_string_lossy(),
+                    display_name,
+                    agents,
+                ),
+                None => store.add_project(
                     &project_path.to_string_lossy(),
                     display_name,
                     skill_ids.clone(),
                     agent_keys.clone(),
-                )
+                ),
             },
         ),
         ProjectsCommand::Update {
@@ -36,17 +52,31 @@ pub fn run(context: &AppRuntimeContext, command: &ProjectsCommand) -> CliRunResu
             display_name,
             skill_ids,
             agent_keys,
+            agent_skill_ids,
+            agent_scene_ids,
+            agent_excluded_skill_ids,
         } => mutate_config(
             context,
             "projects update",
             Some(project_path.as_path()),
-            |store| {
-                store.update_project(
+            |store| match build_layered_agent_map(
+                agent_keys,
+                skill_ids,
+                agent_skill_ids,
+                agent_scene_ids,
+                agent_excluded_skill_ids,
+            )? {
+                Some(agents) => store.update_project_agents(
+                    &project_path.to_string_lossy(),
+                    display_name.as_deref(),
+                    Some(agents),
+                ),
+                None => store.update_project(
                     &project_path.to_string_lossy(),
                     display_name.as_deref(),
                     (!skill_ids.is_empty()).then(|| skill_ids.clone()),
                     (!agent_keys.is_empty()).then(|| agent_keys.clone()),
-                )
+                ),
             },
         ),
         ProjectsCommand::Remove { project_path } => mutate_config(
@@ -248,7 +278,12 @@ fn map_project_error(project_path: Option<&Path>, error: anyhow::Error) -> CliCo
         CliCommandError::target_not_found("project_not_found", message, details)
     } else if message.contains("already exists") {
         CliCommandError::state_conflict("project_already_exists", message, details)
-    } else if message.contains("must be absolute") || message.contains("is required") {
+    } else if message.contains("must be absolute")
+        || message.contains("is required")
+        || message.contains("AGENT=VALUE")
+        || message.contains("agent key cannot be empty")
+        || message.contains("value cannot be empty")
+    {
         CliCommandError::new(
             CliExitStatus::ArgumentError,
             "invalid_project_path",

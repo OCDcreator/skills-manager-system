@@ -24,7 +24,7 @@ Downstream: clap, std::path
 
 ## Core Logic
 
-This module owns argument shape only. It does not touch runtime state or core stores; adapters in `commands/` interpret parsed values. The `scenes set-skills` leaf intentionally uses generic `skill_ids` so the adapter can honor either explicit selected-skill scenes or legacy all-except-disabled scenes.
+This module owns argument shape only. It does not touch runtime state or core stores; adapters in `commands/` interpret parsed values. The `projects add/update` leaves keep legacy flat `--agent` / `--skill` flags and add per-agent project-layer flags for direct skills, scenes, and project-local exclusions. The `scenes set-skills` leaf intentionally uses generic `skill_ids` so the adapter can honor either explicit selected-skill scenes or legacy all-except-disabled scenes.
 
 ## Interactions
 

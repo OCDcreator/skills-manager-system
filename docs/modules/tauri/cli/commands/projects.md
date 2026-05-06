@@ -23,9 +23,8 @@ Downstream: src-tauri/src/app_runtime/*, src-tauri/src/core/projects/*
 
 ## Core Logic
 
-Project config mutations acquire the config lock and delegate to `ProjectConfigStore`. `projects apply` intentionally has no path argument and applies the complete stored assignment snapshot.
+Project config mutations acquire the config lock and delegate to `ProjectConfigStore`. Legacy flat project flags still map through the compatibility store wrappers, while per-agent project-layer flags map to the richer agents shape before persistence. `projects apply` intentionally has no path argument and applies the complete stored assignment snapshot.
 
 ## Interactions
 
-Apply results with unmanaged conflicts become `partial` responses; invalid paths and missing assignments map to stable CLI errors.
-
+Apply results with unmanaged conflicts become `partial` responses; invalid paths, malformed per-agent flag pairs, and missing assignments map to stable CLI errors.
