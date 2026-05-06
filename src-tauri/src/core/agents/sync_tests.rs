@@ -4,7 +4,11 @@ use std::path::{Path, PathBuf};
 use tempfile::tempdir;
 
 use crate::core::agents::config::AgentConfigStore;
-use crate::core::agents::discovery::AgentSystemDirs;
+use crate::core::agents::discovery::{load_agent_inventory, AgentInventoryItem, AgentSystemDirs};
+use crate::core::agents::selection::{
+    load_skill_selection_context, resolve_agent_skill_selection, SkillResolutionResult,
+    SkillSelectionContext,
+};
 use crate::core::agents::sync::{apply_agent_sync, apply_agent_sync_for_agent};
 use crate::core::agents::target_sync::SyncMode;
 use crate::core::scenes::config::SceneConfigStore;
@@ -46,6 +50,117 @@ fn configure_agent(
             excluded_ids.into_iter().map(str::to_string).collect(),
         )
         .unwrap();
+}
+
+struct SyncFixture {
+    config_dir: tempfile::TempDir,
+    repo_dir: tempfile::TempDir,
+    target_root: tempfile::TempDir,
+}
+
+impl SyncFixture {
+    fn new() -> Self {
+        Self {
+            config_dir: tempfile::tempdir().unwrap(),
+            repo_dir: tempfile::tempdir().unwrap(),
+            target_root: tempfile::tempdir().unwrap(),
+        }
+    }
+
+    fn create_skill(&self, relative_path: &str) {
+        create_skill(self.repo_dir.path(), relative_path);
+    }
+
+    fn create_scene(&self, scene_id: &str, skill_ids: Vec<&str>) {
+        let scene_store = SceneConfigStore::new(self.config_dir.path().to_path_buf());
+        scene_store.create_scene(scene_id, scene_id, "").unwrap();
+        scene_store
+            .set_scene_skills(
+                scene_id,
+                skill_ids.into_iter().map(str::to_string).collect(),
+            )
+            .unwrap();
+    }
+
+    fn configure_agent(
+        &self,
+        key: &str,
+        skill_ids: Vec<String>,
+        scene_ids: Vec<String>,
+        excluded_ids: Vec<String>,
+    ) {
+        let target_dir = self.target_root.path().join(format!("{key}-skills"));
+        configure_agent(
+            self.config_dir.path(),
+            key,
+            &target_dir,
+            skill_ids.iter().map(String::as_str).collect(),
+            scene_ids.iter().map(String::as_str).collect(),
+            excluded_ids.iter().map(String::as_str).collect(),
+        );
+    }
+
+    fn load_selection_context(&self) -> SkillSelectionContext {
+        load_skill_selection_context(self.config_dir.path(), self.repo_dir.path()).unwrap()
+    }
+
+    fn agent_inventory_item(&self, key: &str) -> AgentInventoryItem {
+        load_agent_inventory(
+            self.config_dir.path(),
+            &test_system_dirs(self.target_root.path()),
+        )
+        .unwrap()
+        .agents
+        .into_iter()
+        .find(|agent| agent.key == key)
+        .unwrap()
+    }
+
+    fn resolve_agent(&self, key: &str) -> SkillResolutionResult {
+        let context = self.load_selection_context();
+        let agent = self.agent_inventory_item(key);
+        resolve_agent_skill_selection(&agent, &context)
+    }
+}
+
+#[test]
+fn global_resolution_reports_missing_scene_references() {
+    let fixture = SyncFixture::new();
+    fixture.create_skill("custom/alpha");
+    fixture.configure_agent("codex", vec![], vec!["missing-scene".to_string()], vec![]);
+
+    let context = fixture.load_selection_context();
+    let agent = fixture.agent_inventory_item("codex");
+    let result = resolve_agent_skill_selection(&agent, &context);
+
+    assert!(result.entries.is_empty());
+    assert_eq!(
+        result.diagnostics.missing_scene_ids,
+        vec!["missing-scene".to_string()]
+    );
+}
+
+#[test]
+fn global_resolution_labels_direct_and_scene_sources() {
+    let fixture = SyncFixture::new();
+    fixture.create_skill("custom/direct");
+    fixture.create_skill("custom/scene");
+    fixture.create_scene("focus", vec!["custom:scene"]);
+    fixture.configure_agent(
+        "codex",
+        vec!["custom:direct".to_string()],
+        vec!["focus".to_string()],
+        vec![],
+    );
+
+    let result = fixture.resolve_agent("codex");
+
+    assert!(result
+        .source_labels_for("custom:direct")
+        .contains(&"globalDirect"));
+    assert!(result
+        .source_labels_for("custom:scene")
+        .contains(&"globalScene"));
 }
 
 #[test]
