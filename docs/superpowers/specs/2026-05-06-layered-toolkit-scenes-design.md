@@ -28,6 +28,7 @@ Apply            = explicit filesystem sync
 - Scene selection and editing must not write to agent directories by itself.
 - Apply actions remain explicit and scoped: apply global, apply project, or apply one agent target.
 - The UI should show resolved skill previews before apply, including why each skill is included or excluded.
+- The project layer must be per-agent. A project-level `codex` assignment and a project-level `opencode` assignment may select different scenes, direct skills, and exclusions.
 
 ## Relationship To The Upstream Skills Manager
 
@@ -90,6 +91,19 @@ Project configuration should gain scene references and exclusions per project ag
 
 The project `excludedSkillIds` list overrides inherited global skills and project-added skills for that project only.
 
+The current flat project shape:
+
+```json
+{
+  "projectPath": "C:/repo",
+  "displayName": "repo",
+  "skillIds": ["custom:alpha"],
+  "agentKeys": ["codex"]
+}
+```
+
+is legacy input. It must be migrated to the per-agent model by copying the flat `skillIds` into each listed agent's `selectedSkillIds`, setting `selectedSceneIds` and `excludedSkillIds` to empty arrays, and preserving unsupported agent keys as stale project-agent entries that can be shown and removed.
+
 ## Resolution Rules
 
 For a global agent target:
@@ -116,6 +130,16 @@ resolved project skills
 Deduplication is by stable `skillId`. Exclusions win over both direct and scene-provided inclusions. Project exclusions do not remove the skill from global targets or other projects.
 
 If a project enables an agent that has no global configuration, the inherited global set is empty and the project layer still works independently.
+
+Resolution should return structured diagnostics, not only a `Vec<SkillSummary>`. At minimum the result should expose:
+
+- included skills with source labels such as `globalDirect`, `globalScene`, `projectDirect`, and `projectScene`
+- excluded skill IDs and whether they excluded inherited or project-added skills
+- globally disabled referenced skill IDs
+- missing scene IDs grouped by global or project owner
+- missing skill IDs grouped by direct, scene, or exclusion source
+
+This allows the frontend to show stale references instead of silently ignoring them.
 
 ## UI Design
 
@@ -164,8 +188,13 @@ Apply remains a user-initiated filesystem mutation.
 - Applying a project writes the resolved project layer to project-local agent skill directories.
 - Applying a single agent scopes the write to that one target.
 - Editing a scene, selecting a scene, or viewing a project only updates configuration.
+- Applying a scene directly must not rewrite agent configuration to make that scene "active." Scene application should be removed or reframed as a shortcut that opens an explicit target-scoped apply flow.
 
 The app should keep enough apply metadata to show whether a target is current, stale, or never applied.
+
+The current `activeSceneId` field is a legacy compatibility detail. The layered model should stop using it to decide which skills belong to an apply target. Existing config can keep loading it during migration, but new resolution should be driven by agent and project references to scene IDs.
+
+Apply metadata should be target scoped. A practical first version can store the resolved desired entry IDs plus a stable config hash per global agent target and per project-agent target. The UI can compare the current resolution hash to the last applied hash to show `current`, `stale`, or `never applied`.
 
 ## Safety
 
@@ -184,9 +213,12 @@ Rust tests should cover:
 - Project resolution inherits global direct and scene-derived skills.
 - Project scenes add skills on top of inherited global skills.
 - Project exclusions remove inherited global skills only for that project.
+- Flat legacy project config migrates to per-agent project entries without losing selected skills.
 - Global disabled skills are filtered from both global and project resolution.
-- Missing scene and missing skill references do not panic.
+- Missing scene and missing skill references do not panic and are returned in diagnostics.
 - Project apply writes to project-local target directories without changing global target directories.
+- Scene editing and scene selection do not mutate agent config or write target directories.
+- Project apply uses the configured copy/symlink sync mode consistently with global apply, falling back safely when symlink is unavailable.
 
 Frontend tests should cover:
 
@@ -194,6 +226,7 @@ Frontend tests should cover:
 - Project preview labels inherited, project-added, excluded, and globally disabled skills.
 - Project exclusions are presented as local overrides.
 - Apply status distinguishes global and project targets.
+- Stale scene and skill references are visible in global and project previews.
 
 ## Out Of Scope
 
