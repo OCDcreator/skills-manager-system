@@ -7,6 +7,7 @@ Regression tests for project assignment persistence.
 ## Responsibilities
 
 - verifies missing-store defaults, add/update/remove round-trips, and duplicate-path rejection
+- covers per-agent project assignment round trips, selected scenes, project-local exclusions, and unsupported agent preservation
 - covers portable path normalization for project keys
 - covers legacy Windows project-key migration, including duplicate legacy entries that normalize to the same path
 

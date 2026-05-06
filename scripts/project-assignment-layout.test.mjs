@@ -5,6 +5,7 @@ import path from "node:path";
 
 const identityPanelPath = path.resolve("src/components/projects/ProjectIdentityPanel.tsx");
 const editorPath = path.resolve("src/components/projects/ProjectAssignmentEditor.tsx");
+const workbenchPath = path.resolve("src/components/projects/ProjectLayerWorkbench.tsx");
 const summaryPath = path.resolve("src/components/projects/ProjectAssignmentSummary.tsx");
 const projectsViewPath = path.resolve("src/views/ProjectsView.tsx");
 
@@ -29,13 +30,27 @@ test("project assignment editor caps panel height and uses the shared markdown s
   assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3/);
   assert.match(source, /overflow-hidden rounded-2xl border border-slate-800 bg-slate-950\/60/);
   assert.match(source, /\[-webkit-line-clamp:2\]/);
-  assert.match(source, /min-\[1380px\]:grid-cols-\[minmax\(0,7fr\)_minmax\(18rem,5fr\)\]/);
+  assert.match(source, /min-\[1380px\]:grid-cols-\[minmax\(14rem,4fr\)_minmax\(0,8fr\)\]/);
   assert.match(source, /projects\.editor\.allPaths/);
-  assert.match(source, /mt-3 flex flex-wrap items-center gap-2 text-\[11px\] text-slate-400[\s\S]*projects\.editor\.allPaths[\s\S]*projects\.editor\.allSkills/);
+  assert.match(source, /mb-3 flex flex-wrap items-center gap-2 text-\[11px\] text-slate-400[\s\S]*projects\.editor\.allPaths[\s\S]*projects\.editor\.allSkills/);
   assert.doesNotMatch(source, /mt-2 flex flex-wrap gap-2 text-\[11px\] text-slate-400/);
   assert.match(source, /projects\.editor\.allAgents/);
   assert.match(source, /projectSkillsDirRule/);
   assert.match(source, /skill\.relativePath/);
+});
+
+test("project assignment editor edits one selected project agent layer at a time", () => {
+  const source = fs.readFileSync(editorPath, "utf8");
+
+  assert.match(source, /selectedAgentKey: string \| null/);
+  assert.match(source, /activeAgentDraft/);
+  assert.match(source, /projects\.editor\.agentLayerTitle/);
+  assert.match(source, /projects\.editor\.projectScenesTitle/);
+  assert.match(source, /projects\.editor\.exclusionsTitle/);
+  assert.match(source, /onSelectAgent\(agentKey: string\)/);
+  assert.match(source, /props\.onSelectAgent\(agent\.key\)/);
+  assert.match(source, /onToggleProjectScene\(scene\.id\)/);
+  assert.match(source, /onToggle=\{props\.onToggleProjectExclusion\}/);
 });
 
 test("project assignment summary stays scrollable but no longer owns the save button", () => {
@@ -45,8 +60,7 @@ test("project assignment summary stays scrollable but no longer owns the save bu
   assert.match(source, /min-\[1380px\]:absolute min-\[1380px\]:inset-0 min-\[1380px\]:max-h-none/);
   assert.match(source, /min-\[1380px\]:max-h-none/);
   assert.match(source, /skill-markdown-scroll flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 text-sm/);
-  assert.match(source, /<section className="flex min-h-0 flex-1 flex-col">/);
-  assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-2 overflow-y-auto pr-1/);
+  assert.match(source, /props\.agentSummaries\.map/);
   assert.doesNotMatch(source, /saveLabel/);
   assert.doesNotMatch(source, /onSave/);
   assert.doesNotMatch(source, /t\("projects\.summary\.saving"\)/);
@@ -55,20 +69,25 @@ test("project assignment summary stays scrollable but no longer owns the save bu
 test("project assignment summary mirrors selected skills and agents before target details", () => {
   const source = fs.readFileSync(summaryPath, "utf8");
 
-  assert.match(source, /selectedSkills: Array<\{/);
-  assert.match(source, /selectedAgents: Array<\{/);
-  assert.match(source, /projects\.summary\.selectedSkillsTitle/);
+  assert.match(source, /agentSummaries: ProjectAgentSummary\[\]/);
+  assert.match(source, /summary\.inheritedGlobalSkillIds\.length/);
+  assert.match(source, /summary\.projectDirectSkillIds\.length/);
+  assert.match(source, /summary\.excludedSkillIds\.length/);
+  assert.match(source, /projects\.summary\.agentPreviewTitle/);
+  assert.match(source, /projects\.summary\.inheritedGlobal/);
   assert.match(source, /projects\.summary\.selectedAgentsTitle/);
-  assert.match(source, /props\.selectedSkills\.map/);
-  assert.match(source, /props\.selectedAgents\.map/);
+  assert.match(source, /summary\.previewItems\.map/);
+  assert.match(source, /item\.isExcludedByProject/);
 });
 
 test("projects view forwards save props to the identity panel instead of the summary panel", () => {
-  const source = fs.readFileSync(projectsViewPath, "utf8");
+  const source = fs.readFileSync(workbenchPath, "utf8");
+  const viewSource = fs.readFileSync(projectsViewPath, "utf8");
 
-  assert.match(source, /<ProjectIdentityPanel[\s\S]*canSave=\{!duplicatePath && draft\.projectPath\.trim\(\)\.length > 0\}/);
-  assert.match(source, /<ProjectIdentityPanel[\s\S]*isSaving=\{isSavingDraft\}/);
-  assert.match(source, /<ProjectIdentityPanel[\s\S]*onSave=\{\(\) => void handleSaveDraft\(\)\}/);
+  assert.match(source, /<ProjectIdentityPanel[\s\S]*canSave=\{!props\.duplicatePath && props\.draft\.projectPath\.trim\(\)\.length > 0\}/);
+  assert.match(source, /<ProjectIdentityPanel[\s\S]*isSaving=\{props\.isSaving\}/);
+  assert.match(source, /<ProjectIdentityPanel[\s\S]*onSave=\{props\.onSave\}/);
+  assert.match(viewSource, /<ProjectLayerWorkbench[\s\S]*onSave=\{\(\) => void handleSaveDraft\(\)\}/);
   assert.match(source, /<ProjectAssignmentSummary[\s\S]*title=/);
   assert.doesNotMatch(source, /<ProjectAssignmentSummary[\s\S]*saveLabel=/);
   assert.doesNotMatch(source, /<ProjectAssignmentSummary[\s\S]*onSave=/);
@@ -77,13 +96,13 @@ test("projects view forwards save props to the identity panel instead of the sum
 
 test("projects view keeps the right summary as a natural sticky inspector", () => {
   const source = fs.readFileSync(projectsViewPath, "utf8");
+  const workbenchSource = fs.readFileSync(workbenchPath, "utf8");
 
   assert.match(source, /scanResult\.skills,/);
-  assert.match(source, /selectedSkills=\{summary\.selectedSkills\}/);
-  assert.match(source, /selectedAgents=\{summary\.selectedAgents\}/);
+  assert.match(workbenchSource, /agentSummaries=\{props\.summary\.agentSummaries\}/);
   assert.match(source, /sortProjectAgentsForEditor/);
   assert.match(source, /skillPathFilter/);
   assert.match(source, /agentStatusFilter/);
-  assert.match(source, /min-\[1380px\]:sticky min-\[1380px\]:top-8 min-\[1380px\]:relative min-\[1380px\]:self-stretch/);
+  assert.match(workbenchSource, /min-\[1380px\]:sticky min-\[1380px\]:top-8 min-\[1380px\]:relative min-\[1380px\]:self-stretch/);
   assert.match(fs.readFileSync(summaryPath, "utf8"), /min-\[1380px\]:absolute min-\[1380px\]:inset-0/);
 });

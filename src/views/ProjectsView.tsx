@@ -1,26 +1,34 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useTranslation } from "react-i18next";
-import { ProjectAssignmentEditor } from "../components/projects/ProjectAssignmentEditor";
-import { ProjectAssignmentSummary } from "../components/projects/ProjectAssignmentSummary";
-import { ProjectCard } from "../components/projects/ProjectCard";
-import { ProjectIdentityPanel } from "../components/projects/ProjectIdentityPanel";
+import { ProjectLayerWorkbench } from "../components/projects/ProjectLayerWorkbench";
+import { SavedProjectsSection } from "../components/projects/SavedProjectsSection";
 import { useProjectDraftInspection } from "../components/projects/useProjectDraftInspection";
 import { useAppContext } from "../context/AppContext";
 import {
   applyProjectDisplayNameToDraft,
   applyProjectPathToDraft,
-  buildProjectSummary,
+  ensureProjectAgentDraft,
   filterProjectAgents,
   filterProjectSkills,
+  projectDraftAgentKeys,
+  projectDraftFromAssignment,
+  projectDraftToAgentAssignments,
+  removeProjectAgentDraft,
   sortProjectAgentsForEditor,
   suggestProjectDisplayName,
+  toggleProjectAgentExclusion,
+  toggleProjectAgentScene,
+  toggleProjectAgentSkill,
   type ProjectAgentStatusFilter,
   type ProjectSkillSelectionFilter,
   type ProjectDraft,
 } from "../lib/project-draft";
+import { buildProjectSummary } from "../lib/project-summary";
 import * as projectsApi from "../lib/projects";
 import type { ProjectConfigSnapshot } from "../lib/projects";
+import * as scenesApi from "../lib/scenes";
+import type { SceneConfigSnapshot } from "../lib/scenes";
 import {
   buildSkillPathSummaries,
   type SkillPathFilter,
@@ -30,6 +38,7 @@ export function ProjectsView() {
   const { t } = useTranslation();
   const { repoPath, scanResult, sortedAgentInventory, disabledSkillIds } = useAppContext();
   const [config, setConfig] = useState<ProjectConfigSnapshot | null>(null);
+  const [sceneConfig, setSceneConfig] = useState<SceneConfigSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [applying, setApplying] = useState<string | null>(null);
@@ -37,10 +46,9 @@ export function ProjectsView() {
   const [skillQuery, setSkillQuery] = useState("");
   const [agentQuery, setAgentQuery] = useState("");
   const [skillPathFilter, setSkillPathFilter] = useState<SkillPathFilter>("all");
-  const [skillSelectionFilter, setSkillSelectionFilter] =
-    useState<ProjectSkillSelectionFilter>("all");
-  const [agentStatusFilter, setAgentStatusFilter] =
-    useState<ProjectAgentStatusFilter>("all");
+  const [skillSelectionFilter, setSkillSelectionFilter] = useState<ProjectSkillSelectionFilter>("all");
+  const [agentStatusFilter, setAgentStatusFilter] = useState<ProjectAgentStatusFilter>("all");
+  const [selectedAgentKey, setSelectedAgentKey] = useState<string | null>(null);
   const [sessionProjectApplyFeedback, setSessionProjectApplyFeedback] = useState<
     Record<string, string>
   >({});
@@ -52,8 +60,7 @@ export function ProjectsView() {
       projectPath: "",
       displayName: "",
       displayNameManuallyEdited: false,
-      selectedSkillIds: [],
-      selectedAgentKeys: [],
+      agents: {},
       unsupportedAgentKeys: [],
     }),
     [],
@@ -62,10 +69,15 @@ export function ProjectsView() {
 
   const refresh = useCallback(async () => {
     try {
-      const snapshot = await projectsApi.getProjectConfig();
+      const [snapshot, scenes] = await Promise.all([
+        projectsApi.getProjectConfig(),
+        scenesApi.getSceneConfig(),
+      ]);
       setConfig(snapshot);
+      setSceneConfig(scenes);
     } catch {
       setConfig(null);
+      setSceneConfig(null);
     } finally {
       setIsLoading(false);
     }
@@ -78,6 +90,10 @@ export function ProjectsView() {
   }, [refresh]);
 
   const projectList = config ? Object.values(config.projects) : [];
+  const sceneList = useMemo(() => Object.values(sceneConfig?.scenes ?? {}), [sceneConfig]);
+  const selectedAgentKeys = projectDraftAgentKeys(draft);
+  const activeAgentKey = selectedAgentKey && draft.agents[selectedAgentKey] ? selectedAgentKey : selectedAgentKeys[0] ?? null;
+  const activeAgentDraft = activeAgentKey ? draft.agents[activeAgentKey] : null;
   const inspectableAgentKeys = useMemo(
     () => sortedAgentInventory.map((agent) => agent.key),
     [sortedAgentInventory],
@@ -105,11 +121,11 @@ export function ProjectsView() {
     skillQuery,
     skillPathFilter,
     skillSelectionFilter,
-    draft.selectedSkillIds,
+    activeAgentDraft?.selectedSkillIds ?? [],
   );
   const visibleAgents = sortProjectAgentsForEditor(
     filterProjectAgents(sortedAgentInventory, agentQuery, agentStatusFilter),
-    draft.selectedAgentKeys,
+    selectedAgentKeys,
     draft.mode === "edit",
   );
   const summary = buildProjectSummary(
@@ -118,24 +134,29 @@ export function ProjectsView() {
     scanResult.skills,
     sortedAgentInventory,
     disabledSkillIds,
+    sceneConfig?.scenes ?? {},
   );
+  const activeSummary = activeAgentKey
+    ? summary.agentSummaries.find((agent) => agent.agentKey === activeAgentKey)
+    : null;
 
   const toggleSkill = (skillId: string) => {
-    setDraft((current) => ({
-      ...current,
-      selectedSkillIds: current.selectedSkillIds.includes(skillId)
-        ? current.selectedSkillIds.filter((id) => id !== skillId)
-        : [...current.selectedSkillIds, skillId],
-    }));
+    if (!activeAgentKey) return;
+    setDraft((current) => toggleProjectAgentSkill(current, activeAgentKey, skillId));
   };
 
   const toggleAgent = (agentKey: string) => {
-    setDraft((current) => ({
-      ...current,
-      selectedAgentKeys: current.selectedAgentKeys.includes(agentKey)
-        ? current.selectedAgentKeys.filter((key) => key !== agentKey)
-        : [...current.selectedAgentKeys, agentKey],
-    }));
+    setDraft((current) => {
+      const next = current.agents[agentKey]
+        ? removeProjectAgentDraft(current, agentKey)
+        : ensureProjectAgentDraft(current, agentKey);
+      if (!current.agents[agentKey]) {
+        setSelectedAgentKey(agentKey);
+      } else if (selectedAgentKey === agentKey) {
+        setSelectedAgentKey(projectDraftAgentKeys(next)[0] ?? null);
+      }
+      return next;
+    });
   };
 
   const resetEditorFilters = () => {
@@ -179,22 +200,22 @@ export function ProjectsView() {
       const displayName =
         draft.displayName.trim() || suggestProjectDisplayName(draft.projectPath);
       if (draft.mode === "edit" && draft.sourceProjectPath) {
-        const snapshot = await projectsApi.updateProject(
+        const snapshot = await projectsApi.updateProjectWithAgents(
           draft.sourceProjectPath,
           displayName,
-          [...draft.selectedSkillIds],
-          [...draft.selectedAgentKeys, ...draft.unsupportedAgentKeys],
+          projectDraftToAgentAssignments(draft),
+          draft.unsupportedAgentKeys,
         );
         setConfig(snapshot);
       } else {
-        const snapshot = await projectsApi.addProject(
+        const snapshot = await projectsApi.addProjectWithAgents(
           draft.projectPath.trim(),
           displayName,
-          [...draft.selectedSkillIds],
-          [...draft.selectedAgentKeys],
+          projectDraftToAgentAssignments(draft),
         );
         setConfig(snapshot);
         setDraft(emptyDraft);
+        setSelectedAgentKey(null);
         resetEditorFilters();
       }
       setLastResult(t("projects.saved.saveSuccess"));
@@ -228,28 +249,15 @@ export function ProjectsView() {
 
   const handleEdit = (project: projectsApi.ProjectAssignment) => {
     resetEditorFilters();
-    const unsupportedAgentKeys = project.agentKeys.filter(
-      (key) => !sortedAgentInventory.some((agent) => agent.key === key),
-    );
-    setDraft({
-      mode: "edit",
-      sourceProjectPath: project.projectPath,
-      projectPath: project.projectPath,
-      displayName: project.displayName,
-      displayNameManuallyEdited: true,
-      selectedSkillIds: [...project.skillIds],
-      selectedAgentKeys: project.agentKeys.filter((key) =>
-        sortedAgentInventory.some((agent) => agent.key === key),
-      ),
-      unsupportedAgentKeys,
-    });
+    const nextDraft = projectDraftFromAssignment(project, sortedAgentInventory);
+    setDraft(nextDraft);
+    setSelectedAgentKey(projectDraftAgentKeys(nextDraft)[0] ?? null);
   };
-
   const handleCancelEdit = () => {
     setDraft(emptyDraft);
+    setSelectedAgentKey(null);
     resetEditorFilters();
   };
-
   if (!repoPath) {
     return (
       <section className="rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
@@ -272,111 +280,69 @@ export function ProjectsView() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 min-[1380px]:items-stretch min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
-        <div className="space-y-4">
-          <ProjectIdentityPanel
-            canBrowseProjectPath={draft.mode === "create"}
-            canSave={!duplicatePath && draft.projectPath.trim().length > 0}
-            displayName={draft.displayName}
-            duplicatePath={duplicatePath}
-            inferredName={suggestProjectDisplayName(draft.projectPath)}
-            inspectionError={inspectionError}
-            isInspecting={isInspecting}
-            isSaving={isSavingDraft}
-            mode={draft.mode}
-            onBrowseProjectPath={() => void handleBrowseProjectPath()}
-            onDisplayNameChange={(value) =>
-              setDraft((current) => applyProjectDisplayNameToDraft(current, value))
-            }
-            onProjectPathChange={(value) =>
-              setDraft((current) => applyProjectPathToDraft(current, value))
-            }
-            onCancelEdit={handleCancelEdit}
-            onSave={() => void handleSaveDraft()}
-            projectPath={draft.projectPath}
-            saveLabel={
-              draft.mode === "edit"
-                ? t("projects.summary.saveEdit")
-                : t("projects.summary.saveCreate")
-            }
-          />
-          <ProjectAssignmentEditor
-            agentQuery={agentQuery}
-            agentStatusFilter={agentStatusFilter}
-            agents={visibleAgents}
-            onAgentQueryChange={setAgentQuery}
-            onAgentStatusFilterChange={setAgentStatusFilter}
-            onSkillPathFilterChange={setSkillPathFilter}
-            onSkillSelectionFilterChange={setSkillSelectionFilter}
-            onSkillQueryChange={setSkillQuery}
-            onToggleAgent={toggleAgent}
-            onToggleSkill={toggleSkill}
-            selectedAgentKeys={draft.selectedAgentKeys}
-            selectedSkillIds={draft.selectedSkillIds}
-            skillPathFilter={skillPathFilter}
-            skillSelectionFilter={skillSelectionFilter}
-            skillPathSummaries={skillPathSummaries}
-            skillQuery={skillQuery}
-            skills={visibleSkills}
-          />
-        </div>
-        <div className="min-h-0 min-[1380px]:sticky min-[1380px]:top-8 min-[1380px]:relative min-[1380px]:self-stretch">
-          <ProjectAssignmentSummary
-            disabledSelectedSkillIds={summary.disabledSelectedSkillIds}
-            duplicatePath={duplicatePath}
-            inspectionTargets={summary.inspectionAgents}
-            isInspecting={isInspecting}
-            selectedAgentCount={summary.selectedAgentCount}
-            selectedAgents={summary.selectedAgents}
-            selectedSkillCount={summary.selectedSkillCount}
-            selectedSkills={summary.selectedSkills}
-            title={
-              draft.mode === "edit"
-                ? t("projects.summary.editTitle")
-                : t("projects.summary.createTitle")
-            }
-            unsupportedAgentKeys={summary.unsupportedAgentKeys}
-          />
-        </div>
-      </div>
+      <ProjectLayerWorkbench
+        activeAgentDraft={activeAgentDraft}
+        agentQuery={agentQuery}
+        agentStatusFilter={agentStatusFilter}
+        agents={visibleAgents}
+        draft={draft}
+        duplicatePath={duplicatePath}
+        exclusionSkills={activeSummary?.exclusionCandidateSkills ?? []}
+        inferredName={suggestProjectDisplayName(draft.projectPath)}
+        inspectionError={inspectionError}
+        isInspecting={isInspecting}
+        isSaving={isSavingDraft}
+        onAgentQueryChange={setAgentQuery}
+        onAgentStatusFilterChange={setAgentStatusFilter}
+        onBrowseProjectPath={() => void handleBrowseProjectPath()}
+        onCancelEdit={handleCancelEdit}
+        onDisplayNameChange={(value) =>
+          setDraft((current) => applyProjectDisplayNameToDraft(current, value))
+        }
+        onProjectPathChange={(value) =>
+          setDraft((current) => applyProjectPathToDraft(current, value))
+        }
+        onSave={() => void handleSaveDraft()}
+        onSelectAgent={setSelectedAgentKey}
+        onSkillPathFilterChange={setSkillPathFilter}
+        onSkillSelectionFilterChange={setSkillSelectionFilter}
+        onSkillQueryChange={setSkillQuery}
+        onToggleAgent={toggleAgent}
+        onToggleProjectExclusion={(skillId) => {
+          if (!activeAgentKey) return;
+          setDraft((current) =>
+            toggleProjectAgentExclusion(current, activeAgentKey, skillId),
+          );
+        }}
+        onToggleProjectScene={(sceneId) => {
+          if (!activeAgentKey) return;
+          setDraft((current) =>
+            toggleProjectAgentScene(current, activeAgentKey, sceneId),
+          );
+        }}
+        onToggleProjectSkill={toggleSkill}
+        scenes={sceneList}
+        selectedAgentKey={activeAgentKey}
+        selectedAgentKeys={selectedAgentKeys}
+        skillPathFilter={skillPathFilter}
+        skillPathSummaries={skillPathSummaries}
+        skillQuery={skillQuery}
+        skillSelectionFilter={skillSelectionFilter}
+        skills={visibleSkills}
+        summary={summary}
+      />
 
       {isLoading ? (
         <div className="text-sm text-slate-400">{t("projects.loading")}</div>
-      ) : projectList.length === 0 ? (
-        <div className="text-sm text-slate-500">{t("projects.empty")}</div>
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-semibold text-slate-100">
-                {t("projects.saved.title")}
-              </h3>
-              <p className="mt-1 text-sm text-slate-500">
-                {t("projects.saved.description")}
-              </p>
-            </div>
-            <button
-              className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-950 disabled:opacity-60"
-              disabled={projectList.length === 0 || applying === "__all__"}
-              onClick={() => void handleApplyAll()}
-              type="button"
-            >
-              {t("projects.saved.applyAll")}
-            </button>
-          </div>
-          <div className="space-y-4">
-            {projectList.map((project) => (
-              <ProjectCard
-                key={project.projectPath}
-                onDelete={() => void handleDelete(project.projectPath)}
-                onEdit={() => handleEdit(project)}
-                project={project}
-                sessionApplyMessage={sessionProjectApplyFeedback[project.projectPath] ?? null}
-                t={t}
-              />
-            ))}
-          </div>
-        </div>
+        <SavedProjectsSection
+          applyingKey={applying}
+          onApplyAll={() => void handleApplyAll()}
+          onDelete={(projectPath) => void handleDelete(projectPath)}
+          onEdit={handleEdit}
+          projects={projectList}
+          sessionApplyFeedback={sessionProjectApplyFeedback}
+        />
       )}
     </div>
   );

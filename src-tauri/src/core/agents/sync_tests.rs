@@ -1,8 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-
 use tempfile::tempdir;
-
 use crate::core::agents::config::AgentConfigStore;
 use crate::core::agents::discovery::{load_agent_inventory, AgentInventoryItem, AgentSystemDirs};
 use crate::core::agents::selection::{
@@ -13,6 +11,7 @@ use crate::core::agents::sync::{apply_agent_sync, apply_agent_sync_for_agent};
 use crate::core::agents::target_sync::SyncMode;
 use crate::core::scenes::config::SceneConfigStore;
 use crate::core::skills::state::SkillStateStore;
+
 fn create_skill(repo_root: &Path, relative_path: &str) -> PathBuf {
     let skill_dir = repo_root.join(relative_path);
     fs::create_dir_all(&skill_dir).unwrap();
@@ -23,12 +22,14 @@ fn create_skill(repo_root: &Path, relative_path: &str) -> PathBuf {
     .unwrap();
     skill_dir
 }
+
 fn test_system_dirs(root: &Path) -> AgentSystemDirs {
     AgentSystemDirs {
         home_dir: root.join("home"),
         config_dir: Some(root.join("config-home")),
     }
 }
+
 fn configure_agent(
     config_dir: &Path,
     key: &str,
@@ -51,7 +52,6 @@ fn configure_agent(
         )
         .unwrap();
 }
-
 struct SyncFixture {
     config_dir: tempfile::TempDir,
     repo_dir: tempfile::TempDir,
@@ -66,11 +66,9 @@ impl SyncFixture {
             target_root: tempfile::tempdir().unwrap(),
         }
     }
-
     fn create_skill(&self, relative_path: &str) {
         create_skill(self.repo_dir.path(), relative_path);
     }
-
     fn create_scene(&self, scene_id: &str, skill_ids: Vec<&str>) {
         let scene_store = SceneConfigStore::new(self.config_dir.path().to_path_buf());
         scene_store.create_scene(scene_id, scene_id, "").unwrap();
@@ -81,7 +79,6 @@ impl SyncFixture {
             )
             .unwrap();
     }
-
     fn configure_agent(
         &self,
         key: &str,
@@ -99,11 +96,9 @@ impl SyncFixture {
             excluded_ids.iter().map(String::as_str).collect(),
         );
     }
-
     fn load_selection_context(&self) -> SkillSelectionContext {
         load_skill_selection_context(self.config_dir.path(), self.repo_dir.path()).unwrap()
     }
-
     fn agent_inventory_item(&self, key: &str) -> AgentInventoryItem {
         load_agent_inventory(
             self.config_dir.path(),

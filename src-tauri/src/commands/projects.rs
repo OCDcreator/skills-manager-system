@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use tauri::Manager;
@@ -6,7 +7,9 @@ use crate::core::agents::discovery::AgentSystemDirs;
 use crate::core::projects::path_inspection::{
     inspect_project_assignment_path as inspect_project_assignment_path_core, ProjectPathInspection,
 };
-use crate::core::projects::store::{ProjectConfigSnapshot, ProjectConfigStore};
+use crate::core::projects::store::{
+    ProjectAgentAssignment, ProjectConfigSnapshot, ProjectConfigStore,
+};
 use crate::core::projects::sync::{
     apply_project_assignments as apply_project_assignments_core, ApplyProjectAssignmentsResponse,
 };
@@ -53,6 +56,18 @@ pub fn add_project(
 }
 
 #[tauri::command]
+pub fn add_project_with_agents(
+    app: tauri::AppHandle,
+    project_path: String,
+    display_name: String,
+    agents: BTreeMap<String, ProjectAgentAssignment>,
+) -> Result<ProjectConfigSnapshot, String> {
+    project_store(&app)?
+        .add_project_with_agents(&project_path, &display_name, agents)
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 pub fn update_project(
     app: tauri::AppHandle,
     project_path: String,
@@ -67,6 +82,18 @@ pub fn update_project(
             skill_ids,
             agent_keys,
         )
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn update_project_with_agents(
+    app: tauri::AppHandle,
+    project_path: String,
+    display_name: Option<String>,
+    agents: Option<BTreeMap<String, ProjectAgentAssignment>>,
+) -> Result<ProjectConfigSnapshot, String> {
+    project_store(&app)?
+        .update_project_agents(&project_path, display_name.as_deref(), agents)
         .map_err(|error| error.to_string())
 }
 

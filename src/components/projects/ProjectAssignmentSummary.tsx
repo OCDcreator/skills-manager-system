@@ -1,45 +1,34 @@
 import { useTranslation } from "react-i18next";
 import { useRememberedScrollPosition } from "../../lib/scroll-memory";
+import type { ProjectAgentSummary } from "../../lib/project-summary";
 
 interface ProjectAssignmentSummaryProps {
   title: string;
-  selectedSkillCount: number;
   selectedAgentCount: number;
-  selectedSkills: Array<{
-    id: string;
-    name: string;
-    description: string;
-  }>;
-  selectedAgents: Array<{
-    key: string;
-    displayName: string;
-    skillsDirRule: string;
-    projectSkillsDirRule: string;
-  }>;
+  projectDirectSkillCount: number;
+  projectSceneCount: number;
+  projectExclusionCount: number;
+  agentSummaries: ProjectAgentSummary[];
   duplicatePath: boolean;
   unsupportedAgentKeys: string[];
-  disabledSelectedSkillIds: string[];
-  inspectionTargets: Array<{
-    agentKey: string;
-    targetDir: string;
-    markerExists: boolean;
-    targetExists: boolean;
-  }>;
   isInspecting: boolean;
 }
 
 export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
   const { t } = useTranslation();
   const scrollRef = useRememberedScrollPosition(`projects:summary:${props.title}`);
-  const chipClassName =
-    "rounded-full border border-slate-700/80 bg-slate-950/70 px-3 py-1 text-xs text-slate-200";
 
   return (
     <aside className="flex h-full min-h-0 max-h-[clamp(22rem,calc(100vh-13rem),34rem)] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 min-[1380px]:absolute min-[1380px]:inset-0 min-[1380px]:max-h-none">
       <div className="border-b border-slate-800 px-4 py-4">
         <h3 className="text-base font-semibold text-slate-100">{props.title}</h3>
         <p className="mt-2 text-sm text-slate-400">
-          {props.selectedSkillCount} skills · {props.selectedAgentCount} agents
+          {t("projects.summary.layerCounts", {
+            agents: props.selectedAgentCount,
+            skills: props.projectDirectSkillCount,
+            scenes: props.projectSceneCount,
+            exclusions: props.projectExclusionCount,
+          })}
         </p>
       </div>
       <div
@@ -48,43 +37,12 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
       >
         <section>
           <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {t("projects.summary.selectedSkillsTitle")}
-          </div>
-          {props.selectedSkills.length ? (
-            <div className="mt-2 rounded-xl border border-slate-800 bg-slate-950/50 p-2">
-              <div className="skill-markdown-scroll max-h-28 overflow-y-auto pr-1">
-                <div className="flex flex-wrap gap-2">
-                  {props.selectedSkills.map((skill) => (
-                    <span className={chipClassName} key={skill.id} title={skill.description}>
-                      {skill.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p className="mt-2 text-xs text-slate-500">
-              {t("projects.summary.noSelectedSkills")}
-            </p>
-          )}
-        </section>
-
-        <section>
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
             {t("projects.summary.selectedAgentsTitle")}
           </div>
-          {props.selectedAgents.length ? (
+          {props.agentSummaries.length ? (
             <div className="mt-2 space-y-2">
-              {props.selectedAgents.map((agent) => (
-                <div
-                  className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2"
-                  key={agent.key}
-                >
-                  <div className="font-medium text-slate-100">{agent.displayName}</div>
-                  <div className="mt-0.5 truncate text-xs text-slate-500">
-                    {agent.projectSkillsDirRule}
-                  </div>
-                </div>
+              {props.agentSummaries.map((summary) => (
+                <AgentPreviewGroup key={summary.agentKey} summary={summary} />
               ))}
             </div>
           ) : (
@@ -111,39 +69,7 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
             </div>
           </section>
         ) : null}
-        <section className="flex min-h-0 flex-1 flex-col">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {t("projects.summary.targetsTitle")}
-          </div>
-          <div className="mt-2 flex min-h-0 flex-1 flex-col rounded-xl border border-slate-800 bg-slate-950/50 p-2">
-            <div className="skill-markdown-scroll min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-              {props.inspectionTargets.map((target) => (
-                <div
-                  className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3"
-                  key={target.agentKey}
-                >
-                  <div className="font-medium text-slate-100">{target.agentKey}</div>
-                  <div className="mt-1 break-all text-xs text-slate-400">{target.targetDir}</div>
-                  <div className="mt-2 text-xs text-slate-500">
-                    {t("projects.summary.markerStatus")}:{" "}
-                    {target.markerExists
-                      ? t("projects.summary.present")
-                      : t("projects.summary.missing")}{" "}
-                    · {t("projects.summary.targetStatus")}:{" "}
-                    {target.targetExists
-                      ? t("projects.summary.present")
-                      : t("projects.summary.missing")}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-        {props.disabledSelectedSkillIds.length ? (
-          <section className="rounded-xl border border-amber-800 bg-amber-950/50 px-3 py-3 text-xs text-amber-200">
-            {t("projects.summary.disabledSkills")}
-          </section>
-        ) : null}
+
         {props.duplicatePath ? (
           <section className="rounded-xl border border-rose-800 bg-rose-950/50 px-3 py-3 text-xs text-rose-200">
             {t("projects.identity.duplicate")}
@@ -154,5 +80,85 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
         ) : null}
       </div>
     </aside>
+  );
+}
+
+function AgentPreviewGroup({ summary }: { summary: ProjectAgentSummary }) {
+  const { t } = useTranslation();
+  const chipClassName =
+    "rounded-full border border-slate-700/80 bg-slate-950/70 px-2.5 py-1 text-[11px] text-slate-200";
+
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="truncate font-medium text-slate-100">{summary.displayName}</div>
+          <div className="mt-0.5 truncate text-xs text-slate-500">
+            {summary.projectSkillsDirRule}
+          </div>
+        </div>
+        <span className="rounded-full bg-slate-800 px-2 py-1 text-[10px] text-slate-300">
+          {t("projects.summary.agentPreviewTitle")}
+        </span>
+      </div>
+
+      <div className="mt-3 grid gap-2 text-xs text-slate-400">
+        <Metric label={t("projects.summary.inheritedGlobal")} value={summary.inheritedGlobalSkillIds.length} />
+        <Metric label={t("projects.summary.projectDirect")} value={summary.projectDirectSkillIds.length} />
+        <Metric label={t("projects.summary.projectScenes")} value={summary.projectSceneIds.length} />
+        <Metric label={t("projects.summary.projectExclusions")} value={summary.excludedSkillIds.length} />
+      </div>
+
+      {summary.previewItems.length ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {summary.previewItems.map((item) => (
+            <span
+              className={`${chipClassName} ${
+                item.isExcludedByProject
+                  ? "border-rose-800 bg-rose-950/50 text-rose-200"
+                  : item.isGloballyDisabled
+                    ? "border-amber-800 bg-amber-950/50 text-amber-200"
+                    : ""
+              }`}
+              key={item.skill.id}
+              title={item.skill.description}
+            >
+              {item.skill.name}
+              {item.isExcludedByProject ? ` · ${t("projects.summary.excluded")}` : ""}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-slate-500">
+          {t("projects.summary.noPreviewSkills")}
+        </p>
+      )}
+
+      <div className="mt-3 break-all text-xs text-slate-500">
+        {t("projects.summary.targetsTitle")}:{" "}
+        {summary.targetDir ?? t("projects.summary.targetPending")}
+      </div>
+      {summary.markerExists !== null ? (
+        <div className="mt-1 text-xs text-slate-500">
+          {t("projects.summary.markerStatus")}:{" "}
+          {summary.markerExists
+            ? t("projects.summary.present")
+            : t("projects.summary.missing")}{" "}
+          · {t("projects.summary.targetStatus")}:{" "}
+          {summary.targetExists
+            ? t("projects.summary.present")
+            : t("projects.summary.missing")}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-900/70 px-2 py-1.5">
+      <span className="truncate">{label}</span>
+      <span className="font-medium text-slate-100">{value}</span>
+    </div>
   );
 }

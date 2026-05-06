@@ -5,7 +5,7 @@
 
 ## Overview
 
-Saved-project management card showing counts, edit/delete actions, and session-scoped apply feedback.
+Saved-project management card showing per-agent layer counts, edit/delete actions, and session-scoped apply feedback.
 
 ## Props
 
@@ -19,4 +19,5 @@ Saved-project management card showing counts, edit/delete actions, and session-s
 
 ## Interactions
 
-- Used by `ProjectsView.tsx` to render each saved project below the main workbench
+- Used by `SavedProjectsSection.tsx` to render each saved project below the main workbench
+- Reads both the new per-agent assignment shape and legacy flat compatibility fields while saved configs migrate

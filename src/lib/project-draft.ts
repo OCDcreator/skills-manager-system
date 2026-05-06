@@ -1,4 +1,4 @@
-import type { ProjectAssignment, ProjectPathInspection } from "./projects";
+import type { ProjectAssignment } from "./projects";
 import {
   matchesSkillPathFilter,
   type SkillPathFilter,
@@ -8,14 +8,19 @@ import type { AgentInventoryItem, SkillSummary } from "./tauri";
 export type ProjectAgentStatusFilter = "all" | "enabled" | "disabled";
 export type ProjectSkillSelectionFilter = "all" | "selected" | "unselected";
 
+export interface ProjectAgentDraft {
+  selectedSkillIds: string[];
+  selectedSceneIds: string[];
+  excludedSkillIds: string[];
+}
+
 export interface ProjectDraft {
   mode: "create" | "edit";
   sourceProjectPath: string | null;
   projectPath: string;
   displayName: string;
   displayNameManuallyEdited: boolean;
-  selectedSkillIds: string[];
-  selectedAgentKeys: string[];
+  agents: Record<string, ProjectAgentDraft>;
   unsupportedAgentKeys: string[];
 }
 
@@ -26,6 +31,47 @@ export function suggestProjectDisplayName(projectPath: string) {
   return segments[segments.length - 1] ?? trimmed;
 }
 
+export function projectDraftFromAssignment(
+  project: ProjectAssignment,
+  agents: AgentInventoryItem[],
+) {
+  const supportedAgentKeys = new Set<string>(agents.map((agent) => agent.key));
+  const migratedAgents = assignmentAgentDrafts(project);
+  const unsupportedAgentKeys = normalizeIds([
+    ...(project.unsupportedAgentKeys ?? []),
+    ...assignmentAgentKeys(project).filter((key) => !supportedAgentKeys.has(key)),
+  ]);
+
+  return {
+    mode: "edit" as const,
+    sourceProjectPath: project.projectPath,
+    projectPath: project.projectPath,
+    displayName: project.displayName,
+    displayNameManuallyEdited: true,
+    agents: Object.fromEntries(
+      Object.entries(migratedAgents).filter(([key]) => supportedAgentKeys.has(key)),
+    ),
+    unsupportedAgentKeys,
+  };
+}
+
+export function projectDraftAgentKeys(draft: ProjectDraft) {
+  return Object.keys(draft.agents).sort();
+}
+
+export function projectDraftToAgentAssignments(draft: ProjectDraft) {
+  return Object.fromEntries(
+    Object.entries(draft.agents).map(([agentKey, agentDraft]) => [
+      agentKey,
+      {
+        selectedSkillIds: normalizeIds(agentDraft.selectedSkillIds),
+        selectedSceneIds: normalizeIds(agentDraft.selectedSceneIds),
+        excludedSkillIds: normalizeIds(agentDraft.excludedSkillIds),
+      },
+    ]),
+  );
+}
+
 export function isProjectDraftDirty(
   draft: ProjectDraft,
   original: ProjectAssignment | null,
@@ -34,8 +80,7 @@ export function isProjectDraftDirty(
     return Boolean(
       draft.projectPath.trim() ||
         draft.displayName.trim() ||
-        draft.selectedSkillIds.length ||
-        draft.selectedAgentKeys.length ||
+        projectDraftAgentKeys(draft).length ||
         draft.unsupportedAgentKeys.length,
     );
   }
@@ -43,10 +88,53 @@ export function isProjectDraftDirty(
   return (
     draft.displayName !== original.displayName ||
     draft.projectPath !== original.projectPath ||
-    draft.selectedSkillIds.join("\n") !== original.skillIds.join("\n") ||
-    [...draft.selectedAgentKeys, ...draft.unsupportedAgentKeys].join("\n") !==
-      original.agentKeys.join("\n")
+    serializeAgents(draft.agents, draft.unsupportedAgentKeys) !==
+      serializeAgents(assignmentAgentDrafts(original), original.unsupportedAgentKeys ?? [])
   );
+}
+
+export function ensureProjectAgentDraft(draft: ProjectDraft, agentKey: string) {
+  if (draft.agents[agentKey]) {
+    return draft;
+  }
+
+  return {
+    ...draft,
+    agents: {
+      ...draft.agents,
+      [agentKey]: {
+        selectedSkillIds: [],
+        selectedSceneIds: [],
+        excludedSkillIds: [],
+      },
+    },
+  };
+}
+
+export function removeProjectAgentDraft(draft: ProjectDraft, agentKey: string) {
+  if (!draft.agents[agentKey]) {
+    return draft;
+  }
+
+  const agents = { ...draft.agents };
+  delete agents[agentKey];
+  return { ...draft, agents };
+}
+
+export function toggleProjectAgentSkill(draft: ProjectDraft, agentKey: string, skillId: string) {
+  return toggleProjectAgentList(draft, agentKey, "selectedSkillIds", skillId);
+}
+
+export function toggleProjectAgentScene(draft: ProjectDraft, agentKey: string, sceneId: string) {
+  return toggleProjectAgentList(draft, agentKey, "selectedSceneIds", sceneId);
+}
+
+export function toggleProjectAgentExclusion(
+  draft: ProjectDraft,
+  agentKey: string,
+  skillId: string,
+) {
+  return toggleProjectAgentList(draft, agentKey, "excludedSkillIds", skillId);
 }
 
 export function filterProjectSkills(
@@ -138,10 +226,7 @@ export function applyProjectPathToDraft(draft: ProjectDraft, projectPath: string
   };
 }
 
-export function applyProjectDisplayNameToDraft(
-  draft: ProjectDraft,
-  displayName: string,
-) {
+export function applyProjectDisplayNameToDraft(draft: ProjectDraft, displayName: string) {
   return {
     ...draft,
     displayName,
@@ -149,30 +234,83 @@ export function applyProjectDisplayNameToDraft(
   };
 }
 
-export function buildProjectSummary(
+function toggleProjectAgentList(
   draft: ProjectDraft,
-  inspection: ProjectPathInspection | null,
-  skills: SkillSummary[],
-  agents: AgentInventoryItem[],
-  disabledSkillIds: string[],
+  agentKey: string,
+  field: keyof ProjectAgentDraft,
+  id: string,
 ) {
-  const selectedSkillIdSet = new Set(draft.selectedSkillIds);
-  const selectedAgentKeySet = new Set(draft.selectedAgentKeys);
-  const selectedSkills = skills.filter((skill) => selectedSkillIdSet.has(skill.id));
-  const selectedAgents = agents.filter((agent) =>
-    selectedAgentKeySet.has(agent.key),
-  );
-
+  const ensured = ensureProjectAgentDraft(draft, agentKey);
+  const agentDraft = ensured.agents[agentKey];
   return {
-    selectedSkillCount: draft.selectedSkillIds.length,
-    selectedAgentCount: draft.selectedAgentKeys.length,
-    selectedSkills,
-    selectedAgents,
-    disabledSelectedSkillIds: draft.selectedSkillIds.filter((skillId) =>
-      disabledSkillIds.includes(skillId),
-    ),
-    inspectionAgents: inspection?.agents ?? [],
-    unsupportedAgentKeys: draft.unsupportedAgentKeys,
-    warnings: inspection?.warnings ?? [],
+    ...ensured,
+    agents: {
+      ...ensured.agents,
+      [agentKey]: {
+        ...agentDraft,
+        [field]: toggleId(agentDraft[field], id),
+      },
+    },
   };
+}
+
+function assignmentAgentDrafts(project: ProjectAssignment) {
+  const agents = project.agents ?? {};
+  if (Object.keys(agents).length > 0) {
+    return Object.fromEntries(
+      Object.entries(agents).map(([agentKey, assignment]) => [
+        agentKey,
+        {
+          selectedSkillIds: normalizeIds(assignment.selectedSkillIds),
+          selectedSceneIds: normalizeIds(assignment.selectedSceneIds),
+          excludedSkillIds: normalizeIds(assignment.excludedSkillIds),
+        },
+      ]),
+    );
+  }
+
+  return Object.fromEntries(
+    (project.agentKeys ?? []).map((agentKey) => [
+      agentKey,
+      {
+        selectedSkillIds: normalizeIds(project.skillIds ?? []),
+        selectedSceneIds: [],
+        excludedSkillIds: [],
+      },
+    ]),
+  );
+}
+
+function assignmentAgentKeys(project: ProjectAssignment) {
+  return normalizeIds([
+    ...Object.keys(project.agents ?? {}),
+    ...(project.agentKeys ?? []),
+    ...(project.unsupportedAgentKeys ?? []),
+  ]);
+}
+
+function serializeAgents(
+  agents: Record<string, ProjectAgentDraft>,
+  unsupportedAgentKeys: string[],
+) {
+  return JSON.stringify({
+    agents: projectDraftToAgentAssignments({
+      mode: "create",
+      sourceProjectPath: null,
+      projectPath: "",
+      displayName: "",
+      displayNameManuallyEdited: false,
+      agents,
+      unsupportedAgentKeys: [],
+    }),
+    unsupportedAgentKeys: normalizeIds(unsupportedAgentKeys),
+  });
+}
+
+function toggleId(ids: string[], id: string) {
+  return ids.includes(id) ? ids.filter((candidate) => candidate !== id) : normalizeIds([...ids, id]);
+}
+
+function normalizeIds(ids: string[]) {
+  return [...new Set(ids.map((id) => id.trim()).filter(Boolean))].sort();
 }

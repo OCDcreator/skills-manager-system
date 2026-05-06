@@ -15,6 +15,25 @@ export function ProjectCard({
   onEdit,
   t,
 }: ProjectCardProps) {
+  const agentEntries = Object.entries(project.agents ?? {});
+  const legacyAgentKeys = project.agentKeys ?? [];
+  const legacySkillIds = project.skillIds ?? [];
+  const agentCount = agentEntries.length || legacyAgentKeys.length;
+  const directSkillCount = agentEntries.length
+    ? agentEntries.reduce(
+        (count, [, assignment]) => count + assignment.selectedSkillIds.length,
+        0,
+      )
+    : legacySkillIds.length;
+  const sceneCount = agentEntries.reduce(
+    (count, [, assignment]) => count + assignment.selectedSceneIds.length,
+    0,
+  );
+  const exclusionCount = agentEntries.reduce(
+    (count, [, assignment]) => count + assignment.excludedSkillIds.length,
+    0,
+  );
+
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
       <div className="flex items-start justify-between gap-4">
@@ -39,10 +58,16 @@ export function ProjectCard({
 
       <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
         <span>
-          {t("projects.card.skills", { count: project.skillIds.length })}
+          {t("projects.card.agents", { count: agentCount })}
         </span>
         <span>
-          {t("projects.card.agents", { count: project.agentKeys.length })}
+          {t("projects.card.directSkills", { count: directSkillCount })}
+        </span>
+        <span>
+          {t("projects.card.scenes", { count: sceneCount })}
+        </span>
+        <span>
+          {t("projects.card.exclusions", { count: exclusionCount })}
         </span>
       </div>
 

@@ -3,8 +3,16 @@ import { invoke } from "@tauri-apps/api/core";
 export interface ProjectAssignment {
   projectPath: string;
   displayName: string;
-  skillIds: string[];
-  agentKeys: string[];
+  agents: Record<string, ProjectAgentAssignment>;
+  unsupportedAgentKeys: string[];
+  skillIds?: string[];
+  agentKeys?: string[];
+}
+
+export interface ProjectAgentAssignment {
+  selectedSkillIds: string[];
+  selectedSceneIds: string[];
+  excludedSkillIds: string[];
 }
 
 export interface ProjectConfigSnapshot {
@@ -62,6 +70,17 @@ export const addProject = (
     agentKeys,
   });
 
+export const addProjectWithAgents = (
+  projectPath: string,
+  displayName: string,
+  agents: Record<string, ProjectAgentAssignment>,
+) =>
+  invoke<ProjectConfigSnapshot>("add_project_with_agents", {
+    projectPath,
+    displayName,
+    agents,
+  });
+
 export const updateProject = (
   projectPath: string,
   displayName: string | null,
@@ -73,6 +92,18 @@ export const updateProject = (
     displayName,
     skillIds,
     agentKeys,
+  });
+
+export const updateProjectWithAgents = (
+  projectPath: string,
+  displayName: string | null,
+  agents: Record<string, ProjectAgentAssignment> | null,
+  _unsupportedAgentKeys: string[] = [],
+) =>
+  invoke<ProjectConfigSnapshot>("update_project_with_agents", {
+    projectPath,
+    displayName,
+    agents,
   });
 
 export const removeProject = (projectPath: string) =>

@@ -19,10 +19,10 @@ Pure helper module for the Projects workbench draft state.
 | `ProjectSkillSelectionFilter` | Skill selected-state filter union: `all`, `selected`, `unselected`. |
 | `filterProjectSkills` / `filterProjectAgents` | Client-side search helpers with path, selected-state, and enabled-state filters. |
 | `sortProjectAgentsForEditor` | Stable selected-first ordering helper for edit-mode agent lists. |
-| `buildProjectSummary` | Converts draft + inspection state into summary-friendly counts, selected item mirrors, warnings, and target data. |
+| `projectDraftToAgentAssignments` | Serializes per-agent project layers for Tauri save commands. |
 
 ## Core Logic
 
 The module still keeps create/edit draft behavior pure, but its filter helpers now match the workbench's more precise editor controls. Skills can be filtered by free-text search, top-level relative-path buckets such as `custom` or `external`, and selected-state (`selected` / `unselected`), while agents can be filtered by query plus `enabled` / `disabled` state.
 
-`sortProjectAgentsForEditor` is intentionally narrow: it only reorders the already-filtered list, pushing currently configured agents to the top during edit mode without changing the underlying persisted global agent order.
+`sortProjectAgentsForEditor` is intentionally narrow: it only reorders the already-filtered list, pushing currently configured agents to the top during edit mode without changing the underlying persisted global agent order. Preview derivation lives in `src/lib/project-summary.ts` so this module stays centered on draft mutation and filtering.

@@ -4,11 +4,13 @@ import fs from "node:fs";
 import path from "node:path";
 
 const sourcePath = path.resolve("src/lib/project-draft.ts");
+const summaryPath = path.resolve("src/lib/project-summary.ts");
 const identityPanelPath = path.resolve("src/components/projects/ProjectIdentityPanel.tsx");
 const projectsViewPath = path.resolve("src/views/ProjectsView.tsx");
 
 test("project draft helper exports the expected pure helpers", () => {
   const source = fs.readFileSync(sourcePath, "utf8");
+  const summarySource = fs.readFileSync(summaryPath, "utf8");
 
   assert.match(source, /export interface ProjectDraft/);
   assert.match(source, /export function suggestProjectDisplayName/);
@@ -18,9 +20,10 @@ test("project draft helper exports the expected pure helpers", () => {
   assert.match(source, /export function sortProjectAgentsForEditor/);
   assert.match(source, /export function applyProjectPathToDraft/);
   assert.match(source, /export function applyProjectDisplayNameToDraft/);
-  assert.match(source, /export function buildProjectSummary/);
-  assert.match(source, /selectedSkills/);
-  assert.match(source, /selectedAgents/);
+  assert.match(summarySource, /export function buildProjectSummary/);
+  assert.match(source, /projectDraftFromAssignment/);
+  assert.match(source, /projectDraftToAgentAssignments/);
+  assert.match(summarySource, /agentSummaries/);
 });
 
 test("project draft helper tracks sourceProjectPath and unsupportedAgentKeys", () => {
@@ -28,8 +31,31 @@ test("project draft helper tracks sourceProjectPath and unsupportedAgentKeys", (
 
   assert.match(source, /sourceProjectPath: string \| null/);
   assert.match(source, /displayNameManuallyEdited: boolean/);
+  assert.match(source, /agents: Record<string, ProjectAgentDraft>/);
   assert.match(source, /unsupportedAgentKeys: string\[\]/);
   assert.match(source, /mode: "create" \| "edit"/);
+});
+
+test("project draft stores selected scenes per agent", () => {
+  const source = fs.readFileSync(sourcePath, "utf8");
+
+  assert.match(source, /export interface ProjectAgentDraft/);
+  assert.match(source, /selectedSceneIds: string\[\]/);
+  assert.match(source, /export function ensureProjectAgentDraft/);
+  assert.match(source, /export function toggleProjectAgentScene/);
+  assert.match(source, /agents: \{\s*\.\.\.ensured\.agents,\s*\[agentKey\]: \{/s);
+});
+
+test("project summary marks inherited global skills and local exclusions", () => {
+  const source = fs.readFileSync(summaryPath, "utf8");
+
+  assert.match(source, /inheritedGlobalSkillIds/);
+  assert.match(source, /projectDirectSkillIds/);
+  assert.match(source, /projectSceneNames/);
+  assert.match(source, /isExcludedByProject/);
+  assert.match(source, /resolveInheritedGlobalSkillIds/);
+  assert.match(source, /new Set\(agent\.excludedSkillIds\)/);
+  assert.match(source, /const excluded = new Set\(agentDraft\.excludedSkillIds\)/);
 });
 
 test("project creation flow exposes a folder picker for project paths", () => {
@@ -93,7 +119,7 @@ test("project draft auto-fills display names until the user edits them", () => {
   assert.match(viewSource, /applyProjectPathToDraft/);
   assert.match(viewSource, /applyProjectDisplayNameToDraft/);
   assert.match(helperSource, /displayNameManuallyEdited: true/);
-  assert.match(viewSource, /displayNameManuallyEdited: true/);
+  assert.match(helperSource, /displayNameManuallyEdited: true/);
 });
 
 test("project draft filters skills by path and agents by enabled state", () => {
