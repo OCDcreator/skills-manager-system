@@ -80,6 +80,47 @@ test('managed mirror metadata stays additive inside the existing external bucket
   });
 });
 
+test("path summaries stay top-level while external child collections use the group popover", async () => {
+  const module = await loadFiltersModule();
+  const skills = [
+    {
+      id: "custom.alpha",
+      name: "Alpha",
+      description: "",
+      sourceType: "custom",
+      relativePath: "custom/alpha",
+    },
+    {
+      id: "external.anthropic.a",
+      name: "Anthropic A",
+      description: "",
+      sourceType: "external",
+      relativePath: "external/anthropics-skills/agent/a",
+    },
+    {
+      id: "external.anthropic.b",
+      name: "Anthropic B",
+      description: "",
+      sourceType: "external",
+      relativePath: "external\\anthropics-skills\\agent\\b",
+    },
+    {
+      id: "external.awesome",
+      name: "Awesome",
+      description: "",
+      sourceType: "external",
+      relativePath: "external/awesome-claude-skills/c",
+    },
+  ];
+
+  assert.deepEqual(module.buildSkillPathSummaries(skills), [
+    { key: "all", count: 4 },
+    { key: "custom", count: 1 },
+    { key: "external", count: 3 },
+  ]);
+  assert.equal(module.matchesSkillPathFilter(skills[1], "external/anthropics-skills"), false);
+});
+
 test('SkillList uses an auto-fit card grid so cards respond to container width', () => {
   const source = fs.readFileSync(path.resolve('src/components/skills/SkillList.tsx'), 'utf8');
 

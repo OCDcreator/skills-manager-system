@@ -35,7 +35,7 @@ Downstream: src/lib/tauri.ts
 
 ## Core Logic
 
-Filtering trims and lowercases the search term, applies source and status filters, then matches against skill name, description, or relative path. Path summaries are derived from the first segment of each `relativePath`, which keeps filters tied to repository structure instead of duplicating separate hard-coded source enums in every chooser.
+Filtering trims and lowercases the search term, applies source and status filters, then matches against skill name, description, or relative path. Path summaries are derived from the first segment of each `relativePath`, which keeps filters tied to repository structure instead of duplicating separate hard-coded source enums in every chooser. More precise external subgroup filtering is owned by `scene-skill-filters.ts` so chooser UIs can present it through a popover instead of flattening child paths into the main path-pill row.
 
 ## Data Flow
 

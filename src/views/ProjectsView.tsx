@@ -28,10 +28,8 @@ import * as projectsApi from "../lib/projects";
 import type { ProjectConfigSnapshot } from "../lib/projects";
 import * as scenesApi from "../lib/scenes";
 import type { SceneConfigSnapshot } from "../lib/scenes";
-import {
-  buildSkillPathSummaries,
-  type SkillPathFilter,
-} from "../lib/skills/filters";
+import { buildExternalGroupSummaries, type ExternalGroupFilter } from "../lib/scene-skill-filters";
+import { buildSkillPathSummaries, type SkillPathFilter } from "../lib/skills/filters";
 
 export function ProjectsView() {
   const { t } = useTranslation();
@@ -45,6 +43,7 @@ export function ProjectsView() {
   const [skillQuery, setSkillQuery] = useState("");
   const [agentQuery, setAgentQuery] = useState("");
   const [skillPathFilter, setSkillPathFilter] = useState<SkillPathFilter>("all");
+  const [externalGroupFilter, setExternalGroupFilter] = useState<ExternalGroupFilter>("all");
   const [skillSelectionFilter, setSkillSelectionFilter] = useState<ProjectSkillSelectionFilter>("all");
   const [agentStatusFilter, setAgentStatusFilter] = useState<ProjectAgentStatusFilter>("all");
   const [selectedAgentKey, setSelectedAgentKey] = useState<string | null>(null);
@@ -115,10 +114,15 @@ export function ProjectsView() {
     () => buildSkillPathSummaries(scanResult.skills),
     [scanResult.skills],
   );
+  const externalGroupSummaries = useMemo(
+    () => buildExternalGroupSummaries(scanResult.skills, t("projects.editor.externalGroups.all")),
+    [scanResult.skills, t],
+  );
   const visibleSkills = filterProjectSkills(
     scanResult.skills,
     skillQuery,
     skillPathFilter,
+    externalGroupFilter,
     skillSelectionFilter,
     activeAgentDraft?.selectedSkillIds ?? [],
   );
@@ -158,6 +162,7 @@ export function ProjectsView() {
     setSkillQuery("");
     setAgentQuery("");
     setSkillPathFilter("all");
+    setExternalGroupFilter("all");
     setSkillSelectionFilter("all");
     setAgentStatusFilter("all");
   };
@@ -282,6 +287,8 @@ export function ProjectsView() {
         agents={visibleAgents}
         draft={draft}
         duplicatePath={duplicatePath}
+        externalGroupFilter={externalGroupFilter}
+        externalGroupSummaries={externalGroupSummaries}
         inferredName={suggestProjectDisplayName(draft.projectPath)}
         inspectionError={inspectionError}
         isInspecting={isInspecting}
@@ -298,15 +305,14 @@ export function ProjectsView() {
         }
         onSave={() => void handleSaveDraft()}
         onSelectAgent={setSelectedAgentKey}
+        onExternalGroupFilterChange={setExternalGroupFilter}
         onSkillPathFilterChange={setSkillPathFilter}
         onSkillSelectionFilterChange={setSkillSelectionFilter}
         onSkillQueryChange={setSkillQuery}
         onToggleAgent={toggleAgent}
         onToggleProjectScene={(sceneId) => {
           if (!activeAgentKey) return;
-          setDraft((current) =>
-            toggleProjectAgentScene(current, activeAgentKey, sceneId),
-          );
+          setDraft((current) => toggleProjectAgentScene(current, activeAgentKey, sceneId));
         }}
         onToggleProjectSkill={toggleSkill}
         scenes={sceneList}

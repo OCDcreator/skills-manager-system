@@ -237,6 +237,8 @@
   "projects.editor.projectScenesTitle": "项目场景",
   "projects.editor.exclusionsTitle": "排除项",
   "projects.editor.allPaths": "全部路径 {{count}} 个",
+  "projects.editor.externalGroups.all": "全部 external",
+  "projects.editor.externalGroups.empty": "无 external 集合",
   "projects.editor.allSkills": "全部技能",
   "projects.editor.selectedSkills": "已选中",
   "projects.editor.unselectedSkills": "未选中",

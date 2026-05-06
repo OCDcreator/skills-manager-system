@@ -237,6 +237,8 @@
   "projects.editor.projectScenesTitle": "Project scenes",
   "projects.editor.exclusionsTitle": "Exclusions",
   "projects.editor.allPaths": "All paths · {{count}}",
+  "projects.editor.externalGroups.all": "All external",
+  "projects.editor.externalGroups.empty": "No external groups",
   "projects.editor.allSkills": "All skills",
   "projects.editor.selectedSkills": "Selected",
   "projects.editor.unselectedSkills": "Unselected",

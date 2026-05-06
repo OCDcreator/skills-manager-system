@@ -9,6 +9,10 @@ import type {
   ProjectSkillSelectionFilter,
 } from "../../lib/project-draft";
 import type { ProjectAgentSummary } from "../../lib/project-summary";
+import type {
+  ExternalGroupFilter,
+  ExternalGroupSummary,
+} from "../../lib/scene-skill-filters";
 import type { SceneEntry } from "../../lib/scenes";
 import type { SkillPathSummary, SkillPathFilter } from "../../lib/skills/filters";
 import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
@@ -28,7 +32,9 @@ interface ProjectLayerWorkbenchProps {
   selectedAgentKey: string | null;
   selectedAgentKeys: string[];
   skillPathFilter: SkillPathFilter;
+  externalGroupFilter: ExternalGroupFilter;
   skillSelectionFilter: ProjectSkillSelectionFilter;
+  externalGroupSummaries: ExternalGroupSummary[];
   skillPathSummaries: SkillPathSummary[];
   skillQuery: string;
   skills: SkillSummary[];
@@ -47,6 +53,7 @@ interface ProjectLayerWorkbenchProps {
   onProjectPathChange: (value: string) => void;
   onSave: () => void;
   onSelectAgent: (agentKey: string | null) => void;
+  onExternalGroupFilterChange: (value: ExternalGroupFilter) => void;
   onSkillPathFilterChange: (value: SkillPathFilter) => void;
   onSkillSelectionFilterChange: (value: ProjectSkillSelectionFilter) => void;
   onSkillQueryChange: (value: string) => void;
@@ -88,8 +95,11 @@ export function ProjectLayerWorkbench(props: ProjectLayerWorkbenchProps) {
           agentQuery={props.agentQuery}
           agentStatusFilter={props.agentStatusFilter}
           agents={props.agents}
+          externalGroupFilter={props.externalGroupFilter}
+          externalGroupSummaries={props.externalGroupSummaries}
           onAgentQueryChange={props.onAgentQueryChange}
           onAgentStatusFilterChange={props.onAgentStatusFilterChange}
+          onExternalGroupFilterChange={props.onExternalGroupFilterChange}
           onSelectAgent={props.onSelectAgent}
           onSkillPathFilterChange={props.onSkillPathFilterChange}
           onSkillSelectionFilterChange={props.onSkillSelectionFilterChange}

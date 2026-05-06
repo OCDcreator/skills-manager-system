@@ -1,8 +1,6 @@
 import type { ProjectAssignment } from "./projects";
-import {
-  matchesSkillPathFilter,
-  type SkillPathFilter,
-} from "./skills/filters";
+import { getExternalGroupKey, type ExternalGroupFilter } from "./scene-skill-filters";
+import { matchesSkillPathFilter, type SkillPathFilter } from "./skills/filters";
 import type { AgentInventoryItem, SkillSummary } from "./tauri";
 
 export type ProjectAgentStatusFilter = "all" | "enabled" | "disabled";
@@ -141,6 +139,7 @@ export function filterProjectSkills(
   skills: SkillSummary[],
   query: string,
   pathFilter: SkillPathFilter = "all",
+  externalGroupFilter: ExternalGroupFilter = "all",
   selectionFilter: ProjectSkillSelectionFilter = "all",
   selectedSkillIds: string[] = [],
 ) {
@@ -148,6 +147,9 @@ export function filterProjectSkills(
   const selectedSkillIdSet = new Set(selectedSkillIds);
   return skills.filter((skill) => {
     if (!matchesSkillPathFilter(skill, pathFilter)) {
+      return false;
+    }
+    if (pathFilter === "external" && externalGroupFilter !== "all" && getExternalGroupKey(skill) !== externalGroupFilter) {
       return false;
     }
 

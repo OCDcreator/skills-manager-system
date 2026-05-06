@@ -5,6 +5,7 @@ import path from "node:path";
 
 const identityPanelPath = path.resolve("src/components/projects/ProjectIdentityPanel.tsx");
 const editorPath = path.resolve("src/components/projects/ProjectAssignmentEditor.tsx");
+const filterToolbarPath = path.resolve("src/components/projects/ProjectSkillFilterToolbar.tsx");
 const workbenchPath = path.resolve("src/components/projects/ProjectLayerWorkbench.tsx");
 const summaryPath = path.resolve("src/components/projects/ProjectAssignmentSummary.tsx");
 const projectsViewPath = path.resolve("src/views/ProjectsView.tsx");
@@ -26,21 +27,24 @@ test("project assignment layout keeps the save action beside the display name fi
 
 test("project assignment editor caps panel height and uses the shared markdown scroll surface", () => {
   const source = fs.readFileSync(editorPath, "utf8");
+  const toolbarSource = fs.readFileSync(filterToolbarPath, "utf8");
 
   assert.match(source, /max-h-\[clamp\([^,]+,calc\(100vh-[^,]+,[^\]]+\)\]/);
-  assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3/);
-  assert.match(source, /overflow-hidden rounded-xl border border-slate-800 bg-slate-950\/60/);
-  assert.match(source, /\[-webkit-line-clamp:2\]/);
+  assert.match(source, /skill-markdown-scroll grid min-h-0 flex-1 grid-cols-\[repeat\(auto-fill,minmax\(15rem,1fr\)\)\]/);
+  assert.match(source, /content-start gap-x-3 gap-y-1 overflow-y-auto px-3 py-2 pr-4/);
+  assert.match(source, /flex h-10 min-w-0 items-center gap-2 rounded-md border px-2 text-xs/);
+  assert.match(source, /props\.variant === "primary" \? "overflow-visible" : "overflow-hidden"/);
+  assert.doesNotMatch(source, /\[-webkit-line-clamp:2\]/);
   assert.match(source, /skill-markdown-scroll flex gap-2 overflow-x-auto px-3 py-3/);
   assert.match(source, /min-\[1120px\]:grid-cols-\[minmax\(0,1\.45fr\)_minmax\(18rem,0\.75fr\)\]/);
   assert.match(source, /variant="primary"/);
   assert.match(source, /variant="secondary"/);
-  assert.match(source, /projects\.editor\.allPaths/);
-  assert.match(source, /mt-3 flex flex-wrap items-center gap-2 text-\[11px\] text-slate-400[\s\S]*projects\.editor\.allPaths[\s\S]*projects\.editor\.allSkills/);
+  assert.match(toolbarSource, /projects\.editor\.allPaths/);
+  assert.match(toolbarSource, /mt-3 flex flex-wrap items-center gap-2 text-\[11px\] text-slate-400[\s\S]*projects\.editor\.allPaths[\s\S]*projects\.editor\.allSkills/);
   assert.doesNotMatch(source, /mt-2 flex flex-wrap gap-2 text-\[11px\] text-slate-400/);
   assert.match(source, /projects\.editor\.allAgents/);
   assert.match(source, /projects\.editor\.searchAgents/);
-  assert.match(source, /projects\.editor\.searchSkills/);
+  assert.match(toolbarSource, /projects\.editor\.searchSkills/);
   assert.match(source, /projectSkillsDirRule/);
   assert.match(source, /skill\.relativePath/);
 });
@@ -113,6 +117,24 @@ test("projects view keeps the right summary as a natural sticky inspector", () =
   assert.match(source, /agentStatusFilter/);
   assert.match(workbenchSource, /min-\[1380px\]:sticky min-\[1380px\]:top-8 min-\[1380px\]:relative min-\[1380px\]:self-stretch/);
   assert.match(fs.readFileSync(summaryPath, "utf8"), /min-\[1380px\]:absolute min-\[1380px\]:inset-0/);
+});
+
+test("project skill external filter uses the scene-style group popover", () => {
+  const toolbarSource = fs.readFileSync(filterToolbarPath, "utf8");
+  const viewSource = fs.readFileSync(projectsViewPath, "utf8");
+  const draftSource = fs.readFileSync(path.resolve("src/lib/project-draft.ts"), "utf8");
+  const editorSource = fs.readFileSync(editorPath, "utf8");
+
+  assert.match(viewSource, /buildExternalGroupSummaries/);
+  assert.match(viewSource, /externalGroupFilter/);
+  assert.match(viewSource, /setExternalGroupFilter\("all"\)/);
+  assert.match(draftSource, /getExternalGroupKey/);
+  assert.match(toolbarSource, /isExternalGroupOpen/);
+  assert.match(toolbarSource, /selectedExternalGroup/);
+  assert.match(toolbarSource, /absolute bottom-full left-0 z-50 mb-2/);
+  assert.match(toolbarSource, /externalGroupSummaries\.map/);
+  assert.match(editorSource, /props\.variant === "primary"[\s\S]*overflow-visible/);
+  assert.doesNotMatch(viewSource, /includeExternalSubpaths/);
 });
 
 test("project cards surface apply freshness per project agent", () => {

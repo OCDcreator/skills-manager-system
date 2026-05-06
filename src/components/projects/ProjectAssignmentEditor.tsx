@@ -1,12 +1,17 @@
 import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
+import { ProjectSkillFilterToolbar } from "./ProjectSkillFilterToolbar";
 import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type {
   ProjectAgentDraft,
   ProjectAgentStatusFilter,
   ProjectSkillSelectionFilter,
 } from "../../lib/project-draft";
+import type {
+  ExternalGroupFilter,
+  ExternalGroupSummary,
+} from "../../lib/scene-skill-filters";
 import type { SceneEntry } from "../../lib/scenes";
 import type { SkillPathSummary, SkillPathFilter } from "../../lib/skills/filters";
 import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
@@ -16,17 +21,20 @@ interface ProjectAssignmentEditorProps {
   agents: AgentInventoryItem[];
   scenes: SceneEntry[];
   skillPathSummaries: SkillPathSummary[];
+  externalGroupSummaries: ExternalGroupSummary[];
   activeAgentDraft: ProjectAgentDraft | null;
   selectedAgentKey: string | null;
   selectedAgentKeys: string[];
   skillQuery: string;
   agentQuery: string;
   skillPathFilter: SkillPathFilter;
+  externalGroupFilter: ExternalGroupFilter;
   skillSelectionFilter: ProjectSkillSelectionFilter;
   agentStatusFilter: ProjectAgentStatusFilter;
   onSkillQueryChange: (value: string) => void;
   onAgentQueryChange: (value: string) => void;
   onSkillPathFilterChange: (value: SkillPathFilter) => void;
+  onExternalGroupFilterChange: (value: ExternalGroupFilter) => void;
   onSkillSelectionFilterChange: (value: ProjectSkillSelectionFilter) => void;
   onAgentStatusFilterChange: (value: ProjectAgentStatusFilter) => void;
   onSelectAgent(agentKey: string): void;
@@ -112,41 +120,18 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
 
       <div className="grid min-h-0 gap-4 min-[1120px]:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.75fr)]">
         <ProjectChecklistPanel title={t("projects.editor.skillsTitle")} variant="primary">
-          <div className="border-b border-slate-800 px-4 py-3">
-            <SearchField
-              onChange={props.onSkillQueryChange}
-              placeholder={t("projects.editor.searchSkills")}
-              value={props.skillQuery}
-            />
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-              {props.skillPathSummaries.map((summary) => (
-                <button
-                  className={filterPillClass(props.skillPathFilter === summary.key)}
-                  key={summary.key}
-                  onClick={() => props.onSkillPathFilterChange(summary.key)}
-                  type="button"
-                >
-                  {summary.key === "all"
-                    ? t("projects.editor.allPaths", { count: summary.count })
-                    : `${summary.key} · ${summary.count}`}
-                </button>
-              ))}
-              {(["all", "selected", "unselected"] as const).map((status) => (
-                <button
-                  className={filterPillClass(props.skillSelectionFilter === status)}
-                  key={status}
-                  onClick={() => props.onSkillSelectionFilterChange(status)}
-                  type="button"
-                >
-                  {status === "all"
-                    ? t("projects.editor.allSkills")
-                    : status === "selected"
-                      ? t("projects.editor.selectedSkills")
-                      : t("projects.editor.unselectedSkills")}
-                </button>
-              ))}
-            </div>
-          </div>
+          <ProjectSkillFilterToolbar
+            externalGroupFilter={props.externalGroupFilter}
+            externalGroupSummaries={props.externalGroupSummaries}
+            onExternalGroupFilterChange={props.onExternalGroupFilterChange}
+            onSkillPathFilterChange={props.onSkillPathFilterChange}
+            onSkillQueryChange={props.onSkillQueryChange}
+            onSkillSelectionFilterChange={props.onSkillSelectionFilterChange}
+            skillPathFilter={props.skillPathFilter}
+            skillPathSummaries={props.skillPathSummaries}
+            skillQuery={props.skillQuery}
+            skillSelectionFilter={props.skillSelectionFilter}
+          />
           <ProjectSkillList
             checkedIds={activeAgentDraft?.selectedSkillIds ?? []}
             disabled={!activeAgentDraft}
@@ -250,9 +235,10 @@ function ProjectChecklistPanel(props: { title: string; variant: "primary" | "sec
     props.variant === "primary"
       ? "min-h-[26rem] max-h-[clamp(26rem,calc(100vh-20rem),40rem)]"
       : "min-h-[26rem] max-h-[clamp(26rem,calc(100vh-20rem),40rem)]";
+  const overflowClass = props.variant === "primary" ? "overflow-visible" : "overflow-hidden";
 
   return (
-    <div className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60 ${heightClass}`}>
+    <div className={`flex min-h-0 flex-col ${overflowClass} rounded-xl border border-slate-800 bg-slate-950/60 ${heightClass}`}>
       <div className="border-b border-slate-800 px-4 py-3 text-sm font-semibold text-slate-100">
         {props.title}
       </div>
@@ -270,31 +256,38 @@ function ProjectSkillList(props: {
 }) {
   return (
     <div
-      className="skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3"
+      className="skill-markdown-scroll grid min-h-0 flex-1 grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] content-start gap-x-3 gap-y-1 overflow-y-auto px-3 py-2 pr-4"
       ref={props.scrollRef}
     >
-      {props.skills.map((skill) => (
-        <label
-          className="flex items-start gap-3 rounded-xl border border-transparent px-2 py-2 text-sm text-slate-300 hover:border-slate-800 hover:bg-slate-900/70"
-          key={skill.id}
-        >
-          <input
-            checked={props.checkedIds.includes(skill.id)}
-            disabled={props.disabled}
-            onChange={() => props.onToggle(skill.id)}
-            type="checkbox"
-          />
-          <span className="min-w-0 flex-1">
-            <span className="block font-medium text-slate-100">{skill.name}</span>
-            <span className="block overflow-hidden text-xs text-slate-500 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-              {skill.description}
+      {props.skills.map((skill) => {
+        const selected = props.checkedIds.includes(skill.id);
+
+        return (
+          <label
+            className={`flex h-10 min-w-0 items-center gap-2 rounded-md border px-2 text-xs transition ${
+              selected
+                ? "border-sky-500/40 bg-sky-500/10 text-sky-100"
+                : "border-transparent text-slate-300 hover:border-slate-800 hover:bg-slate-900/70"
+            } ${props.disabled ? "opacity-60" : ""}`}
+            key={skill.id}
+            title={skill.description || skill.relativePath}
+          >
+            <input
+              checked={selected}
+              className="shrink-0"
+              disabled={props.disabled}
+              onChange={() => props.onToggle(skill.id)}
+              type="checkbox"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium text-slate-100">{skill.name}</span>
+              <span className="block truncate text-[11px] text-slate-600">
+                {skill.relativePath}
+              </span>
             </span>
-            <span className="mt-1 block truncate text-[11px] text-slate-600">
-              {skill.relativePath}
-            </span>
-          </span>
-        </label>
-      ))}
+          </label>
+        );
+      })}
     </div>
   );
 }
