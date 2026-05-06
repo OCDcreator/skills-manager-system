@@ -11,7 +11,7 @@ Composes the editable project assignment surface: project identity, per-agent pr
 
 - keeps the Projects page view focused on data loading, save/apply handlers, and draft derivation
 - passes identity save controls to `ProjectIdentityPanel`
-- wires `ProjectAssignmentEditor` to the active agent layer, filtered skills, scenes, and exclusion candidates
+- wires `ProjectAssignmentEditor` to the active agent layer, filtered skills, and scenes
 - wires `ProjectAssignmentSummary` to the derived per-agent preview counts and unsupported saved agents
 - owns the responsive two-column workbench grid and sticky right inspector placement
 

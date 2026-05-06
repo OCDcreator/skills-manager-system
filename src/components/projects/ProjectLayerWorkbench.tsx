@@ -24,7 +24,6 @@ interface ProjectLayerWorkbenchProps {
   agentQuery: string;
   agentStatusFilter: ProjectAgentStatusFilter;
   agents: AgentInventoryItem[];
-  exclusionSkills: SkillSummary[];
   scenes: SceneEntry[];
   selectedAgentKey: string | null;
   selectedAgentKeys: string[];
@@ -37,7 +36,6 @@ interface ProjectLayerWorkbenchProps {
     selectedAgentCount: number;
     projectDirectSkillCount: number;
     projectSceneCount: number;
-    projectExclusionCount: number;
     agentSummaries: ProjectAgentSummary[];
     unsupportedAgentKeys: string[];
   };
@@ -53,7 +51,6 @@ interface ProjectLayerWorkbenchProps {
   onSkillSelectionFilterChange: (value: ProjectSkillSelectionFilter) => void;
   onSkillQueryChange: (value: string) => void;
   onToggleAgent: (agentKey: string) => void;
-  onToggleProjectExclusion: (skillId: string) => void;
   onToggleProjectScene: (sceneId: string) => void;
   onToggleProjectSkill: (skillId: string) => void;
 }
@@ -91,7 +88,6 @@ export function ProjectLayerWorkbench(props: ProjectLayerWorkbenchProps) {
           agentQuery={props.agentQuery}
           agentStatusFilter={props.agentStatusFilter}
           agents={props.agents}
-          exclusionSkills={props.exclusionSkills}
           onAgentQueryChange={props.onAgentQueryChange}
           onAgentStatusFilterChange={props.onAgentStatusFilterChange}
           onSelectAgent={props.onSelectAgent}
@@ -99,7 +95,6 @@ export function ProjectLayerWorkbench(props: ProjectLayerWorkbenchProps) {
           onSkillSelectionFilterChange={props.onSkillSelectionFilterChange}
           onSkillQueryChange={props.onSkillQueryChange}
           onToggleAgent={props.onToggleAgent}
-          onToggleProjectExclusion={props.onToggleProjectExclusion}
           onToggleProjectScene={props.onToggleProjectScene}
           onToggleProjectSkill={props.onToggleProjectSkill}
           scenes={props.scenes}
@@ -118,7 +113,6 @@ export function ProjectLayerWorkbench(props: ProjectLayerWorkbenchProps) {
           duplicatePath={props.duplicatePath}
           isInspecting={props.isInspecting}
           projectDirectSkillCount={props.summary.projectDirectSkillCount}
-          projectExclusionCount={props.summary.projectExclusionCount}
           projectSceneCount={props.summary.projectSceneCount}
           selectedAgentCount={props.summary.selectedAgentCount}
           title={

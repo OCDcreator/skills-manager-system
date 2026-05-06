@@ -44,7 +44,7 @@ test("projects, git, and scene subpanels opt into remembered scroll positions", 
   const projectEditorSource = readSource("src/components/projects/ProjectAssignmentEditor.tsx");
   const gitFileListSource = readSource("src/components/git/GitFileList.tsx");
   const gitDiffSource = readSource("src/components/git/GitDiffViewer.tsx");
-  const sceneCardSource = readSource("src/components/scenes/SceneCard.tsx");
+  const sceneSkillChooserSource = readSource("src/components/scenes/SceneSkillChooser.tsx");
 
   assert.match(projectSummarySource, /useRememberedScrollPosition/);
   assert.match(projectSummarySource, /projects:summary:/);
@@ -53,6 +53,6 @@ test("projects, git, and scene subpanels opt into remembered scroll positions", 
   assert.match(gitFileListSource, /git:file-list/);
   assert.match(gitDiffSource, /useRememberedScrollPosition/);
   assert.match(gitDiffSource, /git:diff:/);
-  assert.match(sceneCardSource, /useRememberedScrollPosition/);
-  assert.match(sceneCardSource, /scenes:card:/);
+  assert.match(sceneSkillChooserSource, /useRememberedScrollPosition/);
+  assert.match(sceneSkillChooserSource, /scenes:card:/);
 });

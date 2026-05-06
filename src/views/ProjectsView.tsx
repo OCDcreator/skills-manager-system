@@ -17,7 +17,6 @@ import {
   removeProjectAgentDraft,
   sortProjectAgentsForEditor,
   suggestProjectDisplayName,
-  toggleProjectAgentExclusion,
   toggleProjectAgentScene,
   toggleProjectAgentSkill,
   type ProjectAgentStatusFilter,
@@ -136,10 +135,6 @@ export function ProjectsView() {
     disabledSkillIds,
     sceneConfig?.scenes ?? {},
   );
-  const activeSummary = activeAgentKey
-    ? summary.agentSummaries.find((agent) => agent.agentKey === activeAgentKey)
-    : null;
-
   const toggleSkill = (skillId: string) => {
     if (!activeAgentKey) return;
     setDraft((current) => toggleProjectAgentSkill(current, activeAgentKey, skillId));
@@ -287,7 +282,6 @@ export function ProjectsView() {
         agents={visibleAgents}
         draft={draft}
         duplicatePath={duplicatePath}
-        exclusionSkills={activeSummary?.exclusionCandidateSkills ?? []}
         inferredName={suggestProjectDisplayName(draft.projectPath)}
         inspectionError={inspectionError}
         isInspecting={isInspecting}
@@ -308,12 +302,6 @@ export function ProjectsView() {
         onSkillSelectionFilterChange={setSkillSelectionFilter}
         onSkillQueryChange={setSkillQuery}
         onToggleAgent={toggleAgent}
-        onToggleProjectExclusion={(skillId) => {
-          if (!activeAgentKey) return;
-          setDraft((current) =>
-            toggleProjectAgentExclusion(current, activeAgentKey, skillId),
-          );
-        }}
         onToggleProjectScene={(sceneId) => {
           if (!activeAgentKey) return;
           setDraft((current) =>

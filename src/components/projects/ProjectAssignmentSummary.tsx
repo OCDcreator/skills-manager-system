@@ -7,7 +7,6 @@ interface ProjectAssignmentSummaryProps {
   selectedAgentCount: number;
   projectDirectSkillCount: number;
   projectSceneCount: number;
-  projectExclusionCount: number;
   agentSummaries: ProjectAgentSummary[];
   duplicatePath: boolean;
   unsupportedAgentKeys: string[];
@@ -27,7 +26,6 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
             agents: props.selectedAgentCount,
             skills: props.projectDirectSkillCount,
             scenes: props.projectSceneCount,
-            exclusions: props.projectExclusionCount,
           })}
         </p>
       </div>
@@ -106,7 +104,6 @@ function AgentPreviewGroup({ summary }: { summary: ProjectAgentSummary }) {
         <Metric label={t("projects.summary.inheritedGlobal")} value={summary.inheritedGlobalSkillIds.length} />
         <Metric label={t("projects.summary.projectDirect")} value={summary.projectDirectSkillIds.length} />
         <Metric label={t("projects.summary.projectScenes")} value={summary.projectSceneIds.length} />
-        <Metric label={t("projects.summary.projectExclusions")} value={summary.excludedSkillIds.length} />
       </div>
 
       {summary.previewItems.length ? (
@@ -114,9 +111,7 @@ function AgentPreviewGroup({ summary }: { summary: ProjectAgentSummary }) {
           {summary.previewItems.map((item) => (
             <span
               className={`${chipClassName} ${
-                item.isExcludedByProject
-                  ? "border-rose-800 bg-rose-950/50 text-rose-200"
-                  : item.isGloballyDisabled
+                item.isGloballyDisabled
                     ? "border-amber-800 bg-amber-950/50 text-amber-200"
                     : ""
               }`}
@@ -124,7 +119,6 @@ function AgentPreviewGroup({ summary }: { summary: ProjectAgentSummary }) {
               title={item.skill.description}
             >
               {item.skill.name}
-              {item.isExcludedByProject ? ` · ${t("projects.summary.excluded")}` : ""}
             </span>
           ))}
         </div>

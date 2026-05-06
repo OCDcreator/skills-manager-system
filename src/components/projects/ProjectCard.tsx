@@ -29,10 +29,6 @@ export function ProjectCard({
     (count, [, assignment]) => count + assignment.selectedSceneIds.length,
     0,
   );
-  const exclusionCount = agentEntries.reduce(
-    (count, [, assignment]) => count + assignment.excludedSkillIds.length,
-    0,
-  );
   const statusEntries = [
     ...new Set([
       ...agentEntries.map(([agentKey]) => agentKey),
@@ -72,9 +68,6 @@ export function ProjectCard({
         </span>
         <span>
           {t("projects.card.scenes", { count: sceneCount })}
-        </span>
-        <span>
-          {t("projects.card.exclusions", { count: exclusionCount })}
         </span>
       </div>
 

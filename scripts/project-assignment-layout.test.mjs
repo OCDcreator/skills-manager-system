@@ -29,13 +29,18 @@ test("project assignment editor caps panel height and uses the shared markdown s
 
   assert.match(source, /max-h-\[clamp\([^,]+,calc\(100vh-[^,]+,[^\]]+\)\]/);
   assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3/);
-  assert.match(source, /overflow-hidden rounded-2xl border border-slate-800 bg-slate-950\/60/);
+  assert.match(source, /overflow-hidden rounded-xl border border-slate-800 bg-slate-950\/60/);
   assert.match(source, /\[-webkit-line-clamp:2\]/);
-  assert.match(source, /min-\[1380px\]:grid-cols-\[minmax\(14rem,4fr\)_minmax\(0,8fr\)\]/);
+  assert.match(source, /skill-markdown-scroll flex gap-2 overflow-x-auto px-3 py-3/);
+  assert.match(source, /min-\[1120px\]:grid-cols-\[minmax\(0,1\.45fr\)_minmax\(18rem,0\.75fr\)\]/);
+  assert.match(source, /variant="primary"/);
+  assert.match(source, /variant="secondary"/);
   assert.match(source, /projects\.editor\.allPaths/);
-  assert.match(source, /mb-3 flex flex-wrap items-center gap-2 text-\[11px\] text-slate-400[\s\S]*projects\.editor\.allPaths[\s\S]*projects\.editor\.allSkills/);
+  assert.match(source, /mt-3 flex flex-wrap items-center gap-2 text-\[11px\] text-slate-400[\s\S]*projects\.editor\.allPaths[\s\S]*projects\.editor\.allSkills/);
   assert.doesNotMatch(source, /mt-2 flex flex-wrap gap-2 text-\[11px\] text-slate-400/);
   assert.match(source, /projects\.editor\.allAgents/);
+  assert.match(source, /projects\.editor\.searchAgents/);
+  assert.match(source, /projects\.editor\.searchSkills/);
   assert.match(source, /projectSkillsDirRule/);
   assert.match(source, /skill\.relativePath/);
 });
@@ -47,11 +52,13 @@ test("project assignment editor edits one selected project agent layer at a time
   assert.match(source, /activeAgentDraft/);
   assert.match(source, /projects\.editor\.agentLayerTitle/);
   assert.match(source, /projects\.editor\.projectScenesTitle/);
-  assert.match(source, /projects\.editor\.exclusionsTitle/);
+  assert.doesNotMatch(source, /projects\.editor\.exclusionsTitle/);
   assert.match(source, /onSelectAgent\(agentKey: string\)/);
-  assert.match(source, /props\.onSelectAgent\(agent\.key\)/);
+  assert.match(source, /onSelect=\{props\.onSelectAgent\}/);
+  assert.match(source, /props\.onSelect\(props\.agent\.key\)/);
   assert.match(source, /onToggleProjectScene\(scene\.id\)/);
-  assert.match(source, /onToggle=\{props\.onToggleProjectExclusion\}/);
+  assert.doesNotMatch(source, /onToggleProjectExclusion/);
+  assert.doesNotMatch(source, /excludedSkillIds/);
 });
 
 test("project assignment summary stays scrollable but no longer owns the save button", () => {
@@ -73,12 +80,12 @@ test("project assignment summary mirrors selected skills and agents before targe
   assert.match(source, /agentSummaries: ProjectAgentSummary\[\]/);
   assert.match(source, /summary\.inheritedGlobalSkillIds\.length/);
   assert.match(source, /summary\.projectDirectSkillIds\.length/);
-  assert.match(source, /summary\.excludedSkillIds\.length/);
+  assert.doesNotMatch(source, /summary\.excludedSkillIds\.length/);
   assert.match(source, /projects\.summary\.agentPreviewTitle/);
   assert.match(source, /projects\.summary\.inheritedGlobal/);
   assert.match(source, /projects\.summary\.selectedAgentsTitle/);
   assert.match(source, /summary\.previewItems\.map/);
-  assert.match(source, /item\.isExcludedByProject/);
+  assert.doesNotMatch(source, /item\.isExcludedByProject/);
 });
 
 test("projects view forwards save props to the identity panel instead of the summary panel", () => {

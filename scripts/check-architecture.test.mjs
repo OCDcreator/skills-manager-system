@@ -93,6 +93,7 @@ test('allows explicit domain modules and ignores i18n payload files', () => {
 test('ignores local agent skill cache directories', () => {
   const root = createWorkspace({
     '.claude/skills/impeccable/scripts/live-browser.js': repeatLine('export const value = 1;', 900),
+    '.codex/skills/impeccable/scripts/live-accept.mjs': repeatLine('export const value = 1;', 900),
     '.opencode/skills/impeccable/scripts/live-server.mjs': repeatLine('export const value = 1;', 900),
     '.agents/skills/impeccable/scripts/live-wrap.mjs': repeatLine('export const value = 1;', 900),
     'src/lib/git-status.ts': [

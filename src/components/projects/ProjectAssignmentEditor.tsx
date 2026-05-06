@@ -1,3 +1,4 @@
+import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import { useRememberedScrollPosition } from "../../lib/scroll-memory";
@@ -12,7 +13,6 @@ import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
 
 interface ProjectAssignmentEditorProps {
   skills: SkillSummary[];
-  exclusionSkills: SkillSummary[];
   agents: AgentInventoryItem[];
   scenes: SceneEntry[];
   skillPathSummaries: SkillPathSummary[];
@@ -33,7 +33,6 @@ interface ProjectAssignmentEditorProps {
   onToggleAgent: (agentKey: string) => void;
   onToggleProjectSkill: (skillId: string) => void;
   onToggleProjectScene: (sceneId: string) => void;
-  onToggleProjectExclusion: (skillId: string) => void;
 }
 
 export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
@@ -41,9 +40,6 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
   const skillScrollRef = useRememberedScrollPosition("projects:editor:skills");
   const agentScrollRef = useRememberedScrollPosition("projects:editor:agents");
   const sceneScrollRef = useRememberedScrollPosition("projects:editor:scenes");
-  const exclusionScrollRef = useRememberedScrollPosition("projects:editor:exclusions");
-  const panelClassName =
-    "flex max-h-[clamp(22rem,calc(100vh-20rem),34rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60";
   const activeAgentDraft = props.activeAgentDraft;
   const filterPillClass = (active: boolean) =>
     `rounded-full border px-2 py-1 transition ${
@@ -54,18 +50,23 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
 
   return (
     <section className="grid min-h-0 gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-      <div className="grid min-h-0 gap-4 min-[1380px]:grid-cols-[minmax(14rem,4fr)_minmax(0,8fr)]">
-        <div className={panelClassName}>
-          <div className="border-b border-slate-800 px-4 py-3">
+      <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60">
+        <div className="grid gap-3 border-b border-slate-800 px-4 py-3 min-[980px]:grid-cols-[minmax(12rem,0.55fr)_minmax(0,1fr)] min-[980px]:items-center">
+          <div className="min-w-0">
             <div className="text-sm font-semibold text-slate-100">
               {t("projects.editor.agentsTitle")}
             </div>
-            <input
-              className="mt-3 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 outline-none focus:border-sky-400"
-              onChange={(event) => props.onAgentQueryChange(event.target.value)}
+            <div className="mt-1 truncate text-xs text-slate-500">
+              {props.selectedAgentKey ?? t("projects.editor.noAgentSelected")}
+            </div>
+          </div>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <SearchField
+              onChange={props.onAgentQueryChange}
+              placeholder={t("projects.editor.searchAgents")}
               value={props.agentQuery}
             />
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-400">
+            <div className="flex flex-wrap gap-2 text-[11px] text-slate-400">
               {(["all", "enabled", "disabled"] as const).map((status) => (
                 <button
                   className={filterPillClass(props.agentStatusFilter === status)}
@@ -82,151 +83,176 @@ export function ProjectAssignmentEditor(props: ProjectAssignmentEditorProps) {
               ))}
             </div>
           </div>
-          <div
-            className="skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3"
-            ref={agentScrollRef}
-          >
-            {props.agents.map((agent) => {
-              const selected = props.selectedAgentKeys.includes(agent.key);
-              const active = props.selectedAgentKey === agent.key;
-              return (
-                <div
-                  className={`rounded-xl border px-2 py-2 text-sm ${
-                    active
-                      ? "border-sky-500/50 bg-sky-500/10"
-                      : "border-transparent hover:border-slate-800 hover:bg-slate-900/70"
-                  }`}
-                  key={agent.key}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      checked={selected}
-                      onChange={() => props.onToggleAgent(agent.key)}
-                      type="checkbox"
-                    />
-                    <button
-                      className="min-w-0 flex-1 text-left"
-                      onClick={() => props.onSelectAgent(agent.key)}
-                      type="button"
-                    >
-                      <span className="block truncate font-medium text-slate-100">
-                        {agent.displayName}
-                      </span>
-                      <span className="block truncate text-xs text-slate-500">
-                        {agent.projectSkillsDirRule}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
+        <div
+          className="skill-markdown-scroll flex gap-2 overflow-x-auto px-3 py-3"
+          ref={agentScrollRef}
+        >
+          {props.agents.map((agent) => (
+            <AgentSelectorCard
+              active={props.selectedAgentKey === agent.key}
+              agent={agent}
+              key={agent.key}
+              onSelect={props.onSelectAgent}
+              onToggle={props.onToggleAgent}
+              selected={props.selectedAgentKeys.includes(agent.key)}
+            />
+          ))}
+        </div>
+      </div>
 
-        <div className="min-h-0 space-y-3">
-          <div className="flex min-h-8 items-center justify-between gap-3">
-            <div className="text-sm font-semibold text-slate-100">
-              {t("projects.editor.agentLayerTitle")}
-            </div>
-            <div className="truncate text-xs text-slate-500">
-              {props.selectedAgentKey ?? t("projects.editor.noAgentSelected")}
+      <div className="flex min-h-7 items-center justify-between gap-3 px-1">
+        <div className="text-sm font-semibold text-slate-100">
+          {t("projects.editor.agentLayerTitle")}
+        </div>
+        <div className="truncate text-xs text-slate-500">
+          {props.selectedAgentKey ?? t("projects.editor.noAgentSelected")}
+        </div>
+      </div>
+
+      <div className="grid min-h-0 gap-4 min-[1120px]:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.75fr)]">
+        <ProjectChecklistPanel title={t("projects.editor.skillsTitle")} variant="primary">
+          <div className="border-b border-slate-800 px-4 py-3">
+            <SearchField
+              onChange={props.onSkillQueryChange}
+              placeholder={t("projects.editor.searchSkills")}
+              value={props.skillQuery}
+            />
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+              {props.skillPathSummaries.map((summary) => (
+                <button
+                  className={filterPillClass(props.skillPathFilter === summary.key)}
+                  key={summary.key}
+                  onClick={() => props.onSkillPathFilterChange(summary.key)}
+                  type="button"
+                >
+                  {summary.key === "all"
+                    ? t("projects.editor.allPaths", { count: summary.count })
+                    : `${summary.key} · ${summary.count}`}
+                </button>
+              ))}
+              {(["all", "selected", "unselected"] as const).map((status) => (
+                <button
+                  className={filterPillClass(props.skillSelectionFilter === status)}
+                  key={status}
+                  onClick={() => props.onSkillSelectionFilterChange(status)}
+                  type="button"
+                >
+                  {status === "all"
+                    ? t("projects.editor.allSkills")
+                    : status === "selected"
+                      ? t("projects.editor.selectedSkills")
+                      : t("projects.editor.unselectedSkills")}
+                </button>
+              ))}
             </div>
           </div>
-          <div className="grid min-h-0 gap-4 min-[1040px]:grid-cols-2">
-            <ProjectChecklistPanel title={t("projects.editor.skillsTitle")}>
-              <input
-                className="mb-3 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 outline-none focus:border-sky-400"
-                onChange={(event) => props.onSkillQueryChange(event.target.value)}
-                value={props.skillQuery}
-              />
-              <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-                {props.skillPathSummaries.map((summary) => (
-                  <button
-                    className={filterPillClass(props.skillPathFilter === summary.key)}
-                    key={summary.key}
-                    onClick={() => props.onSkillPathFilterChange(summary.key)}
-                    type="button"
-                  >
-                    {summary.key === "all"
-                      ? t("projects.editor.allPaths", { count: summary.count })
-                      : `${summary.key} · ${summary.count}`}
-                  </button>
-                ))}
-                {(["all", "selected", "unselected"] as const).map((status) => (
-                  <button
-                    className={filterPillClass(props.skillSelectionFilter === status)}
-                    key={status}
-                    onClick={() => props.onSkillSelectionFilterChange(status)}
-                    type="button"
-                  >
-                    {status === "all"
-                      ? t("projects.editor.allSkills")
-                      : status === "selected"
-                        ? t("projects.editor.selectedSkills")
-                        : t("projects.editor.unselectedSkills")}
-                  </button>
-                ))}
-              </div>
-              <ProjectSkillList
-                checkedIds={activeAgentDraft?.selectedSkillIds ?? []}
-                disabled={!activeAgentDraft}
-                onToggle={props.onToggleProjectSkill}
-                scrollRef={skillScrollRef}
-                skills={props.skills}
-              />
-            </ProjectChecklistPanel>
+          <ProjectSkillList
+            checkedIds={activeAgentDraft?.selectedSkillIds ?? []}
+            disabled={!activeAgentDraft}
+            onToggle={props.onToggleProjectSkill}
+            scrollRef={skillScrollRef}
+            skills={props.skills}
+          />
+        </ProjectChecklistPanel>
 
-            <ProjectChecklistPanel title={t("projects.editor.projectScenesTitle")}>
-              <div
-                className="skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3"
-                ref={sceneScrollRef}
-              >
-                {props.scenes.map((scene) => (
-                  <label
-                    className="flex items-start gap-3 rounded-xl border border-transparent px-2 py-2 text-sm text-slate-300 hover:border-slate-800 hover:bg-slate-900/70"
-                    key={scene.id}
-                  >
-                    <input
-                      checked={activeAgentDraft?.selectedSceneIds.includes(scene.id) ?? false}
-                      disabled={!activeAgentDraft}
-                      onChange={() => props.onToggleProjectScene(scene.id)}
-                      type="checkbox"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium text-slate-100">
-                        {scene.name}
-                      </span>
-                      <span className="block truncate text-xs text-slate-500">
-                        {scene.description || scene.id}
-                      </span>
+        <div className="grid min-h-0 gap-4">
+          <ProjectChecklistPanel title={t("projects.editor.projectScenesTitle")} variant="secondary">
+            <div
+              className="skill-markdown-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3"
+              ref={sceneScrollRef}
+            >
+              {props.scenes.map((scene) => (
+                <label
+                  className="flex items-start gap-3 rounded-xl border border-transparent px-2 py-2 text-sm text-slate-300 hover:border-slate-800 hover:bg-slate-900/70"
+                  key={scene.id}
+                >
+                  <input
+                    checked={activeAgentDraft?.selectedSceneIds.includes(scene.id) ?? false}
+                    disabled={!activeAgentDraft}
+                    onChange={() => props.onToggleProjectScene(scene.id)}
+                    type="checkbox"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium text-slate-100">
+                      {scene.name}
                     </span>
-                  </label>
-                ))}
-              </div>
-            </ProjectChecklistPanel>
-
-            <ProjectChecklistPanel title={t("projects.editor.exclusionsTitle")}>
-              <ProjectSkillList
-                checkedIds={activeAgentDraft?.excludedSkillIds ?? []}
-                disabled={!activeAgentDraft}
-                onToggle={props.onToggleProjectExclusion}
-                scrollRef={exclusionScrollRef}
-                skills={props.exclusionSkills}
-              />
-            </ProjectChecklistPanel>
-          </div>
+                    <span className="block truncate text-xs text-slate-500">
+                      {scene.description || scene.id}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </ProjectChecklistPanel>
         </div>
       </div>
     </section>
   );
 }
 
-function ProjectChecklistPanel(props: {
-  title: string;
-  children: ReactNode;
+function SearchField(props: { value: string; placeholder: string; onChange: (value: string) => void }) {
+  return (
+    <label className="flex h-9 min-w-[13rem] flex-1 items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3">
+      <Search className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+      <input
+        className="min-w-0 flex-1 bg-transparent text-xs text-slate-200 outline-none placeholder:text-slate-600"
+        onChange={(event) => props.onChange(event.target.value)}
+        placeholder={props.placeholder}
+        value={props.value}
+      />
+    </label>
+  );
+}
+
+function AgentSelectorCard(props: {
+  agent: AgentInventoryItem;
+  active: boolean;
+  selected: boolean;
+  onSelect: (agentKey: string) => void;
+  onToggle: (agentKey: string) => void;
 }) {
   return (
-    <div className="flex max-h-[clamp(18rem,calc(100vh-23rem),27rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60">
+    <div
+      className={`min-w-[12rem] max-w-[14rem] rounded-xl border px-3 py-2 text-sm ${
+        props.active
+          ? "border-sky-500/50 bg-sky-500/10"
+          : props.selected
+            ? "border-slate-700 bg-slate-900/80"
+            : "border-transparent bg-slate-950/40 hover:border-slate-800 hover:bg-slate-900/70"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <input
+          checked={props.selected}
+          onChange={() => props.onToggle(props.agent.key)}
+          type="checkbox"
+        />
+        <button
+          className="min-w-0 flex-1 text-left"
+          onClick={() => props.onSelect(props.agent.key)}
+          type="button"
+        >
+          <span className="block truncate font-medium text-slate-100">
+            {props.agent.displayName}
+          </span>
+          <span className="block truncate text-xs text-slate-500">
+            {props.agent.projectSkillsDirRule}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ProjectChecklistPanel(props: { title: string; variant: "primary" | "secondary"; children: ReactNode }) {
+  const heightClass =
+    props.variant === "primary"
+      ? "min-h-[26rem] max-h-[clamp(26rem,calc(100vh-20rem),40rem)]"
+      : "min-h-[26rem] max-h-[clamp(26rem,calc(100vh-20rem),40rem)]";
+
+  return (
+    <div className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60 ${heightClass}`}>
       <div className="border-b border-slate-800 px-4 py-3 text-sm font-semibold text-slate-100">
         {props.title}
       </div>

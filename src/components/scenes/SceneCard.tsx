@@ -1,27 +1,22 @@
-import { useMemo, useState } from "react";
 import {
-  CheckSquare,
   Copy,
-  GripVertical,
   Pencil,
   Settings2,
-  Square,
   Trash2,
 } from "lucide-react";
 import {
-  getOrderedEnabledSceneSkills,
   getSceneEnabledSkillCount,
   isSceneSkillEnabled,
 } from "../../lib/scene-skill-order";
-import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { SceneEntry } from "../../lib/scenes";
+import type { SkillSummary } from "../../lib/tauri";
+import { SceneSkillChooser } from "./SceneSkillChooser";
 
 export interface SceneCardProps {
   scene: SceneEntry;
   isEditing: boolean;
   isConfiguring: boolean;
-  skills: { id: string; name: string }[];
-  agents: { key: string; displayName: string }[];
+  skills: SkillSummary[];
   editName: string;
   editDesc: string;
   t: (key: string, options?: Record<string, unknown>) => string;
@@ -34,14 +29,12 @@ export interface SceneCardProps {
   onEditDescChange: (value: string) => void;
   onToggleConfigure: () => void;
   onToggleSkill: (skillId: string) => void;
-  onToggleAgent: (agentKey: string) => void;
   onReorderSkill: (draggedSkillId: string, targetSkillId: string) => void;
 }
 
 export function SceneCard({
   scene,
   skills,
-  agents,
   isEditing,
   isConfiguring,
   editName,
@@ -56,36 +49,10 @@ export function SceneCard({
   onEditDescChange,
   onToggleConfigure,
   onToggleSkill,
-  onToggleAgent,
   onReorderSkill,
 }: SceneCardProps) {
-  const [draggedSkillId, setDraggedSkillId] = useState<string | null>(null);
-  const [dropTargetSkillId, setDropTargetSkillId] = useState<string | null>(null);
   const allSkillsEnabled = skills.length > 0 && skills.every((skill) => isSceneSkillEnabled(scene, skill.id));
   const enabledSkillCount = getSceneEnabledSkillCount(scene, skills);
-  const orderedEnabled = useMemo(
-    () => getOrderedEnabledSceneSkills(scene, skills),
-    [scene, skills],
-  );
-  const disabledSkills = useMemo(
-    () => skills.filter((skill) => !isSceneSkillEnabled(scene, skill.id)),
-    [scene, skills],
-  );
-  const skillsScrollRef = useRememberedScrollPosition(`scenes:card:${scene.id}:skills`);
-  const agentsScrollRef = useRememberedScrollPosition(`scenes:card:${scene.id}:agents`);
-
-  const resetDragState = () => {
-    setDraggedSkillId(null);
-    setDropTargetSkillId(null);
-  };
-
-  const handleDrop = (targetSkillId: string) => {
-    if (!draggedSkillId) return;
-    if (draggedSkillId !== targetSkillId) {
-      onReorderSkill(draggedSkillId, targetSkillId);
-    }
-    resetDragState();
-  };
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
@@ -176,118 +143,17 @@ export function SceneCard({
             ? t("scenes.card.allSkills", { count: skills.length })
             : t("scenes.card.skills", { count: enabledSkillCount })}
         </span>
-        <span>{t("scenes.card.agents", { count: scene.enabledAgentKeys.length })}</span>
       </div>
 
       {isConfiguring ? (
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg bg-slate-800/50 p-3">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="text-xs font-medium text-slate-200">
-                {t("scenes.card.skillsPanel", {
-                  enabled: enabledSkillCount,
-                  total: skills.length,
-                })}
-              </div>
-              <span className="text-[11px] text-slate-500">
-                {t("scenes.card.dragHint")}
-              </span>
-            </div>
-            <div className="max-h-48 space-y-2 overflow-y-auto pr-1" ref={skillsScrollRef}>
-              {orderedEnabled.map((skill) => {
-                const isDropTarget =
-                  dropTargetSkillId === skill.id && draggedSkillId !== skill.id;
-                return (
-                  <div
-                    className={`flex items-center gap-2 rounded-md px-1 py-1 text-xs text-slate-300 ${
-                      isDropTarget ? "bg-sky-950/40 ring-1 ring-sky-700" : ""
-                    } ${draggedSkillId === skill.id ? "opacity-60" : ""}`}
-                    draggable
-                    key={skill.id}
-                    onDragEnd={resetDragState}
-                    onDragEnter={() => setDropTargetSkillId(skill.id)}
-                    onDragOver={(event) => {
-                      event.preventDefault();
-                      setDropTargetSkillId(skill.id);
-                    }}
-                    onDragStart={() => {
-                      setDraggedSkillId(skill.id);
-                      setDropTargetSkillId(skill.id);
-                    }}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      handleDrop(skill.id);
-                    }}
-                  >
-                    <button
-                      aria-label={skill.name}
-                      className="text-slate-400 hover:text-sky-400"
-                      onClick={() => onToggleSkill(skill.id)}
-                      title={`${t("tooltip.scenes.toggleSkill")}: ${skill.name}`}
-                      type="button"
-                    >
-                      <CheckSquare className="h-4 w-4" />
-                    </button>
-                    <span title={t("tooltip.scenes.gripDrag")}>
-                      <GripVertical className="h-3.5 w-3.5 cursor-grab text-slate-500 active:cursor-grabbing" />
-                    </span>
-                    <span className="flex-1">{skill.name}</span>
-                  </div>
-                );
-              })}
-              {disabledSkills.map((skill) => (
-                <div
-                  className="flex items-center gap-2 text-xs text-slate-500"
-                  key={skill.id}
-                >
-                  <button
-                    aria-label={skill.name}
-                    className="text-slate-400 hover:text-sky-400"
-                    onClick={() => onToggleSkill(skill.id)}
-                    title={`${t("tooltip.scenes.toggleSkill")}: ${skill.name}`}
-                    type="button"
-                  >
-                    <Square className="h-4 w-4" />
-                  </button>
-                  <span>{skill.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-lg bg-slate-800/50 p-3">
-            <div className="mb-3 text-xs font-medium text-slate-200">
-              {t("scenes.card.agentsPanel", {
-                count: scene.enabledAgentKeys.length,
-              })}
-            </div>
-            <div className="max-h-48 space-y-2 overflow-y-auto pr-1" ref={agentsScrollRef}>
-              {agents.map((agent) => {
-                const enabled = scene.enabledAgentKeys.includes(agent.key);
-                return (
-                  <label
-                    className="flex cursor-pointer items-center gap-2 text-xs text-slate-300"
-                    key={agent.key}
-                  >
-                    <button
-                      aria-label={agent.displayName}
-                      className="text-slate-400 hover:text-sky-400"
-                      onClick={() => onToggleAgent(agent.key)}
-                      title={`${t("tooltip.scenes.toggleAgent")}: ${agent.displayName}`}
-                      type="button"
-                    >
-                      {enabled ? (
-                        <CheckSquare className="h-4 w-4" />
-                      ) : (
-                        <Square className="h-4 w-4" />
-                      )}
-                    </button>
-                    <span>{agent.displayName}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+        <div className="mt-4">
+          <SceneSkillChooser
+            onReorderSkill={onReorderSkill}
+            onToggleSkill={onToggleSkill}
+            scene={scene}
+            skills={skills}
+            t={t}
+          />
         </div>
       ) : null}
 

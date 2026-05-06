@@ -12,7 +12,6 @@ export function ScenesView() {
   const {
     repoPath,
     scanResult,
-    sortedAgentInventory,
   } = useAppContext();
   const [config, setConfig] = useState<SceneConfigSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,20 +104,6 @@ export function ScenesView() {
     }
   };
 
-  const handleToggleAgent = async (sceneId: string, agentKey: string) => {
-    const scene = config?.scenes[sceneId];
-    if (!scene) return;
-    const enabled = new Set(scene.enabledAgentKeys);
-    if (enabled.has(agentKey)) enabled.delete(agentKey);
-    else enabled.add(agentKey);
-    try {
-      const snapshot = await scenesApi.setSceneAgents(sceneId, [...enabled].sort());
-      setConfig(snapshot);
-    } catch (error) {
-      setLastResult(error instanceof Error ? error.message : String(error));
-    }
-  };
-
   const handleDuplicate = async (scene: SceneEntry) => {
     try {
       const snapshot = await scenesApi.createScene(
@@ -169,7 +154,6 @@ export function ScenesView() {
 
   const sceneList = config ? Object.values(config.scenes) : [];
   const skills = scanResult.skills;
-  const agents = sortedAgentInventory;
 
   return (
     <div className="space-y-6">
@@ -244,7 +228,6 @@ export function ScenesView() {
         <div className="space-y-4">
           {sceneList.map((scene) => (
             <SceneCard
-              agents={agents}
               editDesc={editDesc}
               editName={editName}
               isConfiguring={configuringId === scene.id}
@@ -260,7 +243,6 @@ export function ScenesView() {
               }
               onSaveEdit={() => void handleSaveEdit(scene.id)}
               onStartEdit={() => startEdit(scene)}
-              onToggleAgent={(agentKey) => void handleToggleAgent(scene.id, agentKey)}
               onToggleConfigure={() =>
                 setConfiguringId((current) => (current === scene.id ? null : scene.id))
               }
