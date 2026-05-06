@@ -112,7 +112,7 @@ fn scenes_mutations_update_config_snapshot() {
 }
 
 #[test]
-fn scenes_apply_syncs_agent_targets_and_sets_active_scene() {
+fn scenes_apply_returns_blocked_error_without_mutation() {
     let temp = tempdir().unwrap();
     let config_dir = temp.path().join("config");
     let repo_dir = temp.path().join("repo");
@@ -151,6 +151,15 @@ fn scenes_apply_syncs_agent_targets_and_sets_active_scene() {
     agent_store
         .set_agent_path_override("codex", target_dir.to_string_lossy().as_ref())
         .unwrap();
+    agent_store
+        .set_agent_selection(
+            "codex",
+            vec!["custom:beta".to_string()],
+            vec!["existing".to_string()],
+            vec![],
+        )
+        .unwrap();
+    let before = agent_store.load().unwrap();
 
     let result = apply_with_system_dirs(
         &context,
@@ -162,7 +171,29 @@ fn scenes_apply_syncs_agent_targets_and_sets_active_scene() {
         "focus",
     );
 
-    assert_eq!(result.response.status, CliStatus::Success);
-    assert!(target_dir.join("alpha/SKILL.md").exists());
-    assert!(!target_dir.join("beta").exists());
+    assert_eq!(result.response.status, CliStatus::Error);
+    let error = result.response.error.unwrap();
+    assert_eq!(error.code, "scene_apply_blocked");
+    assert_eq!(
+        error.message,
+        "Scenes are reusable toolkits. Apply them from Agents or Projects."
+    );
+    assert_eq!(agent_store.load().unwrap(), before);
+    assert!(!target_dir.exists());
+}
+
+#[test]
+fn scenes_apply_does_not_require_repo_path() {
+    let temp = tempdir().unwrap();
+    let context = test_context(temp.path().join("config"), None);
+
+    let result = run(
+        &context,
+        &ScenesCommand::Apply {
+            id: "focus".to_string(),
+        },
+    );
+
+    assert_eq!(result.response.status, CliStatus::Error);
+    assert_eq!(result.response.error.unwrap().code, "scene_apply_blocked");
 }

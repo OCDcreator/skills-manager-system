@@ -18,13 +18,6 @@ export interface SceneConfigSnapshot {
   activeSceneId: string | null;
 }
 
-export interface ApplySceneResult {
-  sceneId: string;
-  sceneName: string;
-  disabledSkillCount: number;
-  enabledAgentCount: number;
-}
-
 export const getSceneConfig = () =>
   invoke<SceneConfigSnapshot>("get_scene_config");
 
@@ -51,6 +44,3 @@ export const setSceneAgents = (id: string, enabledAgentKeys: string[]) =>
 
 export const setSceneSkillOrder = (id: string, skillOrder: string[]) =>
   invoke<SceneConfigSnapshot>("set_scene_skill_order", { id, skillOrder });
-
-export const applyScene = (id: string) =>
-  invoke<ApplySceneResult>("apply_scene", { id });

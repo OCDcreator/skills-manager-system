@@ -1,11 +1,9 @@
 use serde_json::json;
-use std::path::Path;
 
 use crate::app_runtime::{AppRuntimeContext, CliCommandError, CliRunResult};
 use crate::cli::args::ScenesCommand;
-use crate::core::agents::discovery::AgentSystemDirs;
 use crate::core::scenes::config::{SceneConfigSnapshot, SceneConfigStore};
-use crate::core::scenes::manager::apply_scene;
+use crate::core::scenes::manager::SCENE_APPLY_BLOCKED_MESSAGE;
 
 pub fn run(context: &AppRuntimeContext, command: &ScenesCommand) -> CliRunResult {
     match command {
@@ -39,12 +37,11 @@ pub fn run(context: &AppRuntimeContext, command: &ScenesCommand) -> CliRunResult
                 store.set_active_scene(None)
             })
         }
-        ScenesCommand::SetSkills {
-            id,
-            skill_ids,
-        } => mutate_config(context, "scenes set-skills", Some(id), |store| {
-            store.set_scene_skills(id, skill_ids.clone())
-        }),
+        ScenesCommand::SetSkills { id, skill_ids } => {
+            mutate_config(context, "scenes set-skills", Some(id), |store| {
+                store.set_scene_skills(id, skill_ids.clone())
+            })
+        }
         ScenesCommand::SetAgents {
             id,
             enabled_agent_keys,
@@ -117,42 +114,20 @@ fn mutate_config(
 }
 
 fn apply(context: &AppRuntimeContext, scene_id: &str) -> CliRunResult {
-    let repo_path = match context.require_repo_path() {
-        Ok(repo_path) => repo_path,
-        Err(_) => {
-            return CliRunResult::error(
-                "scenes apply",
-                CliCommandError::missing_configuration(
-                    "repo_path_not_configured",
-                    "Repository path is not configured.",
-                ),
-                context,
-                None,
-            );
-        }
-    };
-    let system_dirs = match AgentSystemDirs::current() {
-        Ok(system_dirs) => system_dirs,
-        Err(error) => {
-            return CliRunResult::error(
-                "scenes apply",
-                CliCommandError::filesystem(
-                    "agent_system_dirs_unavailable",
-                    format!("Failed to determine agent system directories: {error}"),
-                ),
-                context,
-                Some(repo_path.as_path()),
-            );
-        }
-    };
-
-    apply_with_system_dirs(context, &repo_path, &system_dirs, scene_id)
+    let repo_path = context.current_repo_path().ok().flatten();
+    CliRunResult::error(
+        "scenes apply",
+        map_scene_error(Some(scene_id), anyhow::anyhow!(SCENE_APPLY_BLOCKED_MESSAGE)),
+        context,
+        repo_path.as_deref(),
+    )
 }
 
+#[cfg(test)]
 pub(super) fn apply_with_system_dirs(
     context: &AppRuntimeContext,
-    repo_path: &Path,
-    system_dirs: &AgentSystemDirs,
+    repo_path: &std::path::Path,
+    system_dirs: &crate::core::agents::discovery::AgentSystemDirs,
     scene_id: &str,
 ) -> CliRunResult {
     let _guard = match context.acquire_config_lock() {
@@ -167,7 +142,12 @@ pub(super) fn apply_with_system_dirs(
         }
     };
 
-    match apply_scene(&context.config_dir, repo_path, system_dirs, scene_id) {
+    match crate::core::scenes::manager::apply_scene(
+        &context.config_dir,
+        repo_path,
+        system_dirs,
+        scene_id,
+    ) {
         Ok(result) => CliRunResult::success(
             "scenes apply",
             json!({ "scene": result }),
@@ -191,6 +171,8 @@ fn map_scene_error(scene_id: Option<&str>, error: anyhow::Error) -> CliCommandEr
         CliCommandError::target_not_found("scene_not_found", message, details)
     } else if message.contains("already exists") {
         CliCommandError::state_conflict("scene_already_exists", message, details)
+    } else if message == SCENE_APPLY_BLOCKED_MESSAGE {
+        CliCommandError::state_conflict("scene_apply_blocked", message, details)
     } else {
         CliCommandError::config_write_failed(
             format!("Failed to update scene configuration: {message}"),

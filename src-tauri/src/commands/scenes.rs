@@ -1,27 +1,12 @@
-use std::path::Path;
-
 use tauri::Manager;
 
-use crate::core::agents::discovery::AgentSystemDirs;
 use crate::core::scenes::config::{SceneConfigSnapshot, SceneConfigStore};
-use crate::core::scenes::manager::{apply_scene as apply_scene_core, ApplySceneResult};
-use crate::core::settings::SettingsStore;
+use crate::core::scenes::manager::{ApplySceneResult, SCENE_APPLY_BLOCKED_MESSAGE};
 
 fn app_config_dir(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     app.path()
         .app_config_dir()
         .map_err(|error| error.to_string())
-}
-
-fn load_repo_path(app: &tauri::AppHandle) -> Result<String, String> {
-    let config_dir = app_config_dir(app)?;
-    let settings = SettingsStore::new(config_dir)
-        .load()
-        .map_err(|error| error.to_string())?;
-
-    settings
-        .repo_path
-        .ok_or_else(|| "Repository path is not configured".to_string())
 }
 
 fn scene_store(app: &tauri::AppHandle) -> Result<SceneConfigStore, String> {
@@ -109,11 +94,6 @@ pub fn set_scene_skill_order(
 }
 
 #[tauri::command]
-pub fn apply_scene(app: tauri::AppHandle, id: String) -> Result<ApplySceneResult, String> {
-    let repo_path = load_repo_path(&app)?;
-    let config_dir = app_config_dir(&app)?;
-    let system_dirs = AgentSystemDirs::current().map_err(|error| error.to_string())?;
-
-    apply_scene_core(&config_dir, Path::new(&repo_path), &system_dirs, &id)
-        .map_err(|error| error.to_string())
+pub fn apply_scene(_app: tauri::AppHandle, _id: String) -> Result<ApplySceneResult, String> {
+    Err(SCENE_APPLY_BLOCKED_MESSAGE.to_string())
 }

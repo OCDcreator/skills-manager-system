@@ -12,8 +12,6 @@ export function ScenesView() {
   const {
     repoPath,
     scanResult,
-    refreshAgents,
-    refreshSkills,
     sortedAgentInventory,
   } = useAppContext();
   const [config, setConfig] = useState<SceneConfigSnapshot | null>(null);
@@ -25,7 +23,6 @@ export function ScenesView() {
   const [creating, setCreating] = useState(false);
   const [newId, setNewId] = useState("");
   const [newName, setNewName] = useState("");
-  const [applying, setApplying] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -66,25 +63,6 @@ export function ScenesView() {
       setConfig(snapshot);
     } catch (error) {
       setLastResult(error instanceof Error ? error.message : String(error));
-    }
-  };
-
-  const handleApply = async (id: string) => {
-    setApplying(id);
-    try {
-      const result = await scenesApi.applyScene(id);
-      setLastResult(
-        t("scenes.applyResult", {
-          scene: result.sceneName,
-          agents: result.enabledAgentCount,
-          disabledSkills: result.disabledSkillCount,
-        }),
-      );
-      await Promise.all([refresh(), refreshSkills(), refreshAgents()]);
-    } catch (error) {
-      setLastResult(error instanceof Error ? error.message : String(error));
-    } finally {
-      setApplying(null);
     }
   };
 
@@ -269,12 +247,9 @@ export function ScenesView() {
               agents={agents}
               editDesc={editDesc}
               editName={editName}
-              isActive={config?.activeSceneId === scene.id}
-              isApplying={applying === scene.id}
               isConfiguring={configuringId === scene.id}
               isEditing={editingId === scene.id}
               key={scene.id}
-              onApply={() => void handleApply(scene.id)}
               onCancelEdit={() => setEditingId(null)}
               onDelete={() => void handleDelete(scene.id)}
               onDuplicate={() => void handleDuplicate(scene)}

@@ -5,19 +5,21 @@
 
 ## Overview
 
-Applies a scene by updating target-agent enablement, assigning that scene to the selected agents, and then rerunning agent sync.
+Describes reusable scene toolkit definitions without mutating agent configuration or filesystem targets. The old direct scene apply symbol remains compatibility-only and returns an explicit blocked error.
 
 ## Public Surface
 
 | Export | Purpose |
 |---|---|
-| `apply_scene` | Applies one scene and then reruns agent sync using the saved sync mode. |
-| `ApplySceneResult` | Small summary returned to the frontend. |
+| `describe_scene_toolkit` | Reads one scene and reports skill/agent counts without writing config or targets. |
+| `SceneToolkitSummary` | Non-mutating summary of scene ID, name, enabled/disabled skill counts, and agent count. |
+| `apply_scene` | Compatibility symbol that always errors with "Scenes are reusable toolkits. Apply them from Agents or Projects." |
+| `ApplySceneResult` | Compatibility alias for callers that still type the blocked command result. |
 
 ## Core Logic
 
-Loads the target scene, computes its currently unselected skill count from the live repo scan, persists enabled agent flags through `AgentConfigStore`, replaces enabled agents' selected-scene list with the applied scene ID while preserving direct skill and exclusion lists, maps the saved `AgentSyncMode` to `target_sync::SyncMode`, reruns `apply_agent_sync`, and marks the scene active only after sync succeeds.
+Loads the target scene, computes its enabled and disabled skill counts from the live repo scan, and returns a summary. It does not call `AgentConfigStore`, agent discovery, target sync, settings, or `set_active_scene`.
 
 ## Tests
 
-Includes regressions for explicit-empty new scenes, legacy/selected scene sync behavior, folder-name target entries, and symlink/copy mode application after the per-agent sync redesign. The Unix symlink-mode regression now selects a concrete scene skill before applying the scene so the assertion verifies link mode rather than empty-scene behavior.
+Includes regressions that the summary helper reports counts without mutation and that compatibility apply returns the blocked error without rewriting agent selection or target folders.

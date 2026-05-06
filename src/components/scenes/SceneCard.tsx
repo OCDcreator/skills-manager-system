@@ -1,12 +1,9 @@
 import { useMemo, useState } from "react";
 import {
-  CheckCircle,
   CheckSquare,
-  Circle,
   Copy,
   GripVertical,
   Pencil,
-  Power,
   Settings2,
   Square,
   Trash2,
@@ -21,9 +18,7 @@ import type { SceneEntry } from "../../lib/scenes";
 
 export interface SceneCardProps {
   scene: SceneEntry;
-  isActive: boolean;
   isEditing: boolean;
-  isApplying: boolean;
   isConfiguring: boolean;
   skills: { id: string; name: string }[];
   agents: { key: string; displayName: string }[];
@@ -34,7 +29,6 @@ export interface SceneCardProps {
   onCancelEdit: () => void;
   onSaveEdit: () => void;
   onDelete: () => void;
-  onApply: () => void;
   onDuplicate: () => void;
   onEditNameChange: (value: string) => void;
   onEditDescChange: (value: string) => void;
@@ -48,9 +42,7 @@ export function SceneCard({
   scene,
   skills,
   agents,
-  isActive,
   isEditing,
-  isApplying,
   isConfiguring,
   editName,
   editDesc,
@@ -59,7 +51,6 @@ export function SceneCard({
   onCancelEdit,
   onSaveEdit,
   onDelete,
-  onApply,
   onDuplicate,
   onEditNameChange,
   onEditDescChange,
@@ -97,18 +88,9 @@ export function SceneCard({
   };
 
   return (
-    <div
-      className={`rounded-2xl border p-5 ${
-        isActive ? "border-sky-700 bg-sky-950/20" : "border-slate-800 bg-slate-900"
-      }`}
-    >
+    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          {isActive ? (
-            <CheckCircle className="h-5 w-5 text-sky-400" />
-          ) : (
-            <Circle className="h-5 w-5 text-slate-600" />
-          )}
           <div>
             {isEditing ? (
               <div className="flex items-center gap-2">
@@ -310,16 +292,9 @@ export function SceneCard({
       ) : null}
 
       <div className="mt-3">
-        <button
-          className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-50"
-          disabled={isApplying}
-          onClick={onApply}
-          title={t("tooltip.scenes.apply")}
-          type="button"
-        >
-          <Power className="h-4 w-4" />
-          {isApplying ? t("scenes.card.applying") : t("scenes.card.apply")}
-        </button>
+        <p className="text-xs text-slate-500">
+          {t("scenes.card.toolkitUsage")}
+        </p>
       </div>
     </div>
   );

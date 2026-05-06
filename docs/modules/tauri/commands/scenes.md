@@ -5,7 +5,7 @@
 
 ## Overview
 
-Thin Tauri command layer for scene CRUD and application.
+Thin Tauri command layer for scene CRUD plus compatibility handling for the removed direct-apply behavior.
 
 ## Public Surface
 
@@ -19,10 +19,10 @@ Thin Tauri command layer for scene CRUD and application.
 | `set_scene_skills` | Update scene skill IDs using the scene's stored selection mode |
 | `set_scene_agents` | Set enabled agent keys for a scene |
 | `set_scene_skill_order` | Set skill priority order for a scene |
-| `apply_scene` | Apply scene (update skills + agents + set active) |
+| `apply_scene` | Compatibility command that returns the toolkit-only blocked error |
 
 ## Interactions
 
 - `core::scenes::config` — all CRUD operations
-- `core::scenes::manager` — apply logic
-- `src/lib/scenes.ts` — matching TypeScript wrappers that send generic scene skill IDs rather than assuming a disabled-only payload
+- `core::scenes::manager` — compatibility error message and result type
+- `src/lib/scenes.ts` — matching TypeScript wrappers for scene CRUD/configuration commands

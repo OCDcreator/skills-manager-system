@@ -5,7 +5,7 @@
 
 ## Overview
 
-Persists scene configuration (scene list + active scene) to `scene-config.json` in the app config directory. Each scene now carries a backward-compatible skill-selection mode so legacy scenes can keep their "all except disabled" behavior while new scenes start with an explicit empty selection.
+Persists scene toolkit definitions to `scene-config.json` in the app config directory. The legacy active scene ID is still loaded and saved for compatibility, but normal scene editing no longer treats it as an apply or activation signal. Each scene carries a backward-compatible skill-selection mode so legacy scenes can keep their "all except disabled" behavior while new scenes start with an explicit empty selection.
 
 ## Public Surface
 
@@ -13,7 +13,7 @@ Persists scene configuration (scene list + active scene) to `scene-config.json` 
 |---|---|
 | `SceneEntry` | A single scene definition |
 | `SceneSkillSelectionMode` | Distinguishes legacy all-except-disabled scenes from explicit selected-skill scenes. |
-| `SceneConfigSnapshot` | Full config state (scenes map + active ID) |
+| `SceneConfigSnapshot` | Full config state (scenes map + legacy active ID) |
 | `SceneConfigStore` | Persistence layer with CRUD operations |
 
 ## Core Logic
@@ -22,7 +22,7 @@ Persists scene configuration (scene list + active scene) to `scene-config.json` 
 
 ## Interactions
 
-- `manager.rs` — calls store for applying scenes
+- `manager.rs` — reads scene definitions for non-mutating toolkit summaries
 - `commands::scenes` — thin wrappers around store methods
 
 ## Change Notes

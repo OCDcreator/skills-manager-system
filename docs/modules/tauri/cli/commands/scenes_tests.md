@@ -5,7 +5,7 @@
 
 ## Overview
 
-Covers scene config mutations and scene apply behavior through the CLI adapter layer.
+Covers scene config mutations and blocked direct-apply behavior through the CLI adapter layer.
 
 ## Import Relationships
 
@@ -18,11 +18,11 @@ Downstream: src-tauri/src/cli/commands/scenes.rs, src-tauri/src/core/scenes/*
 
 | Export | Purpose |
 |---|---|
-| tests | Exercise create/update/delete, active scene, skill/agent/order updates, and apply. |
+| tests | Exercise create/update/delete, active scene, skill/agent/order updates, and blocked direct apply. |
 
 ## Core Logic
 
-Tests construct temporary repos with SKILL.md files and injected agent dirs, then assert scene mutations and scene apply write only the expected managed folder-name skill targets. The suite now covers the explicit-empty new-scene model while keeping legacy compatibility checks in the core scene tests.
+Tests construct temporary repos with SKILL.md files and injected agent dirs, then assert scene mutations round-trip and `scenes apply` returns `scene_apply_blocked` without rewriting agent config or target folders. The suite also covers that blocked apply does not require a configured repo path.
 
 ## Interactions
 
