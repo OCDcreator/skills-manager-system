@@ -5,7 +5,7 @@ use std::path::Path;
 use crate::core::scenes::config::{SceneConfigStore, SceneEntry, SceneSkillSelectionMode};
 use crate::core::skills::scan::{scan_repo_skills, SkillSummary};
 use crate::core::skills::state::SkillStateStore;
-
+use crate::core::projects::store::ProjectAgentAssignment;
 use super::discovery::AgentInventoryItem;
 
 pub(crate) struct SkillSelectionContext {
@@ -18,15 +18,9 @@ pub(crate) struct SkillSelectionContext {
 #[allow(dead_code)]
 pub(crate) enum SkillSourceLabel {
     GlobalDirect,
-    GlobalScene {
-        scene_id: String,
-        scene_name: String,
-    },
+    GlobalScene { scene_id: String, scene_name: String },
     ProjectDirect,
-    ProjectScene {
-        scene_id: String,
-        scene_name: String,
-    },
+    ProjectScene { scene_id: String, scene_name: String },
 }
 
 impl SkillSourceLabel {
@@ -68,23 +62,14 @@ impl SkillResolutionResult {
         self.entries
             .iter()
             .find(|entry| entry.skill.id == skill_id)
-            .map(|entry| {
-                entry
-                    .sources
-                    .iter()
-                    .map(SkillSourceLabel::stable_label)
-                    .collect()
-            })
+            .map(|entry| entry.sources.iter().map(SkillSourceLabel::stable_label).collect())
             .unwrap_or_default()
     }
 }
 
 impl SkillSelectionContext {
     pub(crate) fn available_skill_count(&self) -> usize {
-        self.skills
-            .iter()
-            .filter(|skill| !self.globally_disabled_skill_ids.contains(&skill.id))
-            .count()
+        self.skills.iter().filter(|skill| !self.globally_disabled_skill_ids.contains(&skill.id)).count()
     }
 }
 
@@ -98,9 +83,7 @@ pub(crate) fn load_skill_selection_context(
         .disabled_skill_ids
         .into_iter()
         .collect::<BTreeSet<_>>();
-    let scenes = SceneConfigStore::new(config_dir.to_path_buf())
-        .load()?
-        .scenes;
+    let scenes = SceneConfigStore::new(config_dir.to_path_buf()).load()?.scenes;
 
     Ok(SkillSelectionContext {
         skills: scan_result.skills,
@@ -125,16 +108,8 @@ pub(crate) fn resolve_agent_skill_selection(
     agent: &AgentInventoryItem,
     context: &SkillSelectionContext,
 ) -> SkillResolutionResult {
-    let skill_lookup = context
-        .skills
-        .iter()
-        .map(|skill| (skill.id.as_str(), skill))
-        .collect::<BTreeMap<_, _>>();
-    let excluded_skill_ids = agent
-        .excluded_skill_ids
-        .iter()
-        .cloned()
-        .collect::<BTreeSet<_>>();
+    let skill_lookup = skill_lookup(context);
+    let excluded_skill_ids = id_set(&agent.excluded_skill_ids);
     let mut entries = BTreeMap::new();
     let mut diagnostics = SkillResolutionDiagnostics::default();
 
@@ -154,6 +129,10 @@ pub(crate) fn resolve_agent_skill_selection(
         if let Some(scene) = context.scenes.get(scene_id) {
             add_scene_skill_references(
                 scene,
+                SkillSourceLabel::GlobalScene {
+                    scene_id: scene.id.clone(),
+                    scene_name: scene.name.clone(),
+                },
                 context,
                 &skill_lookup,
                 &excluded_skill_ids,
@@ -165,33 +144,72 @@ pub(crate) fn resolve_agent_skill_selection(
         }
     }
 
-    for skill_id in &agent.excluded_skill_ids {
-        if !skill_lookup.contains_key(skill_id.as_str()) {
-            diagnostics.missing_skill_ids.push(skill_id.clone());
+    add_missing_exclusion_diagnostics(&agent.excluded_skill_ids, &skill_lookup, &mut diagnostics);
+    ordered_result(context, entries, diagnostics)
+}
+
+pub(crate) fn resolve_project_agent_skill_selection(
+    global_result: &SkillResolutionResult,
+    project_agent: &ProjectAgentAssignment,
+    context: &SkillSelectionContext,
+) -> SkillResolutionResult {
+    let skill_lookup = skill_lookup(context);
+    let excluded_skill_ids = id_set(&project_agent.excluded_skill_ids);
+    let mut diagnostics = global_result.diagnostics.clone();
+    let mut entries = BTreeMap::new();
+
+    for entry in &global_result.entries {
+        if entry.excluded || entry.globally_disabled {
+            continue;
+        }
+
+        let mut layered_entry = entry.clone();
+        layered_entry.excluded = excluded_skill_ids.contains(&entry.skill.id);
+        entries.insert(layered_entry.skill.id.clone(), layered_entry);
+    }
+
+    for skill_id in &project_agent.selected_skill_ids {
+        add_skill_reference(
+            skill_id,
+            SkillSourceLabel::ProjectDirect,
+            context,
+            &skill_lookup,
+            &excluded_skill_ids,
+            &mut entries,
+            &mut diagnostics,
+        );
+    }
+
+    for scene_id in &project_agent.selected_scene_ids {
+        if let Some(scene) = context.scenes.get(scene_id) {
+            add_scene_skill_references(
+                scene,
+                SkillSourceLabel::ProjectScene {
+                    scene_id: scene.id.clone(),
+                    scene_name: scene.name.clone(),
+                },
+                context,
+                &skill_lookup,
+                &excluded_skill_ids,
+                &mut entries,
+                &mut diagnostics,
+            );
+        } else {
+            diagnostics.missing_scene_ids.push(scene_id.clone());
         }
     }
 
-    diagnostics.missing_scene_ids.sort();
-    diagnostics.missing_scene_ids.dedup();
-    diagnostics.missing_skill_ids.sort();
-    diagnostics.missing_skill_ids.dedup();
-    diagnostics.globally_disabled_references.sort();
-    diagnostics.globally_disabled_references.dedup();
-
-    let entries = context
-        .skills
-        .iter()
-        .filter_map(|skill| entries.remove(&skill.id))
-        .collect();
-
-    SkillResolutionResult {
-        entries,
-        diagnostics,
-    }
+    add_missing_exclusion_diagnostics(
+        &project_agent.excluded_skill_ids,
+        &skill_lookup,
+        &mut diagnostics,
+    );
+    ordered_result(context, entries, diagnostics)
 }
 
 fn add_scene_skill_references(
     scene: &SceneEntry,
+    source: SkillSourceLabel,
     context: &SkillSelectionContext,
     skill_lookup: &BTreeMap<&str, &SkillSummary>,
     excluded_skill_ids: &BTreeSet<String>,
@@ -202,10 +220,7 @@ fn add_scene_skill_references(
         if scene.includes_skill(&skill.id) {
             add_skill_reference(
                 &skill.id,
-                SkillSourceLabel::GlobalScene {
-                    scene_id: scene.id.clone(),
-                    scene_name: scene.name.clone(),
-                },
+                source.clone(),
                 context,
                 skill_lookup,
                 excluded_skill_ids,
@@ -258,5 +273,48 @@ fn add_skill_reference(
 
     if !entry.sources.contains(&source) {
         entry.sources.push(source);
+    }
+}
+
+fn normalize_diagnostics(diagnostics: &mut SkillResolutionDiagnostics) {
+    diagnostics.missing_scene_ids.sort();
+    diagnostics.missing_scene_ids.dedup();
+    diagnostics.missing_skill_ids.sort();
+    diagnostics.missing_skill_ids.dedup();
+    diagnostics.globally_disabled_references.sort();
+    diagnostics.globally_disabled_references.dedup();
+}
+
+fn skill_lookup(context: &SkillSelectionContext) -> BTreeMap<&str, &SkillSummary> {
+    context.skills.iter().map(|skill| (skill.id.as_str(), skill)).collect()
+}
+
+fn id_set(ids: &[String]) -> BTreeSet<String> {
+    ids.iter().cloned().collect()
+}
+
+fn add_missing_exclusion_diagnostics(
+    excluded_ids: &[String],
+    skill_lookup: &BTreeMap<&str, &SkillSummary>,
+    diagnostics: &mut SkillResolutionDiagnostics,
+) {
+    diagnostics.missing_skill_ids.extend(
+        excluded_ids
+            .iter()
+            .filter(|skill_id| !skill_lookup.contains_key(skill_id.as_str()))
+            .cloned(),
+    );
+}
+
+fn ordered_result(
+    context: &SkillSelectionContext,
+    mut entries: BTreeMap<String, ResolvedSkillEntry>,
+    mut diagnostics: SkillResolutionDiagnostics,
+) -> SkillResolutionResult {
+    normalize_diagnostics(&mut diagnostics);
+    let entries = context.skills.iter().filter_map(|skill| entries.remove(&skill.id)).collect();
+    SkillResolutionResult {
+        entries,
+        diagnostics,
     }
 }

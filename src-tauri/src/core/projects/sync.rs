@@ -5,16 +5,20 @@ use std::fs;
 use std::path::Path;
 
 use crate::core::agents::catalog::{find_agent, project_skills_dir_rule};
-use crate::core::agents::discovery::AgentSystemDirs;
+use crate::core::agents::discovery::{load_agent_inventory, AgentInventoryItem, AgentSystemDirs};
+use crate::core::agents::selection::{
+    load_skill_selection_context, resolve_agent_skill_selection,
+    resolve_project_agent_skill_selection, SkillResolutionDiagnostics, SkillSelectionContext,
+};
 use crate::core::agents::sync::AgentApplyResult;
 use crate::core::agents::target_sync::{
     apply_desired_entries, build_desired_skill_entries, cleanup_managed_entries, DesiredSkillEntry,
     SyncMode,
 };
 use crate::core::platform_paths::portable_path_string;
-use crate::core::skills::scan::{scan_repo_skills, SkillSummary};
+use crate::core::settings::{AgentSyncMode, SettingsStore};
 
-use super::store::{ProjectAssignment, ProjectConfigStore};
+use super::store::{ProjectAgentAssignment, ProjectAssignment, ProjectConfigStore};
 
 const PROJECT_LEDGER_FILE_NAME: &str = "project-sync-ledger.json";
 
@@ -50,16 +54,30 @@ pub struct ApplyProjectAssignmentsResponse {
 pub fn apply_project_assignments(
     config_dir: &Path,
     repo_path: &Path,
-    _system_dirs: &AgentSystemDirs,
+    system_dirs: &AgentSystemDirs,
 ) -> Result<ApplyProjectAssignmentsResponse> {
     let snapshot = ProjectConfigStore::new(config_dir.to_path_buf()).load()?;
-    let skills = scan_repo_skills(repo_path)?.skills;
+    let inventory = load_agent_inventory(config_dir, system_dirs)?;
+    let agents = inventory
+        .agents
+        .into_iter()
+        .map(|agent| (agent.key.clone(), agent))
+        .collect::<BTreeMap<_, _>>();
+    let skill_context = load_skill_selection_context(config_dir, repo_path)?;
+    let sync_mode = load_project_sync_mode(config_dir)?;
     let mut ledger = load_ledger(config_dir)?;
     let mut managed_keys = BTreeSet::new();
     let mut results = Vec::new();
 
     for project in snapshot.projects.values() {
-        let result = apply_for_project(project, &skills, &mut ledger, &mut managed_keys)?;
+        let result = apply_for_project(
+            project,
+            &agents,
+            &skill_context,
+            sync_mode,
+            &mut ledger,
+            &mut managed_keys,
+        )?;
         results.push(result);
     }
 
@@ -74,13 +92,14 @@ pub fn apply_project_assignments(
 
 fn apply_for_project(
     project: &ProjectAssignment,
-    all_skills: &[SkillSummary],
+    agents: &BTreeMap<String, AgentInventoryItem>,
+    skill_context: &SkillSelectionContext,
+    sync_mode: SyncMode,
     ledger: &mut ProjectSyncLedger,
     managed_keys: &mut BTreeSet<String>,
 ) -> Result<ProjectAssignmentApplyResult> {
-    let enabled_skills = select_project_skills(project, all_skills);
-    let desired_entries = build_desired_skill_entries(&enabled_skills);
     let mut results = Vec::new();
+    let mut enabled_skill_ids = BTreeSet::new();
 
     cleanup_retargeted_assignments(project, ledger)?;
 
@@ -90,14 +109,38 @@ fn apply_for_project(
 
         let result = match find_agent(agent_key) {
             Some(agent) => {
-                let target_dir = Path::new(&project.project_path)
-                    .join(project_skills_dir_rule(agent));
-                let stats = apply_desired_entries(
-                    &target_dir,
-                    agent_key,
-                    &desired_entries,
-                    SyncMode::Copy,
-                )?;
+                let Some(global_agent) = agents.get(agent_key) else {
+                    ledger.assignments.remove(&key);
+                    results.push(unsupported_agent_result(agent_key));
+                    continue;
+                };
+                let default_project_agent;
+                let project_agent = match project.agents.get(agent_key) {
+                    Some(project_agent) => project_agent,
+                    None => {
+                        default_project_agent = ProjectAgentAssignment::default();
+                        &default_project_agent
+                    }
+                };
+                let global_result = resolve_agent_skill_selection(global_agent, skill_context);
+                let project_result = resolve_project_agent_skill_selection(
+                    &global_result,
+                    project_agent,
+                    skill_context,
+                );
+                let enabled_skills = project_result
+                    .entries
+                    .into_iter()
+                    .filter(|entry| !entry.excluded && !entry.globally_disabled)
+                    .map(|entry| entry.skill)
+                    .collect::<Vec<_>>();
+                enabled_skill_ids.extend(enabled_skills.iter().map(|skill| skill.id.clone()));
+                let desired_entries = build_desired_skill_entries(&enabled_skills);
+                let target_dir =
+                    Path::new(&project.project_path).join(project_skills_dir_rule(agent));
+                let stats =
+                    apply_desired_entries(&target_dir, agent_key, &desired_entries, sync_mode)?;
+                let warnings = format_diagnostics(&project_result.diagnostics);
                 ledger.assignments.insert(
                     key,
                     ProjectSyncLedgerEntry {
@@ -110,7 +153,7 @@ fn apply_for_project(
                     key: agent_key.clone(),
                     display_name: agent.display_name.to_string(),
                     target_dir: Some(portable_path_string(&target_dir)),
-                    status: if stats.conflict_count > 0 {
+                    status: if stats.conflict_count > 0 || !warnings.is_empty() {
                         crate::core::agents::sync::AgentApplyStatus::Partial
                     } else {
                         crate::core::agents::sync::AgentApplyStatus::Success
@@ -122,21 +165,13 @@ fn apply_for_project(
                         &desired_entries,
                         stats.conflict_count,
                         stats.written_count,
+                        &warnings,
                     ),
                 }
             }
             None => {
                 ledger.assignments.remove(&key);
-                AgentApplyResult {
-                    key: agent_key.clone(),
-                    display_name: agent_key.clone(),
-                    target_dir: None,
-                    status: crate::core::agents::sync::AgentApplyStatus::Failed,
-                    written_count: 0,
-                    removed_count: 0,
-                    conflict_count: 0,
-                    message: format!("Unsupported agent key '{}'.", agent_key),
-                }
+                unsupported_agent_result(agent_key)
             }
         };
 
@@ -146,7 +181,7 @@ fn apply_for_project(
     Ok(ProjectAssignmentApplyResult {
         project_path: project.project_path.clone(),
         display_name: project.display_name.clone(),
-        enabled_skill_count: enabled_skills.len(),
+        enabled_skill_count: enabled_skill_ids.len(),
         results,
     })
 }
@@ -160,8 +195,7 @@ fn cleanup_retargeted_assignments(
         let Some(agent) = find_agent(agent_key) else {
             continue;
         };
-        let new_target_dir = Path::new(&project.project_path)
-            .join(project_skills_dir_rule(agent));
+        let new_target_dir = Path::new(&project.project_path).join(project_skills_dir_rule(agent));
         let new_target = portable_path_string(&new_target_dir);
         let Some(previous) = ledger.assignments.get(&key) else {
             continue;
@@ -175,21 +209,6 @@ fn cleanup_retargeted_assignments(
     }
 
     Ok(())
-}
-
-fn select_project_skills(
-    project: &ProjectAssignment,
-    all_skills: &[SkillSummary],
-) -> Vec<SkillSummary> {
-    let skill_map: BTreeMap<&str, &SkillSummary> = all_skills
-        .iter()
-        .map(|skill| (skill.id.as_str(), skill))
-        .collect();
-    project
-        .skill_ids
-        .iter()
-        .filter_map(|skill_id| skill_map.get(skill_id.as_str()).cloned().cloned())
-        .collect()
 }
 
 fn cleanup_stale_assignments(
@@ -212,12 +231,36 @@ fn cleanup_stale_assignments(
     Ok(())
 }
 
+fn unsupported_agent_result(agent_key: &str) -> AgentApplyResult {
+    AgentApplyResult {
+        key: agent_key.to_string(),
+        display_name: agent_key.to_string(),
+        target_dir: None,
+        status: crate::core::agents::sync::AgentApplyStatus::Failed,
+        written_count: 0,
+        removed_count: 0,
+        conflict_count: 0,
+        message: format!("Unsupported agent key '{}'.", agent_key),
+    }
+}
+
+fn load_project_sync_mode(config_dir: &Path) -> Result<SyncMode> {
+    match SettingsStore::new(config_dir.to_path_buf())
+        .load()?
+        .agent_sync_mode
+    {
+        AgentSyncMode::Copy => Ok(SyncMode::Copy),
+        AgentSyncMode::Symlink => Ok(SyncMode::Symlink),
+    }
+}
+
 fn build_message(
     desired_entries: &BTreeMap<String, DesiredSkillEntry>,
     conflict_count: usize,
     written_count: usize,
+    warnings: &[String],
 ) -> String {
-    if conflict_count > 0 {
+    let message = if conflict_count > 0 {
         format!(
             "Applied {} skill(s) with {} unmanaged conflict(s).",
             written_count, conflict_count
@@ -226,7 +269,20 @@ fn build_message(
         "No selected skills remain; cleaned managed entries.".to_string()
     } else {
         format!("Applied {} skill(s).", written_count)
-    }
+    };
+    if warnings.is_empty() { message } else { format!("{message} Warnings: {}", warnings.join("; ")) }
+}
+
+fn format_diagnostics(diagnostics: &SkillResolutionDiagnostics) -> Vec<String> {
+    let mut warnings = Vec::new();
+    push_warning(&mut warnings, "missing scenes", &diagnostics.missing_scene_ids);
+    push_warning(&mut warnings, "missing skills", &diagnostics.missing_skill_ids);
+    push_warning(&mut warnings, "globally disabled", &diagnostics.globally_disabled_references);
+    warnings
+}
+
+fn push_warning(warnings: &mut Vec<String>, label: &str, ids: &[String]) {
+    if !ids.is_empty() { warnings.push(format!("{label}: {}", ids.join(", "))); }
 }
 
 fn load_ledger(config_dir: &Path) -> Result<ProjectSyncLedger> {
@@ -241,10 +297,7 @@ fn load_ledger(config_dir: &Path) -> Result<ProjectSyncLedger> {
 
 fn save_ledger(config_dir: &Path, ledger: &ProjectSyncLedger) -> Result<()> {
     fs::create_dir_all(config_dir)?;
-    fs::write(
-        config_dir.join(PROJECT_LEDGER_FILE_NAME),
-        serde_json::to_string_pretty(ledger)?,
-    )?;
+    fs::write(config_dir.join(PROJECT_LEDGER_FILE_NAME), serde_json::to_string_pretty(ledger)?)?;
     Ok(())
 }
 
