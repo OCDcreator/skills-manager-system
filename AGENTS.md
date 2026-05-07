@@ -31,9 +31,9 @@ my-skills/
 │   └── ...
 ├── automation/              # 自动化脚本
 ├── docs/                    # 状态文档
-├── update.sh / update.bat   # 同步外部源
-├── push.sh / push.bat       # 推送本地改动
-└── pull.sh / pull.bat       # 拉取远端更新
+├── update.sh / update.ps1   # 同步外部源
+├── push.sh / push.ps1       # 推送本地改动
+└── pull.sh / pull.ps1       # 拉取远端更新
 ```
 
 - 每个 skill 是一个目录，根目录包含 `SKILL.md`
@@ -190,7 +190,7 @@ skills-manager-system/
 - 显示仓库当前状态（有无未提交改动、是否与远端同步）
 - 查看 diff（文件级和内容级）
 - 执行 push / pull / commit
-- 触发 `update.sh`/`update.bat` 同步外部源
+- 触发 `update.sh`/`update.ps1` 同步外部源
 - 显示操作日志
 
 ### 2. Skill 浏览

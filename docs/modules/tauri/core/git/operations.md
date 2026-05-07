@@ -22,7 +22,7 @@ Downstream: commands::git, core::git::operations_test
 | `git_diff` | Get staged or unstaged diff text |
 | `git_log` | Recent commit log entries |
 | `git_pull` / `git_push` / `git_commit` / `git_fetch` | Remote and local operations |
-| `run_sync_script` | Run update.sh / update.bat |
+| `run_sync_script` | Run the repo sync script for the current platform |
 | response DTOs | Imported from `core::git::types` |
 
 ## Core Logic
@@ -49,5 +49,5 @@ None.
 ## Change Notes
 
 - Porcelain v2 parsing depends on git output format stability
-- Windows sync script uses `update.bat`, Unix uses `update.sh`
+- Windows sync script prefers `update.ps1` and falls back to legacy `update.bat`; Unix uses `update.sh`
 - `git_commit` stages all changes before committing (`git add -A`)

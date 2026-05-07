@@ -159,3 +159,28 @@ fn git_sync_external_executes_update_script() {
         "synced"
     );
 }
+
+#[cfg(windows)]
+#[test]
+fn git_sync_external_executes_powershell_update_script() {
+    let temp = tempdir().unwrap();
+    let repo_dir = temp.path().join("repo");
+    std::fs::create_dir_all(&repo_dir).unwrap();
+    init_repo(&repo_dir);
+    std::fs::write(
+        repo_dir.join("update.ps1"),
+        "Set-Content -Path sync-output.txt -Value 'synced' -NoNewline\n",
+    )
+    .unwrap();
+    git(&repo_dir, &["add", "-A"]);
+    git(&repo_dir, &["commit", "-m", "add script"]);
+    let context = test_context(temp.path().join("config"), repo_dir.clone());
+
+    let result = run(&context, &GitCommand::SyncExternal);
+
+    assert_eq!(result.response.status, CliStatus::Success);
+    assert_eq!(
+        std::fs::read_to_string(repo_dir.join("sync-output.txt")).unwrap(),
+        "synced"
+    );
+}

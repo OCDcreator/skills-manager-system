@@ -62,6 +62,35 @@ fn run_git_result(cmd: &mut Command) -> GitOperationResult {
     }
 }
 
+fn sync_script_error(script_path: &Path) -> GitOperationResult {
+    let message = format!("Sync script not found: {}", script_path.display());
+    GitOperationResult {
+        success: false,
+        message: message.clone(),
+        stdout: None,
+        stderr: Some(message),
+        exit_code: None,
+    }
+}
+
+fn run_command_result(mut cmd: Command, failure_message: String) -> GitOperationResult {
+    match cmd.output() {
+        Ok(output) => build_git_result(
+            output.status.success(),
+            &output.stdout,
+            &output.stderr,
+            output.status.code(),
+        ),
+        Err(error) => GitOperationResult {
+            success: false,
+            message: failure_message.clone(),
+            stdout: None,
+            stderr: Some(format!("{failure_message}: {error}")),
+            exit_code: None,
+        },
+    }
+}
+
 // ---------- public operations ----------
 
 pub fn git_status(repo_path: &Path) -> Result<GitStatusResponse> {
@@ -212,50 +241,50 @@ pub fn git_remote_url(repo_path: &Path) -> Result<Option<String>> {
 }
 
 pub fn run_sync_script(repo_path: &Path) -> GitOperationResult {
-    let script_name = if cfg!(windows) {
-        "update.bat"
-    } else {
-        "update.sh"
-    };
-    let script_path = repo_path.join(script_name);
+    if cfg!(windows) {
+        let powershell_script = repo_path.join("update.ps1");
+        if powershell_script.exists() {
+            let (mut cmd, resolution) =
+                crate::core::command_resolution::resolved_command("powershell");
+            let script_path = powershell_script.to_string_lossy().to_string();
+            cmd.args([
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                script_path.as_str(),
+            ])
+            .current_dir(repo_path);
+            let failure_message = resolution.spawn_error_message(&std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "PowerShell executable was not found",
+            ));
+            return run_command_result(cmd, failure_message);
+        }
 
+        let legacy_batch_script = repo_path.join("update.bat");
+        if legacy_batch_script.exists() {
+            let script_path = legacy_batch_script.to_string_lossy().to_string();
+            let mut cmd = Command::new("cmd");
+            cmd.args(["/C", script_path.as_str()])
+                .current_dir(repo_path);
+            return run_command_result(
+                cmd,
+                "Failed to execute legacy batch sync script".to_string(),
+            );
+        }
+
+        return sync_script_error(&powershell_script);
+    }
+
+    let script_path = repo_path.join("update.sh");
     if !script_path.exists() {
-        return GitOperationResult {
-            success: false,
-            message: format!("Sync script not found: {}", script_path.display()),
-            stdout: None,
-            stderr: Some(format!("Sync script not found: {}", script_path.display())),
-            exit_code: None,
-        };
+        return sync_script_error(&script_path);
     }
 
-    let result = if cfg!(windows) {
-        Command::new("cmd")
-            .args(["/C", &script_path.to_string_lossy()])
-            .current_dir(repo_path)
-            .output()
-    } else {
-        Command::new("sh")
-            .arg(&script_path)
-            .current_dir(repo_path)
-            .output()
-    };
-
-    match result {
-        Ok(output) => build_git_result(
-            output.status.success(),
-            &output.stdout,
-            &output.stderr,
-            output.status.code(),
-        ),
-        Err(error) => GitOperationResult {
-            success: false,
-            message: error.to_string(),
-            stdout: None,
-            stderr: Some(error.to_string()),
-            exit_code: None,
-        },
-    }
+    let mut cmd = Command::new("sh");
+    cmd.arg(&script_path).current_dir(repo_path);
+    run_command_result(cmd, "Failed to execute sync shell script".to_string())
 }
 
 // ---------- parsing ----------

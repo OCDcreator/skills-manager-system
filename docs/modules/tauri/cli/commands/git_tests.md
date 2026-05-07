@@ -22,9 +22,8 @@ Downstream: src-tauri/src/cli/commands/git.rs, system git
 
 ## Core Logic
 
-Tests configure throwaway git repos with local identity settings, avoiding network remotes while still verifying fetch/pull/push semantics.
+Tests configure throwaway git repos with local identity settings, avoiding network remotes while still verifying fetch/pull/push semantics. Platform-specific sync coverage checks the actual script entrypoint used by the current OS: `update.sh` on Unix and `update.ps1` on Windows.
 
 ## Interactions
 
 Requires the system `git` binary on PATH, matching the core git operation dependency.
-
