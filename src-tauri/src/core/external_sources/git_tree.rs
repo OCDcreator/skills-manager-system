@@ -21,6 +21,66 @@ pub(crate) fn list_recursive_skill_dirs_at_ref(
     list_skill_dirs_at_ref(repo_dir, git_ref, root, false)
 }
 
+pub(crate) fn list_direct_child_directories_at_ref(
+    repo_dir: &Path,
+    git_ref: &str,
+    root: &str,
+) -> Result<Vec<String>> {
+    list_direct_child_entries_at_ref(repo_dir, git_ref, root, "tree")
+}
+
+pub(crate) fn list_direct_child_files_at_ref(
+    repo_dir: &Path,
+    git_ref: &str,
+    root: &str,
+) -> Result<Vec<String>> {
+    list_direct_child_entries_at_ref(repo_dir, git_ref, root, "blob")
+}
+
+fn list_direct_child_entries_at_ref(
+    repo_dir: &Path,
+    git_ref: &str,
+    root: &str,
+    expected_kind: &str,
+) -> Result<Vec<String>> {
+    let root = if root == "." {
+        ".".to_string()
+    } else {
+        canonicalize_repo_relative_path(root)?
+    };
+    let tree_spec = if root == "." {
+        git_ref.to_string()
+    } else {
+        format!("{git_ref}:{root}")
+    };
+    let output = run_git_bytes(git_cmd(repo_dir).args(["ls-tree", "-z", &tree_spec]))
+        .with_context(|| format!("Failed to list direct child directories for {tree_spec}"))?;
+
+    let mut entries = BTreeSet::new();
+    for chunk in output.split(|byte| *byte == 0) {
+        if chunk.is_empty() {
+            continue;
+        }
+
+        let tab_index = chunk
+            .iter()
+            .position(|byte| *byte == b'\t')
+            .ok_or_else(|| anyhow!("Malformed ls-tree output"))?;
+        let header = std::str::from_utf8(&chunk[..tab_index]).context("Malformed tree header")?;
+        let path = std::str::from_utf8(&chunk[tab_index + 1..]).context("Malformed tree path")?;
+        let Some(kind) = header.split_whitespace().nth(1) else {
+            return Err(anyhow!("Malformed ls-tree header"));
+        };
+        if kind != expected_kind {
+            continue;
+        }
+
+        entries.insert(path.to_string());
+    }
+
+    Ok(entries.into_iter().collect())
+}
+
 pub(crate) fn read_text_file_at_ref(
     repo_dir: &Path,
     git_ref: &str,
@@ -145,6 +205,81 @@ mod tests {
         assert_eq!(direct, vec![".agents/skills/impeccable".to_string()]);
         assert!(recursive.contains(&".agents/skills/impeccable".to_string()));
         assert!(recursive.contains(&".agents/skills/group/impeccable".to_string()));
+    }
+
+    #[test]
+    fn list_direct_child_directories_at_ref_reads_tree_entries() {
+        let temp = tempdir().unwrap();
+        let repo_dir = temp.path().join("repo");
+
+        run_git(Command::new("git").arg("init").arg(&repo_dir)).unwrap();
+        run_git(git_cmd(&repo_dir).args(["config", "user.email", "test@example.com"])).unwrap();
+        run_git(git_cmd(&repo_dir).args(["config", "user.name", "Test User"])).unwrap();
+
+        fs::create_dir_all(repo_dir.join(".agents/skills/impeccable/examples")).unwrap();
+        fs::create_dir_all(repo_dir.join(".agents/skills/impeccable/scripts")).unwrap();
+        fs::write(
+            repo_dir.join(".agents/skills/impeccable/SKILL.md"),
+            "# Impeccable\n",
+        )
+        .unwrap();
+        fs::write(
+            repo_dir.join(".agents/skills/impeccable/examples/demo.md"),
+            "demo\n",
+        )
+        .unwrap();
+        fs::write(
+            repo_dir.join(".agents/skills/impeccable/scripts/run.sh"),
+            "echo hi\n",
+        )
+        .unwrap();
+        run_git(git_cmd(&repo_dir).args(["add", "."])).unwrap();
+        run_git(git_cmd(&repo_dir).args(["commit", "-m", "initial"])).unwrap();
+
+        let head = run_git(git_cmd(&repo_dir).args(["rev-parse", "HEAD"])).unwrap();
+        let directories = list_direct_child_directories_at_ref(
+            &repo_dir,
+            &head,
+            ".agents/skills/impeccable",
+        )
+        .unwrap();
+
+        assert_eq!(directories, vec!["examples".to_string(), "scripts".to_string()]);
+    }
+
+    #[test]
+    fn list_direct_child_files_at_ref_reads_blob_entries() {
+        let temp = tempdir().unwrap();
+        let repo_dir = temp.path().join("repo");
+
+        run_git(Command::new("git").arg("init").arg(&repo_dir)).unwrap();
+        run_git(git_cmd(&repo_dir).args(["config", "user.email", "test@example.com"])).unwrap();
+        run_git(git_cmd(&repo_dir).args(["config", "user.name", "Test User"])).unwrap();
+
+        fs::create_dir_all(repo_dir.join(".agents/skills/impeccable/examples")).unwrap();
+        fs::write(
+            repo_dir.join(".agents/skills/impeccable/SKILL.md"),
+            "# Impeccable\n",
+        )
+        .unwrap();
+        fs::write(
+            repo_dir.join(".agents/skills/impeccable/README.md"),
+            "intro\n",
+        )
+        .unwrap();
+        fs::write(
+            repo_dir.join(".agents/skills/impeccable/examples/demo.md"),
+            "demo\n",
+        )
+        .unwrap();
+        run_git(git_cmd(&repo_dir).args(["add", "."])).unwrap();
+        run_git(git_cmd(&repo_dir).args(["commit", "-m", "initial"])).unwrap();
+
+        let head = run_git(git_cmd(&repo_dir).args(["rev-parse", "HEAD"])).unwrap();
+        let files =
+            list_direct_child_files_at_ref(&repo_dir, &head, ".agents/skills/impeccable").unwrap();
+
+        assert_eq!(files, vec!["README.md".to_string(), "SKILL.md".to_string()]);
     }
 
     fn run_git(cmd: &mut Command) -> Result<String> {

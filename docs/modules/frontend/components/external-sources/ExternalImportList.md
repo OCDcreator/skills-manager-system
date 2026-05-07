@@ -15,7 +15,7 @@ Renders the imported-mirror list for one external source card.
 
 ## Core Logic
 
-The component stays presentation-focused: it shows the empty state, renders agent/skill badges plus pinned and last-checked commits, surfaces stored warning messages, and disables update or repair buttons from the shared `updatingImportId` plus a local `busyImportAction` intent so the visible busy label matches the action the user actually triggered. Busy-state truth comes from `resolveImportBusyState()` in `src/lib/external-sources.ts`, which prevents a repair operation on an updateable import from being mislabeled as an update. It does not decide whether an import is stale; it only reflects `updateAvailable` from the backend snapshot.
+The component stays presentation-focused: it shows the empty state, renders agent/skill badges plus pinned and last-checked commits, surfaces stored warning messages, and disables update or repair buttons from the shared `updatingImportId` plus a local `busyImportAction` intent so the visible busy label matches the action the user actually triggered. Busy-state truth comes from `resolveImportBusyState()` in `src/lib/external-sources.ts`, which prevents a repair operation on an updateable import from being mislabeled as an update. It does not decide whether an import is stale; it only reflects `updateAvailable` from the backend snapshot. The rendered list now caps its own height, scrolls internally, and reuses the shared `skill-markdown-scroll` skin so a large import set does not make the parent source card unmanageably tall or visually diverge from the rest of the app.
 
 ## Interactions
 

@@ -265,9 +265,9 @@ test("AgentsView mounts an agent-scoped external variant panel", () => {
   assert.match(viewSource, /updateExternalImport/);
 });
 
-test("AgentExternalVariantPanel keeps repair busy state independent from update availability", () => {
+test("Agent external source section keeps repair busy state independent from update availability", () => {
   const source = fs.readFileSync(
-    path.resolve("src/components/agents/AgentExternalVariantPanel.tsx"),
+    path.resolve("src/components/agents/AgentExternalSourceSection.tsx"),
     "utf8",
   );
 

@@ -27,6 +27,10 @@ fn list_external_sources_reads_variants_from_persisted_fetch_commit() {
     run_git(git_cmd(&repo_dir).args(["config", "user.name", "Test User"]));
     let variant_dir = repo_dir.join("dist/agents/.agents/skills/fast-start");
     fs::create_dir_all(&variant_dir).unwrap();
+    fs::create_dir_all(variant_dir.join("examples")).unwrap();
+    fs::create_dir_all(variant_dir.join("scripts")).unwrap();
+    fs::write(variant_dir.join("examples/demo.md"), "# Demo\n").unwrap();
+    fs::write(variant_dir.join("scripts/run.sh"), "echo hi\n").unwrap();
     fs::write(
         variant_dir.join("SKILL.md"),
         "---\nname: Fast Start\ndescription: Loaded from git objects\n---\n# Fast Start\n",
@@ -70,6 +74,14 @@ fn list_external_sources_reads_variants_from_persisted_fetch_commit() {
     assert_eq!(
         variants[0].description.as_deref(),
         Some("Loaded from git objects")
+    );
+    assert_eq!(
+        variants[0].child_directories,
+        vec!["examples".to_string(), "scripts".to_string()]
+    );
+    assert_eq!(
+        variants[0].child_files,
+        vec!["SKILL.md".to_string()]
     );
 }
 

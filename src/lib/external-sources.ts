@@ -1,4 +1,5 @@
 import type {
+  AgentKey,
   ExternalSourceRecord,
   ExternalSourceWarning,
   ExternalVariantSnapshot,
@@ -51,8 +52,41 @@ const AGENT_LABELS: Record<string, string> = {
   skill_repository: "Skill Repository",
 };
 
+export const EXTERNAL_IMPORT_TARGETS: AgentKey[] = [
+  "codex",
+  "claude_code",
+  "opencode",
+  "cursor",
+  "amp",
+  "kilo_code",
+  "kimi",
+  "roo_code",
+  "goose",
+  "gemini_cli",
+  "github_copilot",
+  "windsurf",
+];
+
+export function agentLabel(agentKey: string) {
+  return AGENT_LABELS[agentKey] ?? agentKey;
+}
+
 export function sourceAgentLabels(variants: ExternalVariantSnapshot[]) {
-  return [...new Set(variants.map((variant) => AGENT_LABELS[variant.agentKey] ?? variant.agentKey))];
+  const labels = new Set<string>();
+  for (const variant of variants) {
+    if (variant.suggestedTargetAgents.length) {
+      for (const target of variant.suggestedTargetAgents) {
+        labels.add(agentLabel(target));
+      }
+      continue;
+    }
+    if (variant.detectedAgentHint) {
+      labels.add(agentLabel(variant.detectedAgentHint));
+      continue;
+    }
+    labels.add(agentLabel(variant.agentKey));
+  }
+  return [...labels];
 }
 
 export interface BusyImportAction {

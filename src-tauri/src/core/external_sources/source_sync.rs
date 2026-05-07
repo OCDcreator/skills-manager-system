@@ -259,10 +259,9 @@ fn refresh_imports_for_source(
         .filter(|item| item.external_source_id == source_id)
     {
         import.last_checked_commit = Some(head_commit.to_string());
-        let still_detected = variants.iter().any(|variant| {
-            variant.agent_key == import.agent_key
-                && variant.variant_path == import.upstream_variant_path
-        });
+        let still_detected = variants
+            .iter()
+            .any(|variant| variant.variant_path == import.upstream_variant_path);
         if !still_detected {
             import.update_available = false;
             import.warnings = vec![warning(

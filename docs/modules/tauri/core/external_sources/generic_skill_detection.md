@@ -13,13 +13,13 @@ Detects ordinary skill repository layouts after generated agent bundle detection
 |---|---|
 | `GENERIC_SKILL_REPOSITORY_KIND` | Internal detection kind for ordinary skill repository sources. |
 | `GENERIC_SKILL_AGENT_KEY` | Neutral variant key used for ordinary skill repository imports. |
-| `detect_generic_skill_variants` | Emits one root variant or one variant per direct child skill directory under the configured scan root. |
+| `detect_generic_skill_variants` | Emits one root variant or one variant per recursively discovered fallback skill directory under the configured scan root. |
 
 ## Core Logic
 
-The detector accepts injected tree/worktree callbacks from `detect.rs`, so it does not know whether the source is being read from git objects or a fallback filesystem tree. If the scan root itself has `SKILL.md`, it emits the root as a single variant. Otherwise it emits direct child directories that contain `SKILL.md` and intentionally ignores deeper nested matches for the MVP.
+The detector accepts injected tree/worktree callbacks from `detect.rs`, so it does not know whether the source is being read from git objects or a fallback filesystem tree. If the scan root itself has `SKILL.md`, it emits the root as a single variant. It also collects recursive `SKILL.md` matches below the scan root, de-duplicates them, and filters out paths already claimed by supported generated-bundle rules.
 
-Generic variants use the neutral `skill_repository` key so ordinary skill repositories do not masquerade as Codex-specific exports. Existing managed imports that were created with an older agent key remain readable through their stored manifests and records; the detector only affects newly listed variants.
+This pass deliberately skips noisy infrastructure directories such as `.git`, `node_modules`, `target`, `coverage`, `.next`, and `build`, and it excludes `source/skills/*` authoring paths so repositories that ship both source-of-truth skills and generated outputs do not show duplicate import rows. Generic variants use the neutral `skill_repository` key, mark themselves as `generic_discovered`, and leave target-agent selection open for the frontend rather than guessing at import time.
 
 ## Interactions
 

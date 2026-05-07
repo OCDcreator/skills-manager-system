@@ -31,6 +31,13 @@ where
                 metadata_path: Some(format!("{variant_path}/SKILL.md")),
                 source_of_truth_path: source_skill_index.get(&skill_name).cloned(),
                 variant_path,
+                detection_class: if rule.alias_supported {
+                    "alias_supported".to_string()
+                } else {
+                    "exact_supported".to_string()
+                },
+                suggested_target_agents: vec![rule.agent_key.to_string()],
+                detected_agent_hint: Some(rule.agent_key.to_string()),
             });
         }
     }
@@ -117,6 +124,7 @@ struct GeneratedRule {
     agent_key: &'static str,
     scan_root: &'static str,
     variant_root: &'static str,
+    alias_supported: bool,
 }
 
 const GENERATED_RULES: &[GeneratedRule] = &[
@@ -124,61 +132,85 @@ const GENERATED_RULES: &[GeneratedRule] = &[
         agent_key: "codex",
         scan_root: "dist/agents",
         variant_root: "dist/agents/.agents/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "claude_code",
         scan_root: "dist/agents",
         variant_root: "dist/agents/.claude/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "opencode",
         scan_root: "dist/agents",
         variant_root: "dist/agents/.opencode/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "codex",
         scan_root: ".agents",
         variant_root: ".agents/skills",
+        alias_supported: false,
+    },
+    GeneratedRule {
+        agent_key: "codex",
+        scan_root: "dist/codex",
+        variant_root: "dist/codex/.codex/skills",
+        alias_supported: true,
+    },
+    GeneratedRule {
+        agent_key: "codex",
+        scan_root: ".codex",
+        variant_root: ".codex/skills",
+        alias_supported: true,
     },
     GeneratedRule {
         agent_key: "cursor",
         scan_root: "dist/cursor",
         variant_root: "dist/cursor/.cursor/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "cursor",
         scan_root: ".cursor",
         variant_root: ".cursor/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "claude_code",
         scan_root: ".claude",
         variant_root: ".claude/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "gemini_cli",
         scan_root: "dist/gemini",
         variant_root: "dist/gemini/.gemini/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "gemini_cli",
         scan_root: ".gemini",
         variant_root: ".gemini/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "github_copilot",
         scan_root: "dist/github",
         variant_root: "dist/github/.github/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "github_copilot",
         scan_root: ".github",
         variant_root: ".github/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "kilo_code",
         scan_root: "dist/kiro",
         variant_root: "dist/kiro/.kiro/skills",
+        alias_supported: false,
     },
     // Upstream repositories like impeccable publish Kiro under `.kiro`, while this app
     // currently exposes the corresponding managed target as `kilo_code`.
@@ -186,10 +218,12 @@ const GENERATED_RULES: &[GeneratedRule] = &[
         agent_key: "kilo_code",
         scan_root: ".kiro",
         variant_root: ".kiro/skills",
+        alias_supported: false,
     },
     GeneratedRule {
         agent_key: "opencode",
         scan_root: ".opencode",
         variant_root: ".opencode/skills",
+        alias_supported: false,
     },
 ];

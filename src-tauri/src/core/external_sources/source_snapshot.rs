@@ -1,7 +1,9 @@
 use std::fs;
 use std::path::Path;
 
-use crate::core::external_sources::git_tree::read_text_file_at_ref;
+use crate::core::external_sources::git_tree::{
+    list_direct_child_directories_at_ref, list_direct_child_files_at_ref, read_text_file_at_ref,
+};
 use crate::core::external_sources::models::{
     ExternalSourceRecord, ExternalSourceWarning, ImportedExternalSkillRecord,
     ManagedSkillMirrorManifest,
@@ -31,17 +33,33 @@ pub(super) fn load_variants_for_source(
                         .variants
                         .into_iter()
                         .map(|variant| {
+                            let variant_path = variant.variant_path;
+                            let source_of_truth_path = variant.source_of_truth_path;
+                            let metadata_path = variant.metadata_path;
                             let metadata = load_variant_metadata(
                                 &repo_dir,
                                 git_ref.as_deref(),
-                                variant.source_of_truth_path.as_deref(),
-                                variant.metadata_path.as_deref(),
+                                source_of_truth_path.as_deref(),
+                                metadata_path.as_deref(),
                             );
                             ExternalVariantSnapshot {
                                 agent_key: variant.agent_key,
-                                variant_path: variant.variant_path,
-                                source_of_truth_path: variant.source_of_truth_path,
-                                metadata_path: variant.metadata_path,
+                                variant_path: variant_path.clone(),
+                                source_of_truth_path,
+                                metadata_path,
+                                child_directories: load_variant_child_directories(
+                                    &repo_dir,
+                                    git_ref.as_deref(),
+                                    &variant_path,
+                                ),
+                                child_files: load_variant_child_files(
+                                    &repo_dir,
+                                    git_ref.as_deref(),
+                                    &variant_path,
+                                ),
+                                detection_class: variant.detection_class,
+                                suggested_target_agents: variant.suggested_target_agents,
+                                detected_agent_hint: variant.detected_agent_hint,
                                 name: metadata.name,
                                 description: metadata.description,
                             }
@@ -92,6 +110,72 @@ fn load_variant_metadata(
     }
 
     parse_skill_metadata(&repo_dir.join(skill_md_path)).unwrap_or_default()
+}
+
+fn load_variant_child_directories(
+    repo_dir: &Path,
+    git_ref: Option<&str>,
+    variant_path: &str,
+) -> Vec<String> {
+    if let Some(git_ref) = git_ref {
+        if let Ok(directories) =
+            list_direct_child_directories_at_ref(repo_dir, git_ref, variant_path)
+        {
+            return directories;
+        }
+    }
+
+    let directory_path = if variant_path == "." {
+        repo_dir.to_path_buf()
+    } else {
+        repo_dir.join(variant_path)
+    };
+    let Ok(entries) = fs::read_dir(directory_path) else {
+        return Vec::new();
+    };
+
+    let mut directories = entries
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| {
+            entry
+                .file_type()
+                .ok()
+                .filter(|file_type| file_type.is_dir())
+                .map(|_| entry.file_name().to_string_lossy().to_string())
+        })
+        .collect::<Vec<_>>();
+    directories.sort();
+    directories
+}
+
+fn load_variant_child_files(repo_dir: &Path, git_ref: Option<&str>, variant_path: &str) -> Vec<String> {
+    if let Some(git_ref) = git_ref {
+        if let Ok(files) = list_direct_child_files_at_ref(repo_dir, git_ref, variant_path) {
+            return files;
+        }
+    }
+
+    let directory_path = if variant_path == "." {
+        repo_dir.to_path_buf()
+    } else {
+        repo_dir.join(variant_path)
+    };
+    let Ok(entries) = fs::read_dir(directory_path) else {
+        return Vec::new();
+    };
+
+    let mut files = entries
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| {
+            entry
+                .file_type()
+                .ok()
+                .filter(|file_type| file_type.is_file())
+                .map(|_| entry.file_name().to_string_lossy().to_string())
+        })
+        .collect::<Vec<_>>();
+    files.sort();
+    files
 }
 
 pub(super) fn runtime_integrity_warning(

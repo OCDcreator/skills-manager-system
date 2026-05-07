@@ -65,6 +65,21 @@ test("ExternalSourceCard defaults to a collapsed summary with clickable repo acc
   assert.match(source, /openUrl\(record\.repoUrl\)/);
   assert.match(source, /t\("sources\.summary\.descriptionFallback"/);
   assert.match(source, /t\("sources\.tags\./);
+  assert.match(source, /t\("sources\.variants\.targetLabel"\)/);
+  assert.match(source, /t\("sources\.variants\.selectTarget"\)/);
+  assert.match(source, /t\("sources\.variants\.importAs"/);
+  assert.match(source, /t\("sources\.variants\.childDirectories"\)/);
+  assert.match(source, /t\("sources\.variants\.childFiles"\)/);
+  assert.match(source, /variant\.childFiles\.length/);
+  assert.match(source, /variant\.childFiles\.slice\(0, 5\)/);
+  assert.match(source, /variant\.childDirectories\.length/);
+  assert.match(source, /variant\.childDirectories\.slice\(0, 5\)/);
+  assert.match(source, /variant\.childDirectories\.length > 5/);
+  assert.match(source, /skill-markdown-scroll max-h-\[32rem\] overflow-y-auto/);
+  assert.match(source, /EXTERNAL_IMPORT_TARGETS\.map/);
+  assert.match(source, /variant\.suggestedTargetAgents\[0\]/);
+  assert.match(source, /variant\.detectedAgentHint/);
+  assert.match(source, /t\(`sources\.variants\.detection\.\$\{variant\.detectionClass\}`\)/);
   assert.match(source, /target="_blank"/);
 });
 
@@ -97,6 +112,14 @@ test("Sources surface strings are backed by real i18n keys", () => {
     "sources.title",
     "sources.form.submitFailed",
     "sources.variants.title",
+    "sources.variants.targetLabel",
+    "sources.variants.selectTarget",
+    "sources.variants.targetRequired",
+    "sources.variants.importAs",
+    "sources.variants.childDirectories",
+    "sources.variants.childFiles",
+    "sources.variants.none",
+    "sources.variants.rootOnly",
     "sources.imports.update",
     "sources.meta.unknown",
     "sources.meta.subpath",
@@ -107,6 +130,9 @@ test("Sources surface strings are backed by real i18n keys", () => {
     "sources.actions.expand",
     "sources.actions.collapse",
     "sources.actions.openRepo",
+    "sources.variants.detection.exact_supported",
+    "sources.variants.detection.alias_supported",
+    "sources.variants.detection.generic_discovered",
     "sources.summary.descriptionFallback",
     "sources.summary.supportedVariants",
     "sources.summary.noSupportedVariants",
@@ -123,11 +149,15 @@ test("Sources surface strings are backed by real i18n keys", () => {
   assert.match(cardSource, /t\("sources\.variants\.title"\)/);
   assert.match(cardSource, /t\("sources\.actions\.openRepo"\)/);
   assert.match(cardSource, /primaryVariant\?\.description/);
+  assert.match(cardSource, /t\("sources\.variants\.hint"/);
+  assert.match(cardSource, /t\("sources\.variants\.childDirectories"\)/);
+  assert.match(cardSource, /t\("sources\.variants\.childFiles"\)/);
   assert.match(cardSource, /shortCommit\(record\.lastFetchedCommit, unknownLabel\)/);
   assert.match(cardSource, /record\.branch \?\? record\.defaultBranch/);
   assert.match(cardSource, /record\.subpath \?\? t\("sources\.meta\.rootSubpath"\)/);
   assert.match(cardSource, /t\("sources\.warnings\.count", \{ count: record\.warnings\.length \}\)/);
   assert.match(importListSource, /t\("sources\.imports\.update"\)/);
+  assert.match(importListSource, /skill-markdown-scroll max-h-\[32rem\] overflow-y-auto/);
   assert.match(listSource, /t\("sources\.emptyTitle"\)/);
   assert.doesNotMatch(helperSource, /No warnings/);
   assert.doesNotMatch(helperSource, /`\$\{warnings\.length\} warnings`/);
@@ -177,6 +207,8 @@ test("external source helpers execute busy-state behavior at runtime", async () 
 
   assert.equal(module.shortCommit("abcdef1234567890"), "abcdef12");
   assert.equal(module.shortCommit(null, "unknown"), "unknown");
+  assert.equal(module.agentLabel("codex"), "Codex");
+  assert.ok(module.EXTERNAL_IMPORT_TARGETS.includes("codex"));
   assert.equal(
     module.warningSummary(
       [{ code: "one", severity: "warning", message: "Only warning" }],

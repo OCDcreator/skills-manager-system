@@ -5,7 +5,7 @@
 
 ## Overview
 
-Owns the generated agent bundle rule table and warning scan used by external-source detection.
+Owns the supported generated-bundle rule table and warning scan used by external-source detection.
 
 ## Public Surface
 
@@ -18,9 +18,11 @@ Owns the generated agent bundle rule table and warning scan used by external-sou
 
 ## Core Logic
 
-The module keeps generated-bundle detection separate from generic repository fallback detection. It scans the configured source subpath, if present, then applies the same supported layout table for `.agents`, `.claude`, `.opencode`, `.cursor`, `.gemini`, `.github`, and `.kiro` skill roots. Supported variants are direct child skill directories with `SKILL.md`, and source-of-truth metadata is linked from the matching `source/skills/<name>` directory when present.
+The module keeps supported-layout detection separate from generic repository fallback detection. It scans the configured source subpath, if present, then applies the same supported layout table for `.agents`, `.claude`, `.opencode`, `.cursor`, `.gemini`, `.github`, `.kiro`, and `.codex` skill roots. The `.codex` rules are treated as alias-compatible support for the existing `codex` managed target rather than as a new app-catalog agent key.
 
-The warning path scans broader generated agent roots and reports `unsupported_agent_variant` for nested or unknown generated layouts. This keeps the MVP strict: unsupported generated agents are visible as warnings instead of being imported under guessed agent keys.
+Supported variants are direct child skill directories with `SKILL.md`, and source-of-truth metadata is linked from the matching `source/skills/<name>` directory when present. Each emitted variant also marks whether it came from an exact supported root or an alias-supported root, and exposes the suggested managed target agent so the UI can prefill a safe import choice without hardcoding more path rules in TypeScript.
+
+The warning path scans broader generated agent roots and reports `unsupported_agent_variant` for nested or unknown generated layouts. This keeps the managed-mirror flow strict: unsupported generated agents are visible as warnings, while the more permissive manual fallback lives in `generic_skill_detection.rs`.
 
 ## Interactions
 

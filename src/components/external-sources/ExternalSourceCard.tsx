@@ -2,8 +2,16 @@ import { useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { externalSourceName, shortCommit, sourceAgentLabels, statusClasses, warningSummary } from "../../lib/external-sources";
-import type { ExternalSourceSnapshotItem } from "../../lib/tauri";
+import {
+  agentLabel,
+  EXTERNAL_IMPORT_TARGETS,
+  externalSourceName,
+  shortCommit,
+  sourceAgentLabels,
+  statusClasses,
+  warningSummary,
+} from "../../lib/external-sources";
+import type { AgentKey, ExternalSourceSnapshotItem } from "../../lib/tauri";
 import { ExternalImportList } from "./ExternalImportList";
 
 interface ExternalSourceCardProps {
@@ -31,9 +39,9 @@ export function ExternalSourceCard({
 }: ExternalSourceCardProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedTargets, setSelectedTargets] = useState<Record<string, AgentKey | "">>({});
   const { record, variants, imports } = source;
   const isBusy = updatingExternalSourceId === record.id;
-  const importedKeys = new Set(imports.map((item) => `${item.agentKey}:${item.upstreamVariantPath}`));
   const unknownLabel = t("sources.meta.unknown");
   const agentLabels = sourceAgentLabels(variants);
   const primaryVariant = variants.find((variant) => variant.description) ?? variants[0] ?? null;
@@ -184,10 +192,22 @@ export function ExternalSourceCard({
             ) : null}
 
             {variants.length ? (
-              <div className="space-y-3">
+              <div className="skill-markdown-scroll max-h-[32rem] overflow-y-auto space-y-3 pr-1">
                 {variants.map((variant) => {
                   const variantKey = `${variant.agentKey}:${variant.variantPath}`;
-                  const isImported = importedKeys.has(variantKey);
+                  const defaultTarget =
+                    selectedTargets[variantKey]
+                    ?? variant.suggestedTargetAgents[0]
+                    ?? variant.detectedAgentHint
+                    ?? "";
+                  const isImported = defaultTarget
+                    ? imports.some(
+                        (item) =>
+                          item.agentKey === defaultTarget
+                          && item.upstreamVariantPath === variant.variantPath,
+                      )
+                    : false;
+                  const canImport = Boolean(defaultTarget) && !isImported && !isBusy && Boolean(repoPath);
                   return (
                     <div
                       key={variantKey}
@@ -196,8 +216,15 @@ export function ExternalSourceCard({
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="rounded-full border border-slate-700 px-2 py-1 text-xs text-slate-300">
-                            {variant.agentKey}
+                            {t(`sources.variants.detection.${variant.detectionClass}`)}
                           </span>
+                          {variant.detectedAgentHint ? (
+                            <span className="rounded-full border border-sky-800/80 bg-sky-950/40 px-2 py-1 text-xs text-sky-200">
+                              {t("sources.variants.hint", {
+                                agent: agentLabel(variant.detectedAgentHint),
+                              })}
+                            </span>
+                          ) : null}
                           <span className="text-sm font-medium text-slate-100">{variant.variantPath}</span>
                         </div>
                         {variant.sourceOfTruthPath ? (
@@ -207,21 +234,111 @@ export function ExternalSourceCard({
                             })}
                           </p>
                         ) : null}
+                        <div className="space-y-2 pt-1 text-xs text-slate-500">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium text-slate-400">
+                              {t("sources.variants.childDirectories")}
+                            </span>
+                            {variant.childDirectories.length ? (
+                              <>
+                                {variant.childDirectories.slice(0, 5).map((directory) => (
+                                  <span
+                                    key={`${variantKey}:dir:${directory}`}
+                                    className="rounded-full border border-slate-800 bg-slate-900/80 px-2 py-1 text-[11px] text-slate-300"
+                                  >
+                                    {directory}
+                                  </span>
+                                ))}
+                                {variant.childDirectories.length > 5 ? (
+                                  <span className="text-[11px] text-slate-500">
+                                    +{variant.childDirectories.length - 5}
+                                  </span>
+                                ) : null}
+                              </>
+                            ) : (
+                              <span className="text-[11px] text-slate-500">
+                                {t("sources.variants.none")}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium text-slate-400">
+                              {t("sources.variants.childFiles")}
+                            </span>
+                            {variant.childFiles.length ? (
+                              <>
+                                {variant.childFiles.slice(0, 5).map((file) => (
+                                  <span
+                                    key={`${variantKey}:file:${file}`}
+                                    className="rounded-full border border-slate-800 bg-slate-950/70 px-2 py-1 text-[11px] text-slate-400"
+                                  >
+                                    {file}
+                                  </span>
+                                ))}
+                                {variant.childFiles.length > 5 ? (
+                                  <span className="text-[11px] text-slate-500">
+                                    +{variant.childFiles.length - 5}
+                                  </span>
+                                ) : null}
+                              </>
+                            ) : variant.childDirectories.length ? (
+                              <span className="text-[11px] text-slate-500">
+                                {t("sources.variants.none")}
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-slate-500">
+                                {t("sources.variants.rootOnly")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <button
-                        className="rounded-lg bg-sky-400 px-3 py-2 text-xs font-medium text-slate-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-400"
-                        disabled={isBusy || isImported || !repoPath}
-                        onClick={() => void onImportVariant(record.id, variant.agentKey, variant.variantPath)}
-                        type="button"
-                      >
-                        {!repoPath
-                          ? t("sources.variants.repoRequired")
-                          : isImported
-                            ? t("sources.variants.imported")
-                            : isBusy
-                              ? t("sources.variants.importing")
-                              : t("sources.variants.import")}
-                      </button>
+                      <div className="flex min-w-[15rem] flex-col gap-2">
+                        <label className="space-y-1">
+                          <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                            {t("sources.variants.targetLabel")}
+                          </span>
+                          <select
+                            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 outline-none transition focus:border-sky-400"
+                            onChange={(event) =>
+                              setSelectedTargets((current) => ({
+                                ...current,
+                                [variantKey]: event.target.value as AgentKey | "",
+                              }))
+                            }
+                            value={defaultTarget}
+                          >
+                            <option value="">{t("sources.variants.selectTarget")}</option>
+                            {EXTERNAL_IMPORT_TARGETS.map((target) => (
+                              <option key={`${variantKey}:${target}`} value={target}>
+                                {agentLabel(target)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <button
+                          className="rounded-lg bg-sky-400 px-3 py-2 text-xs font-medium text-slate-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-400"
+                          disabled={!canImport}
+                          onClick={() =>
+                            defaultTarget
+                              ? void onImportVariant(record.id, defaultTarget, variant.variantPath)
+                              : undefined
+                          }
+                          type="button"
+                        >
+                          {!repoPath
+                            ? t("sources.variants.repoRequired")
+                            : !defaultTarget
+                              ? t("sources.variants.targetRequired")
+                              : isImported
+                                ? t("sources.variants.imported")
+                                : isBusy
+                                  ? t("sources.variants.importing")
+                                  : t("sources.variants.importAs", {
+                                      agent: agentLabel(defaultTarget),
+                                    })}
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

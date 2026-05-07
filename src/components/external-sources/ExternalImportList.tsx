@@ -27,7 +27,7 @@ export function ExternalImportList({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="skill-markdown-scroll max-h-[32rem] overflow-y-auto space-y-3 pr-1">
       {imports.map((item) => {
         const { isBusyImport, isUpdatingImport, isRepairingImport } = resolveImportBusyState(
           item,

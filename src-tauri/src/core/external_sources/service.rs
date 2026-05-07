@@ -30,6 +30,11 @@ pub struct ExternalVariantSnapshot {
     pub variant_path: String,
     pub source_of_truth_path: Option<String>,
     pub metadata_path: Option<String>,
+    pub child_directories: Vec<String>,
+    pub child_files: Vec<String>,
+    pub detection_class: String,
+    pub suggested_target_agents: Vec<String>,
+    pub detected_agent_hint: Option<String>,
     pub name: Option<String>,
     pub description: Option<String>,
 }

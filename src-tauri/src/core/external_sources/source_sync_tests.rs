@@ -6,8 +6,11 @@ use tempfile::tempdir;
 
 use super::{fetch_source_with_runtime, upsert_source, SourceFetchRuntime, SourceUpsertInput};
 use crate::app_runtime::config_lock::acquire_config_lock;
-use crate::core::external_sources::detect::DetectionResult;
-use crate::core::external_sources::models::{ExternalSourceRecord, ExternalSourcesSnapshot};
+use crate::core::external_sources::detect::{DetectedExternalVariant, DetectionResult};
+use crate::core::external_sources::models::{
+    ExternalSourceRecord, ExternalSourcesSnapshot, ExternalSourceWarning,
+    ImportedExternalSkillRecord,
+};
 use crate::core::external_sources::ExternalSourcesStore;
 
 #[test]
@@ -144,10 +147,78 @@ fn fetch_source_passes_configured_subpath_to_detection() {
     }));
 }
 
+#[test]
+fn fetch_source_keeps_manual_target_mapping_when_generic_candidate_still_exists() {
+    let temp = tempdir().unwrap();
+    let config_dir = temp.path().join("config");
+    let store = ExternalSourcesStore::new(config_dir.clone());
+    let guard = acquire_config_lock(&config_dir).unwrap();
+    store
+        .save(
+            &guard,
+            &ExternalSourcesSnapshot {
+                schema_version: 1,
+                sources: vec![ExternalSourceRecord {
+                    id: "src_example".to_string(),
+                    repo_url: "https://github.com/example/repo".to_string(),
+                    ..ExternalSourceRecord::default()
+                }],
+                imports: vec![ImportedExternalSkillRecord {
+                    import_id: "imp_example".to_string(),
+                    external_source_id: "src_example".to_string(),
+                    agent_key: "codex".to_string(),
+                    upstream_variant_path: "packages/fallback/manual-one".to_string(),
+                    pinned_commit: "old_commit".to_string(),
+                    pinned_variant_fingerprint: Some("same-fingerprint".to_string()),
+                    skill_id:
+                        "external:managed/github/example__repo/codex/manual-one".to_string(),
+                    mirror_relative_path:
+                        "external/managed/github/example__repo/codex/manual-one".to_string(),
+                    last_checked_commit: None,
+                    imported_at: None,
+                    warnings: vec![ExternalSourceWarning {
+                        code: "variant_disappeared".to_string(),
+                        severity: "warning".to_string(),
+                        message: "stale".to_string(),
+                    }],
+                    update_available: false,
+                }],
+            },
+        )
+        .unwrap();
+    drop(guard);
+    let runtime = RecordingFetchRuntime::new(temp.path().join("repo")).with_detection(
+        DetectionResult {
+            kind: "generated_agent_bundle".to_string(),
+            variants: vec![DetectedExternalVariant {
+                agent_key: "skill_repository".to_string(),
+                variant_path: "packages/fallback/manual-one".to_string(),
+                source_of_truth_path: None,
+                metadata_path: Some("packages/fallback/manual-one/SKILL.md".to_string()),
+                detection_class: "generic_discovered".to_string(),
+                suggested_target_agents: Vec::new(),
+                detected_agent_hint: None,
+            }],
+            warnings: Vec::new(),
+        },
+        Some("same-fingerprint".to_string()),
+    );
+
+    fetch_source_with_runtime(&config_dir, "src_example", &runtime).unwrap();
+
+    let snapshot = store.load().unwrap();
+    let import = &snapshot.imports[0];
+    assert!(import.warnings.is_empty());
+    assert!(!import.update_available);
+    assert_eq!(import.last_checked_commit.as_deref(), Some("main_commit"));
+}
+
 struct RecordingFetchRuntime {
     repo_dir: PathBuf,
     head_branches: RefCell<Vec<String>>,
     detect_subpaths: RefCell<Vec<Option<String>>>,
+    detection_result: DetectionResult,
+    fingerprint: Option<String>,
 }
 
 impl RecordingFetchRuntime {
@@ -156,7 +227,23 @@ impl RecordingFetchRuntime {
             repo_dir,
             head_branches: RefCell::new(Vec::new()),
             detect_subpaths: RefCell::new(Vec::new()),
+            detection_result: DetectionResult {
+                kind: "unsupported".to_string(),
+                variants: Vec::new(),
+                warnings: Vec::new(),
+            },
+            fingerprint: None,
         }
+    }
+
+    fn with_detection(
+        mut self,
+        detection_result: DetectionResult,
+        fingerprint: Option<String>,
+    ) -> Self {
+        self.detection_result = detection_result;
+        self.fingerprint = fingerprint;
+        self
     }
 }
 
@@ -189,11 +276,7 @@ impl SourceFetchRuntime for RecordingFetchRuntime {
         self.detect_subpaths
             .borrow_mut()
             .push(subpath.map(ToOwned::to_owned));
-        Ok(DetectionResult {
-            kind: "unsupported".to_string(),
-            variants: Vec::new(),
-            warnings: Vec::new(),
-        })
+        Ok(self.detection_result.clone())
     }
 
     fn fingerprint_variant_at_ref(
@@ -202,6 +285,6 @@ impl SourceFetchRuntime for RecordingFetchRuntime {
         _git_ref: &str,
         _variant_path: &str,
     ) -> Result<Option<String>> {
-        Ok(None)
+        Ok(self.fingerprint.clone())
     }
 }

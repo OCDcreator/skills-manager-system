@@ -26,6 +26,9 @@ pub struct DetectedExternalVariant {
     pub variant_path: String,
     pub source_of_truth_path: Option<String>,
     pub metadata_path: Option<String>,
+    pub detection_class: String,
+    pub suggested_target_agents: Vec<String>,
+    pub detected_agent_hint: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -105,24 +108,29 @@ where
     Recursive: Fn(&str) -> Result<Vec<String>>,
 {
     let scan_root = scoped_path(subpath, "")?;
-    let variants = collect_supported_generated_variants(subpath, &list_direct_skill_dirs)?;
+    let supported_variants = collect_supported_generated_variants(subpath, &list_direct_skill_dirs)?;
+    let supported_paths = supported_variants
+        .iter()
+        .map(|variant| variant.variant_path.clone())
+        .collect::<BTreeSet<_>>();
     let mut warnings =
         detect_unknown_generated_agent_variants(source_id, subpath, &list_recursive_skill_dirs)?;
-    if !variants.is_empty() {
-        return Ok(DetectionResult {
-            kind: GENERATED_AGENT_BUNDLE_KIND.to_string(),
-            variants,
-            warnings,
-        });
-    }
-
-    let (variants, generic_warnings) =
-        detect_generic_skill_variants(&scan_root, has_skill_dir, list_direct_skill_dirs)?;
+    let (generic_variants, generic_warnings) = detect_generic_skill_variants(
+        &scan_root,
+        has_skill_dir,
+        list_recursive_skill_dirs,
+        &supported_paths,
+    )?;
     warnings.extend(generic_warnings);
+    let has_supported_variants = !supported_variants.is_empty();
+    let mut variants = supported_variants;
+    variants.extend(generic_variants);
 
     Ok(DetectionResult {
         kind: if variants.is_empty() {
             UNSUPPORTED_KIND.to_string()
+        } else if has_supported_variants {
+            GENERATED_AGENT_BUNDLE_KIND.to_string()
         } else {
             GENERIC_SKILL_REPOSITORY_KIND.to_string()
         },
@@ -169,7 +177,7 @@ fn collect_recursive_skill_dirs_from_worktree(repo_dir: &Path, root: &str) -> Re
 
     let mut skill_dirs = BTreeSet::new();
     for skill_file in WalkDir::new(&target_root)
-        .min_depth(2)
+        .min_depth(1)
         .into_iter()
         .filter_map(|item| item.ok())
         .filter(|item| item.file_type().is_file() && item.file_name() == "SKILL.md")
@@ -178,6 +186,9 @@ fn collect_recursive_skill_dirs_from_worktree(repo_dir: &Path, root: &str) -> Re
             .path()
             .parent()
             .with_context(|| format!("Missing parent for {}", skill_file.path().display()))?;
+        if skill_dir == repo_dir {
+            continue;
+        }
         skill_dirs.insert(canonicalize_repo_relative_path(
             path_relative_to(repo_dir, skill_dir)?
                 .to_string_lossy()
@@ -205,6 +216,12 @@ fn path_relative_to<'a>(repo_dir: &Path, child: &'a Path) -> Result<&'a Path> {
     child
         .strip_prefix(repo_dir)
         .with_context(|| format!("{} is not under {}", child.display(), repo_dir.display()))
+}
+
+pub(super) fn is_noise_skill_dir(relative_path: &str) -> bool {
+    relative_path
+        .split('/')
+        .any(|segment| matches!(segment, ".git" | "node_modules" | "target" | "coverage" | ".next" | "build"))
 }
 
 #[cfg(test)]

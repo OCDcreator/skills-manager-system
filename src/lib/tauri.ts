@@ -15,6 +15,10 @@ export type AgentKey =
   | "windsurf";
 
 export type ExternalVariantKey = AgentKey | "skill_repository";
+export type ExternalCandidateDetectionClass =
+  | "exact_supported"
+  | "alias_supported"
+  | "generic_discovered";
 
 export interface ManagedSourceInfo {
   kind: "github_import";
@@ -154,6 +158,11 @@ export interface ExternalVariantSnapshot {
   variantPath: string;
   sourceOfTruthPath: string | null;
   metadataPath: string | null;
+  childDirectories: string[];
+  childFiles: string[];
+  detectionClass: ExternalCandidateDetectionClass;
+  suggestedTargetAgents: AgentKey[];
+  detectedAgentHint: AgentKey | null;
   name: string | null;
   description: string | null;
 }
