@@ -3,8 +3,6 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
-  agentLabel,
-  EXTERNAL_IMPORT_TARGETS,
   externalSourceName,
   shortCommit,
   sourceAgentLabels,
@@ -12,7 +10,7 @@ import {
   warningSummary,
 } from "../../lib/external-sources";
 import type { AgentKey, ExternalSourceSnapshotItem } from "../../lib/tauri";
-import { ExternalImportList } from "./ExternalImportList";
+import { ExternalSourceAgentGroups } from "./ExternalSourceAgentGroups";
 
 interface ExternalSourceCardProps {
   source: ExternalSourceSnapshotItem;
@@ -162,206 +160,35 @@ export function ExternalSourceCard({
       </div>
 
       {isExpanded ? (
-        <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]" id={detailsId}>
-          <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-semibold text-slate-100">{t("sources.variants.title")}</h4>
-                <p className="text-xs text-slate-400">
-                  {variants.length
-                    ? t("sources.variants.count", { count: variants.length })
-                    : t("sources.variants.emptyHint")}
-                </p>
-              </div>
-            </div>
-
-            {record.warnings.length ? (
-              <div className="rounded-xl border border-amber-700/50 bg-amber-950/40 p-3 text-sm text-amber-100">
-                <p className="font-medium">
-                  {warningSummary(
-                    record.warnings,
-                    t("sources.warnings.count", { count: record.warnings.length }),
-                  )}
-                </p>
-                <ul className="mt-2 space-y-1 text-xs text-amber-200">
-                  {record.warnings.map((warning) => (
-                    <li key={`${record.id}-${warning.code}`}>{warning.message}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {variants.length ? (
-              <div className="skill-markdown-scroll max-h-[32rem] overflow-y-auto space-y-3 pr-1">
-                {variants.map((variant) => {
-                  const variantKey = `${variant.agentKey}:${variant.variantPath}`;
-                  const defaultTarget =
-                    selectedTargets[variantKey]
-                    ?? variant.suggestedTargetAgents[0]
-                    ?? variant.detectedAgentHint
-                    ?? "";
-                  const isImported = defaultTarget
-                    ? imports.some(
-                        (item) =>
-                          item.agentKey === defaultTarget
-                          && item.upstreamVariantPath === variant.variantPath,
-                      )
-                    : false;
-                  const canImport = Boolean(defaultTarget) && !isImported && !isBusy && Boolean(repoPath);
-                  return (
-                    <div
-                      key={variantKey}
-                      className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-950 p-4 lg:flex-row lg:items-start lg:justify-between"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full border border-slate-700 px-2 py-1 text-xs text-slate-300">
-                            {t(`sources.variants.detection.${variant.detectionClass}`)}
-                          </span>
-                          {variant.detectedAgentHint ? (
-                            <span className="rounded-full border border-sky-800/80 bg-sky-950/40 px-2 py-1 text-xs text-sky-200">
-                              {t("sources.variants.hint", {
-                                agent: agentLabel(variant.detectedAgentHint),
-                              })}
-                            </span>
-                          ) : null}
-                          <span className="text-sm font-medium text-slate-100">{variant.variantPath}</span>
-                        </div>
-                        {variant.sourceOfTruthPath ? (
-                          <p className="text-xs text-slate-500">
-                            {t("sources.variants.sourceOfTruth", {
-                              path: variant.sourceOfTruthPath,
-                            })}
-                          </p>
-                        ) : null}
-                        <div className="space-y-2 pt-1 text-xs text-slate-500">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-medium text-slate-400">
-                              {t("sources.variants.childDirectories")}
-                            </span>
-                            {variant.childDirectories.length ? (
-                              <>
-                                {variant.childDirectories.slice(0, 5).map((directory) => (
-                                  <span
-                                    key={`${variantKey}:dir:${directory}`}
-                                    className="rounded-full border border-slate-800 bg-slate-900/80 px-2 py-1 text-[11px] text-slate-300"
-                                  >
-                                    {directory}
-                                  </span>
-                                ))}
-                                {variant.childDirectories.length > 5 ? (
-                                  <span className="text-[11px] text-slate-500">
-                                    +{variant.childDirectories.length - 5}
-                                  </span>
-                                ) : null}
-                              </>
-                            ) : (
-                              <span className="text-[11px] text-slate-500">
-                                {t("sources.variants.none")}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-medium text-slate-400">
-                              {t("sources.variants.childFiles")}
-                            </span>
-                            {variant.childFiles.length ? (
-                              <>
-                                {variant.childFiles.slice(0, 5).map((file) => (
-                                  <span
-                                    key={`${variantKey}:file:${file}`}
-                                    className="rounded-full border border-slate-800 bg-slate-950/70 px-2 py-1 text-[11px] text-slate-400"
-                                  >
-                                    {file}
-                                  </span>
-                                ))}
-                                {variant.childFiles.length > 5 ? (
-                                  <span className="text-[11px] text-slate-500">
-                                    +{variant.childFiles.length - 5}
-                                  </span>
-                                ) : null}
-                              </>
-                            ) : variant.childDirectories.length ? (
-                              <span className="text-[11px] text-slate-500">
-                                {t("sources.variants.none")}
-                              </span>
-                            ) : (
-                              <span className="text-[11px] text-slate-500">
-                                {t("sources.variants.rootOnly")}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex min-w-[15rem] flex-col gap-2">
-                        <label className="space-y-1">
-                          <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                            {t("sources.variants.targetLabel")}
-                          </span>
-                          <select
-                            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 outline-none transition focus:border-sky-400"
-                            onChange={(event) =>
-                              setSelectedTargets((current) => ({
-                                ...current,
-                                [variantKey]: event.target.value as AgentKey | "",
-                              }))
-                            }
-                            value={defaultTarget}
-                          >
-                            <option value="">{t("sources.variants.selectTarget")}</option>
-                            {EXTERNAL_IMPORT_TARGETS.map((target) => (
-                              <option key={`${variantKey}:${target}`} value={target}>
-                                {agentLabel(target)}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <button
-                          className="rounded-lg bg-sky-400 px-3 py-2 text-xs font-medium text-slate-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-400"
-                          disabled={!canImport}
-                          onClick={() =>
-                            defaultTarget
-                              ? void onImportVariant(record.id, defaultTarget, variant.variantPath)
-                              : undefined
-                          }
-                          type="button"
-                        >
-                          {!repoPath
-                            ? t("sources.variants.repoRequired")
-                            : !defaultTarget
-                              ? t("sources.variants.targetRequired")
-                              : isImported
-                                ? t("sources.variants.imported")
-                                : isBusy
-                                  ? t("sources.variants.importing")
-                                  : t("sources.variants.importAs", {
-                                      agent: agentLabel(defaultTarget),
-                                    })}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-400">{t("sources.variants.noneDetected")}</p>
-            )}
-          </section>
-
-          <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-            <div>
-              <h4 className="text-sm font-semibold text-slate-100">{t("sources.imports.title")}</h4>
-              <p className="text-xs text-slate-400">
-                {t("sources.imports.description")}
+        <div className="mt-4 space-y-4" id={detailsId}>
+          {record.warnings.length ? (
+            <div className="rounded-xl border border-amber-700/50 bg-amber-950/40 p-3 text-sm text-amber-100">
+              <p className="font-medium">
+                {warningSummary(
+                  record.warnings,
+                  t("sources.warnings.count", { count: record.warnings.length }),
+                )}
               </p>
+              <ul className="mt-2 space-y-1 text-xs text-amber-200">
+                {record.warnings.map((warning) => (
+                  <li key={`${record.id}-${warning.code}`}>{warning.message}</li>
+                ))}
+              </ul>
             </div>
-            <ExternalImportList
-              imports={imports}
-              onRepairImport={onRepairImport}
-              onUpdateImport={onUpdateImport}
-              updatingImportId={updatingExternalImportId}
-            />
-          </section>
+          ) : null}
+          <ExternalSourceAgentGroups
+            imports={imports}
+            isBusy={isBusy}
+            onImportVariant={onImportVariant}
+            onRepairImport={onRepairImport}
+            onUpdateImport={onUpdateImport}
+            recordId={record.id}
+            repoPath={repoPath}
+            selectedTargets={selectedTargets}
+            setSelectedTargets={setSelectedTargets}
+            updatingExternalImportId={updatingExternalImportId}
+            variants={variants}
+          />
         </div>
       ) : null}
     </article>

@@ -89,6 +89,71 @@ export function sourceAgentLabels(variants: ExternalVariantSnapshot[]) {
   return [...labels];
 }
 
+export type ExternalVariantAgentGroupKey = AgentKey | "manual";
+
+export interface ExternalVariantAgentGroup {
+  agentKey: ExternalVariantAgentGroupKey;
+  variants: ExternalVariantSnapshot[];
+  imports: ImportedExternalSkillRecord[];
+}
+
+function isKnownImportTarget(agentKey: string): agentKey is AgentKey {
+  return EXTERNAL_IMPORT_TARGETS.includes(agentKey as AgentKey);
+}
+
+function variantTargetAgents(variant: ExternalVariantSnapshot): ExternalVariantAgentGroupKey[] {
+  if (variant.suggestedTargetAgents.length) {
+    return variant.suggestedTargetAgents;
+  }
+  if (variant.detectedAgentHint) {
+    return [variant.detectedAgentHint];
+  }
+  if (isKnownImportTarget(variant.agentKey)) {
+    return [variant.agentKey];
+  }
+  return ["manual"];
+}
+
+export function groupExternalVariantsByAgent(
+  variants: ExternalVariantSnapshot[],
+  imports: ImportedExternalSkillRecord[],
+): ExternalVariantAgentGroup[] {
+  const groups = new Map<ExternalVariantAgentGroupKey, ExternalVariantAgentGroup>();
+
+  function ensureGroup(agentKey: ExternalVariantAgentGroupKey) {
+    const existing = groups.get(agentKey);
+    if (existing) return existing;
+    const group = { agentKey, variants: [], imports: [] };
+    groups.set(agentKey, group);
+    return group;
+  }
+
+  for (const variant of variants) {
+    for (const agentKey of variantTargetAgents(variant)) {
+      ensureGroup(agentKey).variants.push(variant);
+    }
+  }
+
+  for (const item of imports) {
+    const agentKey = isKnownImportTarget(item.agentKey) ? item.agentKey : "manual";
+    ensureGroup(agentKey).imports.push(item);
+  }
+
+  const orderedKeys: ExternalVariantAgentGroupKey[] = [
+    ...EXTERNAL_IMPORT_TARGETS.filter((agentKey) => groups.has(agentKey)),
+  ];
+  for (const key of groups.keys()) {
+    if (key !== "manual" && !orderedKeys.includes(key)) {
+      orderedKeys.push(key);
+    }
+  }
+  if (groups.has("manual")) {
+    orderedKeys.push("manual");
+  }
+
+  return orderedKeys.map((agentKey) => groups.get(agentKey)!);
+}
+
 export interface BusyImportAction {
   action: "repair" | "update";
   importId: string;

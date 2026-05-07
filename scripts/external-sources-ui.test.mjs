@@ -53,6 +53,7 @@ test("ExternalSourcesView renders the add form and list surfaces", () => {
 
 test("ExternalSourceCard defaults to a collapsed summary with clickable repo access and guidance tags", () => {
   const source = readIfExists("src/components/external-sources/ExternalSourceCard.tsx");
+  const groupsSource = readIfExists("src/components/external-sources/ExternalSourceAgentGroups.tsx");
 
   assert.match(source, /useState\(false\)/);
   assert.match(source, /primaryVariant\?\.description/);
@@ -65,21 +66,21 @@ test("ExternalSourceCard defaults to a collapsed summary with clickable repo acc
   assert.match(source, /openUrl\(record\.repoUrl\)/);
   assert.match(source, /t\("sources\.summary\.descriptionFallback"/);
   assert.match(source, /t\("sources\.tags\./);
-  assert.match(source, /t\("sources\.variants\.targetLabel"\)/);
-  assert.match(source, /t\("sources\.variants\.selectTarget"\)/);
-  assert.match(source, /t\("sources\.variants\.importAs"/);
-  assert.match(source, /t\("sources\.variants\.childDirectories"\)/);
-  assert.match(source, /t\("sources\.variants\.childFiles"\)/);
-  assert.match(source, /variant\.childFiles\.length/);
-  assert.match(source, /variant\.childFiles\.slice\(0, 5\)/);
-  assert.match(source, /variant\.childDirectories\.length/);
-  assert.match(source, /variant\.childDirectories\.slice\(0, 5\)/);
-  assert.match(source, /variant\.childDirectories\.length > 5/);
-  assert.match(source, /skill-markdown-scroll max-h-\[32rem\] overflow-y-auto/);
-  assert.match(source, /EXTERNAL_IMPORT_TARGETS\.map/);
-  assert.match(source, /variant\.suggestedTargetAgents\[0\]/);
-  assert.match(source, /variant\.detectedAgentHint/);
-  assert.match(source, /t\(`sources\.variants\.detection\.\$\{variant\.detectionClass\}`\)/);
+  assert.match(groupsSource, /t\("sources\.variants\.targetLabel"\)/);
+  assert.match(groupsSource, /t\("sources\.variants\.selectTarget"\)/);
+  assert.match(groupsSource, /t\("sources\.variants\.importAs"/);
+  assert.match(source, /ExternalSourceAgentGroups/);
+  assert.doesNotMatch(source, /xl:grid-cols-\[1\.15fr_0\.85fr\]/);
+  assert.match(groupsSource, /t\("sources\.variants\.childDirectories"\)/);
+  assert.match(groupsSource, /t\("sources\.variants\.childFiles"\)/);
+  assert.match(groupsSource, /variant\.childFiles\.length/);
+  assert.match(groupsSource, /items\.slice\(0, 5\)/);
+  assert.match(groupsSource, /variant\.childDirectories/);
+  assert.match(groupsSource, /skill-markdown-scroll max-h-\[36rem\]/);
+  assert.match(groupsSource, /EXTERNAL_IMPORT_TARGETS\.map/);
+  assert.match(groupsSource, /groupExternalVariantsByAgent/);
+  assert.match(groupsSource, /variant\.detectedAgentHint/);
+  assert.match(groupsSource, /t\(`sources\.variants\.detection\.\$\{variant\.detectionClass\}`\)/);
   assert.match(source, /target="_blank"/);
 });
 
@@ -105,6 +106,7 @@ test("Sources surface strings are backed by real i18n keys", () => {
   const cardSource = readIfExists("src/components/external-sources/ExternalSourceCard.tsx");
   const listSource = readIfExists("src/components/external-sources/ExternalSourceList.tsx");
   const importListSource = readIfExists("src/components/external-sources/ExternalImportList.tsx");
+  const groupsSource = readIfExists("src/components/external-sources/ExternalSourceAgentGroups.tsx");
 
   const requiredKeys = [
     "nav.sources",
@@ -116,6 +118,11 @@ test("Sources surface strings are backed by real i18n keys", () => {
     "sources.variants.selectTarget",
     "sources.variants.targetRequired",
     "sources.variants.importAs",
+    "sources.variants.groupTitle",
+    "sources.variants.groupDescription",
+    "sources.variants.manualGroup",
+    "sources.variants.groupCounts",
+    "sources.variants.groupImportsTitle",
     "sources.variants.childDirectories",
     "sources.variants.childFiles",
     "sources.variants.none",
@@ -146,12 +153,14 @@ test("Sources surface strings are backed by real i18n keys", () => {
   }
 
   assert.match(cardSource, /t\("sources\.actions\.fetch"\)/);
-  assert.match(cardSource, /t\("sources\.variants\.title"\)/);
   assert.match(cardSource, /t\("sources\.actions\.openRepo"\)/);
   assert.match(cardSource, /primaryVariant\?\.description/);
-  assert.match(cardSource, /t\("sources\.variants\.hint"/);
-  assert.match(cardSource, /t\("sources\.variants\.childDirectories"\)/);
-  assert.match(cardSource, /t\("sources\.variants\.childFiles"\)/);
+  assert.match(groupsSource, /groupExternalVariantsByAgent/);
+  assert.match(groupsSource, /t\("sources\.variants\.groupTitle"\)/);
+  assert.match(groupsSource, /t\("sources\.variants\.manualGroup"\)/);
+  assert.match(groupsSource, /t\("sources\.variants\.hint"/);
+  assert.match(groupsSource, /t\("sources\.variants\.childDirectories"\)/);
+  assert.match(groupsSource, /t\("sources\.variants\.childFiles"\)/);
   assert.match(cardSource, /shortCommit\(record\.lastFetchedCommit, unknownLabel\)/);
   assert.match(cardSource, /record\.branch \?\? record\.defaultBranch/);
   assert.match(cardSource, /record\.subpath \?\? t\("sources\.meta\.rootSubpath"\)/);
@@ -221,6 +230,56 @@ test("external source helpers execute busy-state behavior at runtime", async () 
     module.resolveImportBusyState(item, "imp-1", { action: "repair", importId: "imp-1" }),
     { isBusyImport: true, isUpdatingImport: false, isRepairingImport: true },
   );
+});
+
+test("external source helpers group variants and imports by resolved target agent", async () => {
+  const module = await loadExternalSourcesModule();
+  const variants = [
+    {
+      agentKey: "skill_repository",
+      variantPath: "common",
+      suggestedTargetAgents: ["codex", "opencode"],
+      detectedAgentHint: null,
+    },
+    {
+      agentKey: "claude_code",
+      variantPath: ".claude/skills",
+      suggestedTargetAgents: [],
+      detectedAgentHint: "claude_code",
+    },
+    {
+      agentKey: "skill_repository",
+      variantPath: "manual-only",
+      suggestedTargetAgents: [],
+      detectedAgentHint: null,
+    },
+  ];
+  const imports = [
+    {
+      importId: "imp-codex",
+      agentKey: "codex",
+      upstreamVariantPath: "common",
+    },
+    {
+      importId: "imp-claude",
+      agentKey: "claude_code",
+      upstreamVariantPath: ".claude/skills",
+    },
+  ];
+
+  const groups = module.groupExternalVariantsByAgent(variants, imports);
+
+  assert.deepEqual(groups.map((group) => group.agentKey), [
+    "codex",
+    "claude_code",
+    "opencode",
+    "manual",
+  ]);
+  assert.deepEqual(groups[0].variants.map((variant) => variant.variantPath), ["common"]);
+  assert.deepEqual(groups[0].imports.map((item) => item.importId), ["imp-codex"]);
+  assert.deepEqual(groups[1].imports.map((item) => item.importId), ["imp-claude"]);
+  assert.deepEqual(groups[2].variants.map((variant) => variant.variantPath), ["common"]);
+  assert.deepEqual(groups[3].variants.map((variant) => variant.variantPath), ["manual-only"]);
 });
 
 test("refreshSkills reloads the selected document when the selected skill survives the refresh", () => {
