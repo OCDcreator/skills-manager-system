@@ -7,6 +7,7 @@ import { AgentOrderModal } from "../components/agents/AgentOrderModal";
 import { AgentSyncSummary } from "../components/agents/AgentSyncSummary";
 import { AgentTargetsSection } from "../components/agents/AgentTargetsSection";
 import { useAppContext } from "../context/AppContext";
+import { applyAgentEnabledOverrides, readAgentSideNavEnabledOnlyPreference, resolveAgentSideNavInventory, writeAgentSideNavEnabledOnlyPreference } from "../lib/agent-side-nav";
 import {
   draftFromAgent,
   draftToConfig,
@@ -63,6 +64,7 @@ export function AgentsView() {
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isSavingAgentOrder, setIsSavingAgentOrder] = useState(false);
+  const [showEnabledOnlyInSideNav, setShowEnabledOnlyInSideNav] = useState(readAgentSideNavEnabledOnlyPreference);
 
   const disabledSkillIdSet = useMemo(() => new Set(disabledSkillIds), [disabledSkillIds]);
   const availableSkillCount = useMemo(
@@ -70,6 +72,14 @@ export function AgentsView() {
     [scanResult.skills, disabledSkillIdSet],
   );
   const sceneList = useMemo(() => Object.values(sceneConfig?.scenes ?? {}), [sceneConfig]);
+  const agentInventoryForControls = useMemo(
+    () => applyAgentEnabledOverrides(agentInventory, Object.fromEntries(agentInventory.map((agent) => [agent.key, drafts[agent.key]?.enabled]))),
+    [agentInventory, drafts],
+  );
+  const floatingNavAgents = useMemo(
+    () => resolveAgentSideNavInventory(agentInventoryForControls, agentOrder, showEnabledOnlyInSideNav),
+    [agentInventoryForControls, agentOrder, showEnabledOnlyInSideNav],
+  );
 
   useEffect(() => {
     setDrafts((current) =>
@@ -106,6 +116,10 @@ export function AgentsView() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    writeAgentSideNavEnabledOnlyPreference(showEnabledOnlyInSideNav);
+  }, [showEnabledOnlyInSideNav]);
 
   const dirtyAgentKeys = useMemo(
     () =>
@@ -227,7 +241,7 @@ export function AgentsView() {
 
   return (
     <div className="space-y-6 pr-12">
-      <AgentFloatingNav agents={sortedAgentInventory} onOpenOrderModal={() => setIsOrderModalOpen(true)} />
+      <AgentFloatingNav agents={floatingNavAgents} onOpenOrderModal={() => setIsOrderModalOpen(true)} />
 
       <div id="agent-sync-overview" className="scroll-mt-8">
         <AgentSyncSummary
@@ -316,11 +330,13 @@ export function AgentsView() {
 
       {isOrderModalOpen ? (
         <AgentOrderModal
-          agents={agentInventory}
+          agents={agentInventoryForControls}
           initialOrder={agentOrder}
           isSaving={isSavingAgentOrder}
           onClose={() => setIsOrderModalOpen(false)}
           onSave={handleSaveAgentOrder}
+          onShowEnabledOnlyInSideNavChange={setShowEnabledOnlyInSideNav}
+          showEnabledOnlyInSideNav={showEnabledOnlyInSideNav}
         />
       ) : null}
     </div>

@@ -50,9 +50,27 @@ test('Agent order modal caps its height and keeps the reorder list scrollable', 
     'utf8',
   );
 
-  assert.match(source, /max-h-\[calc\(100vh-2rem\)\]/);
-  assert.match(source, /flex max-h-\[calc\(100vh-2rem\)\] w-full max-w-xl flex-col overflow-hidden/);
-  assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-5 overflow-y-auto/);
+  assert.match(source, /max-h-\[min\(44rem,calc\(100vh-2rem\)\)\]/);
+  assert.match(source, /flex max-h-\[min\(44rem,calc\(100vh-2rem\)\)\] w-full max-w-\[58rem\] flex-col overflow-hidden/);
+  assert.match(source, /skill-markdown-scroll min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-5/);
+  assert.match(source, /border-t border-slate-800\/90 bg-slate-950\/70 px-6 py-4/);
+});
+
+test('Agent order modal surfaces a lightweight dirty state in the header and footer', () => {
+  const source = fs.readFileSync(
+    path.resolve('src/components/agents/AgentOrderModal.tsx'),
+    'utf8',
+  );
+  const i18nEn = fs.readFileSync(path.resolve('src/i18n/en.json'), 'utf8');
+  const i18nZh = fs.readFileSync(path.resolve('src/i18n/zh.json'), 'utf8');
+
+  assert.match(source, /const isDirty =/);
+  assert.match(source, /agents\.orderModal\.dirtyBadge/);
+  assert.match(source, /agents\.orderModal\.dirtyHint/);
+  assert.match(source, /agents\.orderModal\.cleanHint/);
+  assert.match(source, /disabled=\{isSaving \|\| !isDirty\}/);
+  assert.match(i18nEn, /"agents\.orderModal\.dirtyBadge"/);
+  assert.match(i18nZh, /"agents\.orderModal\.dirtyHint"/);
 });
 
 test('Agent order modal uses pointer drag handles instead of native draggable rows', () => {
