@@ -28,10 +28,7 @@ pub fn canonicalize_repo_relative_path(raw: &str) -> Result<String> {
 
 fn has_drive_qualified_prefix(path: &str) -> bool {
     let bytes = path.as_bytes();
-    bytes.len() >= 3
-        && bytes[0].is_ascii_alphabetic()
-        && bytes[1] == b':'
-        && bytes[2] == b'/'
+    bytes.len() >= 3 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':' && bytes[2] == b'/'
 }
 
 pub fn resolve_source_type(relative_path: &str) -> Result<&'static str> {
@@ -68,8 +65,9 @@ mod tests {
 
     #[test]
     fn canonicalize_repo_relative_path_normalizes_separators_and_curdir() {
-        let path = canonicalize_repo_relative_path(r".\external\managed\github\owner__repo\codex\skill\.")
-            .unwrap();
+        let path =
+            canonicalize_repo_relative_path(r".\external\managed\github\owner__repo\codex\skill\.")
+                .unwrap();
 
         assert_eq!(path, "external/managed/github/owner__repo/codex/skill");
     }

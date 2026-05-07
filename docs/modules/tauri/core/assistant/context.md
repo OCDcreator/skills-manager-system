@@ -44,3 +44,7 @@ Root path → ancestor walk → file collection → content read → status + do
 ## Configuration
 
 None.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

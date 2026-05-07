@@ -4,6 +4,7 @@ use serde_json::Value;
 use tempfile::tempdir;
 
 use super::skills::run;
+use crate::app_runtime::config_lock::acquire_config_lock;
 use crate::app_runtime::{AppRuntimeContext, AppRuntimeOptions, CliStatus};
 use crate::cli::args::SkillsCommand;
 use crate::core::external_sources::models::{
@@ -12,7 +13,6 @@ use crate::core::external_sources::models::{
 };
 use crate::core::external_sources::store::ExternalSourcesStore;
 use crate::core::skills::state::SkillStateStore;
-use crate::app_runtime::config_lock::acquire_config_lock;
 
 #[test]
 fn skills_list_joins_scan_and_state() {
@@ -187,8 +187,10 @@ fn skills_list_enriches_managed_external_mirrors() {
     let skills = data.get("skills").and_then(Value::as_array).unwrap();
     let managed = skills
         .iter()
-        .find(|item| item.get("id").and_then(Value::as_str)
-            == Some("external:managed/github/demo__repo/codex/impeccable"))
+        .find(|item| {
+            item.get("id").and_then(Value::as_str)
+                == Some("external:managed/github/demo__repo/codex/impeccable")
+        })
         .unwrap();
 
     assert_eq!(result.response.status, CliStatus::Success);

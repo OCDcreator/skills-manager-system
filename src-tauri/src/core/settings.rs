@@ -67,8 +67,8 @@ impl SettingsStore {
         assistant_working_directory: Option<&Path>,
     ) -> Result<AppSettings> {
         let mut settings = self.load()?;
-        settings.assistant_working_directory = assistant_working_directory
-            .map(portable_path_string);
+        settings.assistant_working_directory =
+            assistant_working_directory.map(portable_path_string);
         self.save(&settings)
     }
 
@@ -222,9 +222,7 @@ mod tests {
 
         assert_eq!(
             store.load().unwrap().assistant_working_directory.as_deref(),
-            Some(
-                "C:/Users/test/AppData/Roaming/com.ocdcreator.skills-manager-system.dev"
-            )
+            Some("C:/Users/test/AppData/Roaming/com.ocdcreator.skills-manager-system.dev")
         );
     }
 
@@ -254,7 +252,9 @@ mod tests {
         store
             .save_agent_order(&["codex".to_string(), "cursor".to_string()])
             .unwrap();
-        store.save_repo_path(Some(Path::new("C:/tmp/my-skills"))).unwrap();
+        store
+            .save_repo_path(Some(Path::new("C:/tmp/my-skills")))
+            .unwrap();
 
         assert_eq!(
             store.load().unwrap().agent_order,

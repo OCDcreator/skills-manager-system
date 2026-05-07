@@ -21,3 +21,7 @@ Read-only inspection module for the Projects workbench.
 - resolves project-local agent target rules from the catalog
 - reports unsupported agent keys without mutating stored configuration
 - emits marker and target paths in the shared portable path-string format
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

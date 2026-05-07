@@ -35,7 +35,9 @@ pub fn find_skill_references(config_dir: &Path, skill_id: &str) -> Result<Blocki
 
     let agent_snapshot = AgentConfigStore::new(config_dir.to_path_buf()).load()?;
     for (agent_key, entry) in agent_snapshot.agents {
-        if contains(&entry.selected_skill_ids, skill_id) || contains(&entry.excluded_skill_ids, skill_id) {
+        if contains(&entry.selected_skill_ids, skill_id)
+            || contains(&entry.excluded_skill_ids, skill_id)
+        {
             references.agents.push(agent_key);
         }
     }

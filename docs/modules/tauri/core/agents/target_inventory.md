@@ -29,3 +29,7 @@ Loads managed snapshots through `target_sync`, uses `target_manifest` to hide th
 ## Interactions
 
 Keep aligned with `.skills-manager-system-manifest.json` semantics in `target_manifest.rs`, the reconciliation behavior in `target_sync.rs`, the explicit actions in `target_management.rs`, and the `AgentInventoryItem.targetSkillEntries` fields consumed by the Agent Sync UI.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

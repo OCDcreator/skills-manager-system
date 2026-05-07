@@ -23,7 +23,10 @@ pub struct AssistantAnswerResponse {
 fn sources_from_chunks(chunks: &[AssistantRetrievedChunk]) -> Vec<AssistantSource> {
     let mut sources = Vec::new();
     for chunk in chunks {
-        if sources.iter().any(|source: &AssistantSource| source.path == chunk.path) {
+        if sources
+            .iter()
+            .any(|source: &AssistantSource| source.path == chunk.path)
+        {
             continue;
         }
 
@@ -98,8 +101,8 @@ mod tests {
         let context = AssistantContextBundle {
             status: AssistantContextStatus {
                 project_root: ".".into(),
-                scope_label:
-                    "AGENTS.md + docs/**/*.md + package.json + src-tauri/Cargo.toml".into(),
+                scope_label: "AGENTS.md + docs/**/*.md + package.json + src-tauri/Cargo.toml"
+                    .into(),
                 indexed_document_count: 2,
                 indexed_chunk_count: 2,
                 last_indexed_at: "2026-04-23T00:00:00Z".into(),
@@ -108,8 +111,7 @@ mod tests {
             documents: vec![AssistantContextDocument {
                 path: "AGENTS.md".into(),
                 title: "Skills Manager System".into(),
-                content: "npm run verify\ncargo check --manifest-path src-tauri/Cargo.toml"
-                    .into(),
+                content: "npm run verify\ncargo check --manifest-path src-tauri/Cargo.toml".into(),
             }],
         };
 

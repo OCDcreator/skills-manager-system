@@ -17,3 +17,7 @@ This module is internal to `core::projects`. It exposes helpers to `sync.rs` for
 ## Interactions
 
 `sync.rs` owns loading and saving the ledger. This module only compares the current resolved project layer against ledger entries and returns DTOs for project config responses.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

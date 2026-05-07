@@ -26,3 +26,7 @@ The result also carries stale-reference diagnostics. Missing scene IDs are repor
 ## Interactions
 
 Used by agent and project sync modules so high-level apply orchestration stays focused on ledger and target reconciliation rather than selection rules. Agent sync still consumes the wrapper; project sync consumes the structured global result plus the layered project resolver.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

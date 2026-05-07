@@ -22,3 +22,7 @@ This helper layer converts normalized GitHub repo URLs into stable repo slugs, s
 ## Interactions
 
 Used by `imports.rs`. Keep its slug and path rules aligned with `skills::identity`, `hash.rs`, and the managed mirror layout expected by scanner enrichment and manifests.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

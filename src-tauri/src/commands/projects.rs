@@ -11,8 +11,8 @@ use crate::core::projects::store::{
     ProjectAgentAssignment, ProjectConfigSnapshot, ProjectConfigStore,
 };
 use crate::core::projects::sync::{
-    apply_project_assignments as apply_project_assignments_core, ApplyProjectAssignmentsResponse,
-    attach_project_apply_statuses,
+    apply_project_assignments as apply_project_assignments_core, attach_project_apply_statuses,
+    ApplyProjectAssignmentsResponse,
 };
 use crate::core::settings::SettingsStore;
 

@@ -27,3 +27,7 @@ The module keeps import/update/remove flows safe by treating manifests as the so
 ## Interactions
 
 `imports.rs` owns workflow order; this module owns the filesystem invariants that workflow depends on. Any manifest-shape change must stay aligned with `models.rs`, `skills::identity`, and runtime integrity checks in `source_snapshot.rs`.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

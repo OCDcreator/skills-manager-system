@@ -3,9 +3,7 @@ use std::path::{Path, PathBuf};
 
 use super::git_repo::normalize_github_repo_url;
 use super::hash::sha256_hex;
-use super::models::{
-    ExternalSourceRecord, ExternalSourcesSnapshot, ImportedExternalSkillRecord,
-};
+use super::models::{ExternalSourceRecord, ExternalSourcesSnapshot, ImportedExternalSkillRecord};
 
 pub(super) fn determine_mirror_relative_path(
     repo_root: &Path,
@@ -39,8 +37,7 @@ pub(super) fn determine_mirror_relative_path(
 
     let mut suffix_len = 10usize;
     loop {
-        let candidate =
-            format!("external/managed/github/{repo_slug}/{agent_key}/{variant_key}");
+        let candidate = format!("external/managed/github/{repo_slug}/{agent_key}/{variant_key}");
         if candidate.len() > 180 {
             bail!("Managed mirror path would exceed the safe path budget");
         }
@@ -107,7 +104,8 @@ fn build_repo_slug(
     );
     let collides = snapshot.sources.iter().any(|other| {
         other.id != source.id
-            && normalize_github_repo_url(&other.repo_url).ok().as_deref() != Some(normalized_repo_url)
+            && normalize_github_repo_url(&other.repo_url).ok().as_deref()
+                != Some(normalized_repo_url)
             && format!(
                 "{}__{}",
                 sanitize_segment(

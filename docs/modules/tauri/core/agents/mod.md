@@ -48,3 +48,7 @@ None.
 ## Change Notes
 
 Keep this file small and declarative; business logic belongs in the leaf modules.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

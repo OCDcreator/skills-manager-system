@@ -279,7 +279,10 @@ mod tests {
 
         assert!(snapshot.scenes.contains_key("work"));
         assert_eq!(snapshot.scenes["work"].name, "Work");
-        assert_eq!(snapshot.scenes["work"].selected_skill_ids, Vec::<String>::new());
+        assert_eq!(
+            snapshot.scenes["work"].selected_skill_ids,
+            Vec::<String>::new()
+        );
         assert_eq!(
             snapshot.scenes["work"].skill_selection_mode,
             SceneSkillSelectionMode::OnlySelected

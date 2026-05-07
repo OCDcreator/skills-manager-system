@@ -15,3 +15,7 @@ Thin Tauri command layer for the Project Assistant terminal runtime.
 - bootstrap the terminal config workspace before saving preferences
 - delegate all session logic to `core::terminal::session::TerminalState`
 - convert backend errors into string responses that the frontend can surface
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

@@ -28,3 +28,7 @@ Persists scene toolkit definitions to `scene-config.json` in the app config dire
 ## Change Notes
 
 Keeps persistence path handling scoped to `PathBuf`; no runtime path references are required in this module.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

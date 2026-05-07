@@ -20,3 +20,7 @@ This module is internal to `core::projects`. It provides:
 ## Interactions
 
 `sync.rs` records fresh ledger entries after applying project targets. `apply_status.rs` reads the same ledger shape to compare current project-layer hashes with the last applied state.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

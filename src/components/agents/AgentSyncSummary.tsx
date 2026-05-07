@@ -5,27 +5,36 @@ interface AgentSyncSummaryProps {
   repoPath: string | null;
   enabledSkillCount: number;
   enabledAgentCount: number;
+  dirtyAgentCount: number;
   isApplying: boolean;
   isSavingMode: boolean;
+  isSavingDrafts: boolean;
   canApply: boolean;
   syncMode: AgentSyncMode;
   onApply: () => Promise<void>;
+  onDiscardChanges: () => void;
+  onSaveChanges: () => Promise<void>;
   onSyncModeChange: (syncMode: AgentSyncMode) => Promise<void>;
 }
 
 export function AgentSyncSummary(props: AgentSyncSummaryProps) {
   const {
     canApply,
+    dirtyAgentCount,
     enabledAgentCount,
     enabledSkillCount,
     isApplying,
+    isSavingDrafts,
     isSavingMode,
     onApply,
+    onDiscardChanges,
+    onSaveChanges,
     onSyncModeChange,
     repoPath,
     syncMode,
   } = props;
   const { t } = useTranslation();
+  const hasDirtyDrafts = dirtyAgentCount > 0;
   const disabledReason = !repoPath
     ? t("agents.summary.noRepo")
     : enabledAgentCount === 0
@@ -90,12 +99,46 @@ export function AgentSyncSummary(props: AgentSyncSummaryProps) {
           >
             {isApplying ? t("agents.apply.running") : t("agents.apply.button")}
           </button>
-          <p className="text-xs leading-5 text-slate-500">
-            {disabledReason ||
-              t("agents.apply.modeHint", {
-                mode: t(`agents.syncMode.${syncMode}`),
-              })}
-          </p>
+          <div
+            className={`min-h-[5.75rem] rounded-xl border px-3 py-3 ${
+              hasDirtyDrafts
+                ? "border-sky-900/60 bg-sky-950/40"
+                : "border-slate-800 bg-slate-950/70"
+            }`}
+          >
+            {hasDirtyDrafts ? (
+              <>
+                <p className="text-xs leading-5 text-sky-200">
+                  {t("agents.unsavedBanner", { count: dirtyAgentCount })}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-200 disabled:opacity-60"
+                    disabled={isApplying || isSavingMode}
+                    onClick={onDiscardChanges}
+                    type="button"
+                  >
+                    {t("agents.discardAll")}
+                  </button>
+                  <button
+                    className="rounded-lg bg-sky-400 px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-60"
+                    disabled={isApplying || isSavingMode}
+                    onClick={() => void onSaveChanges()}
+                    type="button"
+                  >
+                    {isSavingDrafts ? t("agents.card.saving") : t("agents.saveAll")}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="text-xs leading-5 text-slate-500">
+                {disabledReason ||
+                  t("agents.apply.modeHint", {
+                    mode: t(`agents.syncMode.${syncMode}`),
+                  })}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </section>

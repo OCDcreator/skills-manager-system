@@ -39,3 +39,7 @@ Response shape mirrors the future cloud-model payload: `answer`, `context_summar
 ## Configuration
 
 None.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

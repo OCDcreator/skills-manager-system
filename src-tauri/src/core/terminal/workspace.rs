@@ -116,8 +116,7 @@ First determine whether the candidate is actually a skill or a collection of ski
 "#;
 
 pub fn ensure_terminal_workspace(config_dir: &Path) -> Result<()> {
-    fs::create_dir_all(config_dir)
-        .with_context(|| format!("Failed to create {:?}", config_dir))?;
+    fs::create_dir_all(config_dir).with_context(|| format!("Failed to create {:?}", config_dir))?;
 
     write_text_if_changed(
         &config_dir.join(CONFIG_GUIDE_FILE_NAME),
@@ -228,7 +227,10 @@ mod tests {
         for (_, skills_dir_rule) in TERMINAL_AGENT_ROOTS {
             let skills_dir = temp.path().join(skills_dir_rule);
             assert!(skills_dir.is_dir());
-            assert!(skills_dir.join(CONFIG_GUIDE_SKILL_NAME).join("SKILL.md").is_file());
+            assert!(skills_dir
+                .join(CONFIG_GUIDE_SKILL_NAME)
+                .join("SKILL.md")
+                .is_file());
             assert!(skills_dir
                 .join(EXTERNAL_SOURCE_SKILL_NAME)
                 .join("SKILL.md")

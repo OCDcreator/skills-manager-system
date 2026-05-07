@@ -11,10 +11,7 @@ pub fn split_into_chunks(content: &str) -> Vec<DocumentChunk> {
 
     for line in content.lines() {
         let trimmed = line.trim();
-        if trimmed.starts_with("# ")
-            || trimmed.starts_with("## ")
-            || trimmed.starts_with("### ")
-        {
+        if trimmed.starts_with("# ") || trimmed.starts_with("## ") || trimmed.starts_with("### ") {
             if !current_lines.is_empty() {
                 let body = current_lines.join("\n");
                 if !body.trim().is_empty() {
@@ -25,12 +22,7 @@ pub fn split_into_chunks(content: &str) -> Vec<DocumentChunk> {
                 }
                 current_lines.clear();
             }
-            current_heading = Some(
-                trimmed
-                    .trim_start_matches('#')
-                    .trim()
-                    .to_string(),
-            );
+            current_heading = Some(trimmed.trim_start_matches('#').trim().to_string());
         } else {
             current_lines.push(line);
         }

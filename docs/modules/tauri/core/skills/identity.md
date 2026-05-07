@@ -23,3 +23,7 @@ The canonicalizer converts backslashes to forward slashes, strips `.` segments, 
 ## Interactions
 
 This module is the canonical skill-path boundary for scanners, document reads, managed-mirror manifests, and external-source detection. Any change here affects skill ids across the repo.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

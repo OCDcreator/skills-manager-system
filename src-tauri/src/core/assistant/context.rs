@@ -7,8 +7,7 @@ use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
 use walkdir::WalkDir;
 
-const CONTEXT_SCOPE_LABEL: &str =
-    "AGENTS.md + docs/**/*.md + package.json + src-tauri/Cargo.toml";
+const CONTEXT_SCOPE_LABEL: &str = "AGENTS.md + docs/**/*.md + package.json + src-tauri/Cargo.toml";
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -43,10 +42,7 @@ fn discover_project_root(start: &Path) -> Result<PathBuf> {
         }
     }
 
-    bail!(
-        "Could not discover project root from {}",
-        start.display()
-    )
+    bail!("Could not discover project root from {}", start.display())
 }
 
 fn collect_context_paths(root: &Path) -> Vec<PathBuf> {
@@ -70,12 +66,7 @@ fn collect_context_paths(root: &Path) -> Vec<PathBuf> {
             .filter_map(|entry| entry.ok())
         {
             let path = entry.path();
-            if path.is_file()
-                && path
-                    .extension()
-                    .and_then(|value| value.to_str())
-                    == Some("md")
-            {
+            if path.is_file() && path.extension().and_then(|value| value.to_str()) == Some("md") {
                 paths.push(path.to_path_buf());
             }
         }
@@ -172,7 +163,11 @@ mod tests {
         fs::create_dir_all(root.join("src")).unwrap();
         fs::write(root.join("AGENTS.md"), "# Agent Rules").unwrap();
         fs::write(root.join("docs/README.md"), "# Docs").unwrap();
-        fs::write(root.join("docs/modules/intro.md"), "Verification lives here").unwrap();
+        fs::write(
+            root.join("docs/modules/intro.md"),
+            "Verification lives here",
+        )
+        .unwrap();
         fs::write(root.join("package.json"), r#"{ "name": "assistant-demo" }"#).unwrap();
         fs::write(
             root.join("src-tauri/Cargo.toml"),
@@ -198,11 +193,7 @@ mod tests {
         fs::write(root.join("AGENTS.md"), "# Agent Rules").unwrap();
         fs::write(root.join("docs/keep.md"), "# Keep").unwrap();
         fs::write(root.join("docs/skip.txt"), "skip").unwrap();
-        fs::write(
-            root.join("package.json"),
-            r#"{ "name": "assistant-demo" }"#,
-        )
-        .unwrap();
+        fs::write(root.join("package.json"), r#"{ "name": "assistant-demo" }"#).unwrap();
         fs::write(
             root.join("src-tauri/Cargo.toml"),
             "[package]\nname = \"assistant-demo\"",

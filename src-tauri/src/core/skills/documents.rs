@@ -98,8 +98,11 @@ mod tests {
     #[test]
     fn read_skill_document_accepts_external_managed_paths() {
         let repo = tempdir().unwrap();
-        fs::create_dir_all(repo.path().join("external/managed/github/owner__repo/codex/skill"))
-            .unwrap();
+        fs::create_dir_all(
+            repo.path()
+                .join("external/managed/github/owner__repo/codex/skill"),
+        )
+        .unwrap();
         fs::write(
             repo.path()
                 .join("external/managed/github/owner__repo/codex/skill/SKILL.md"),
@@ -118,6 +121,9 @@ mod tests {
             document.relative_path,
             "external/managed/github/owner__repo/codex/skill"
         );
-        assert_eq!(document.id, "external:managed/github/owner__repo/codex/skill");
+        assert_eq!(
+            document.id,
+            "external:managed/github/owner__repo/codex/skill"
+        );
     }
 }

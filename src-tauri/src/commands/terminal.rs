@@ -2,12 +2,12 @@ use std::path::Path;
 
 use tauri::{Manager, State};
 
+use crate::core::settings::SettingsStore;
+use crate::core::terminal::session::TerminalState;
 use crate::core::terminal::{
     ensure_terminal_workspace, load_terminal_launcher_preferences, TerminalDrainResponse,
     TerminalLaunchInput, TerminalLauncherPreferences, TerminalSessionSnapshot,
 };
-use crate::core::terminal::session::TerminalState;
-use crate::core::settings::SettingsStore;
 
 fn app_config_dir(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     app.path()
@@ -67,10 +67,7 @@ pub fn drain_terminal_output(
 }
 
 #[tauri::command]
-pub fn write_terminal_input(
-    state: State<'_, TerminalState>,
-    input: String,
-) -> Result<(), String> {
+pub fn write_terminal_input(state: State<'_, TerminalState>, input: String) -> Result<(), String> {
     state.write_input(&input).map_err(|error| error.to_string())
 }
 

@@ -86,7 +86,10 @@ pub(super) fn load_ledger(config_dir: &Path) -> Result<ProjectSyncLedger> {
 
 pub(super) fn save_ledger(config_dir: &Path, ledger: &ProjectSyncLedger) -> Result<()> {
     fs::create_dir_all(config_dir)?;
-    fs::write(config_dir.join(PROJECT_LEDGER_FILE_NAME), serde_json::to_string_pretty(ledger)?)?;
+    fs::write(
+        config_dir.join(PROJECT_LEDGER_FILE_NAME),
+        serde_json::to_string_pretty(ledger)?,
+    )?;
     Ok(())
 }
 

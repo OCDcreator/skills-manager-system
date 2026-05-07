@@ -27,3 +27,7 @@ Every command first resolves the effective repo path from the shared runtime con
 ## Interactions
 
 Must stay aligned with `scan_repo_skills_with_external_sources`, `read_skill_document`, `SkillStateStore`, `skill_mutations.rs`, and the CLI JSON schema in `src-tauri/src/app_runtime/output.rs`.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

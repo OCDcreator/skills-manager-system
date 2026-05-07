@@ -110,10 +110,12 @@ fn build_agent_inventory_item(
 
     let (target_skill_entries, target_skill_scan_error) = effective_skills_dir
         .as_deref()
-        .map(|path| match scan_target_skill_entries(Path::new(path), definition.key) {
-            Ok(entries) => (entries, None),
-            Err(error) => (Vec::new(), Some(error.to_string())),
-        })
+        .map(
+            |path| match scan_target_skill_entries(Path::new(path), definition.key) {
+                Ok(entries) => (entries, None),
+                Err(error) => (Vec::new(), Some(error.to_string())),
+            },
+        )
         .unwrap_or_else(|| (Vec::new(), None));
 
     AgentInventoryItem {

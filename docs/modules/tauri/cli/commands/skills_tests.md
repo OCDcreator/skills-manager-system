@@ -27,3 +27,7 @@ The tests create temporary config and repository roots, verify that `skills list
 ## Interactions
 
 Must stay aligned with `SkillsCommand`, `skill_mutations.rs`, `ExternalSourcesStore`, the CLI JSON response shape, and the `SkillStateStore` repo-scoped disabled ID format.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

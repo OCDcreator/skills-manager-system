@@ -41,7 +41,8 @@ pub fn scan_target_skill_entries(
     let managed_entries = load_managed_entry_snapshots(target_dir, agent_key)?;
     let mut entries = Vec::new();
 
-    for entry in fs::read_dir(target_dir).with_context(|| format!("Failed to read {target_dir:?}"))?
+    for entry in
+        fs::read_dir(target_dir).with_context(|| format!("Failed to read {target_dir:?}"))?
     {
         let entry = entry?;
         let entry_name = entry.file_name();
@@ -57,7 +58,12 @@ pub fn scan_target_skill_entries(
         let symlink_target_path = read_symlink_target_path(&path, &entry_kind);
         let has_skill_document = path.join("SKILL.md").exists();
 
-        if !should_report_entry(&entry_name, managed.is_some(), has_skill_document, &entry_kind) {
+        if !should_report_entry(
+            &entry_name,
+            managed.is_some(),
+            has_skill_document,
+            &entry_kind,
+        ) {
             continue;
         }
 
@@ -119,10 +125,7 @@ fn read_skill_display_name(path: &Path) -> Option<String> {
     read_frontmatter_name(&raw).or_else(|| read_heading_name(&raw))
 }
 
-fn read_symlink_target_path(
-    path: &Path,
-    entry_kind: &AgentTargetSkillEntryKind,
-) -> Option<String> {
+fn read_symlink_target_path(path: &Path, entry_kind: &AgentTargetSkillEntryKind) -> Option<String> {
     if !matches!(entry_kind, AgentTargetSkillEntryKind::Symlink) {
         return None;
     }

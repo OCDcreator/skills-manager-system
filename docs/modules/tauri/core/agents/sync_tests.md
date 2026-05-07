@@ -18,3 +18,7 @@ Builds disposable repositories and target directories to verify per-agent direct
 ## Data Flow
 
 Test fixtures create repo/config/scene/target state, invoke `apply_agent_sync` or `apply_agent_sync_for_agent`, and assert filesystem results.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

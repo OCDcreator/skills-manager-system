@@ -30,3 +30,7 @@ Resolver diagnostics are surfaced through each agent apply result message. Missi
 - `settings.rs` — provides the saved copy/symlink mode
 - `agents::target_sync` — reuses `DesiredSkillEntry`, `apply_desired_entries`, and cleanup helpers
 - `commands::projects` — thin wrapper for Tauri command
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

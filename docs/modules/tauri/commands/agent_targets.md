@@ -22,3 +22,7 @@ The module validates the agent key, resolves that agent's effective target direc
 ## Interactions
 
 Must stay aligned with `src/lib/tauri.ts`, the command registration in `src-tauri/src/lib.rs`, and the target-management core module under `src-tauri/src/core/agents/`.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

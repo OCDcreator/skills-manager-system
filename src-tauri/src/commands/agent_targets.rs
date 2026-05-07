@@ -3,7 +3,9 @@ use std::path::Path;
 use tauri::Manager;
 
 use crate::core::agents::catalog::find_agent;
-use crate::core::agents::discovery::{load_agent_inventory, AgentInventorySnapshot, AgentSystemDirs};
+use crate::core::agents::discovery::{
+    load_agent_inventory, AgentInventorySnapshot, AgentSystemDirs,
+};
 use crate::core::agents::target_management::{
     delete_target_skill_entry, import_unmanaged_target_skill, take_over_unmanaged_target_skill,
     ImportTargetSkillResult,
@@ -45,9 +47,9 @@ fn resolve_agent_target_dir(app: &tauri::AppHandle, agent_key: &str) -> Result<S
         .find(|item| item.key == agent_key)
         .ok_or_else(|| format!("Unknown agent key: {agent_key}"))?;
 
-    agent.effective_skills_dir.ok_or_else(|| {
-        "No effective target directory is available for this agent".to_string()
-    })
+    agent
+        .effective_skills_dir
+        .ok_or_else(|| "No effective target directory is available for this agent".to_string())
 }
 
 #[tauri::command]

@@ -25,3 +25,7 @@ Resolves path candidates from catalog rules, handles `.config/...` dual-candidat
 ## Interactions
 
 Must stay aligned with the built-in rules in `catalog.rs`, persisted config in `config.rs`, target inventory scanning in `target_inventory.rs`, frontend DTOs in `src/lib/tauri.ts`, project-local inspection/sync, and global sync orchestration in `sync.rs`.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

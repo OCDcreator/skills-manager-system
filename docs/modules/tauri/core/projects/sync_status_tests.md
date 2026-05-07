@@ -16,3 +16,7 @@ Focused tests for project apply freshness metadata.
 ## Interactions
 
 Exercises `apply_project_assignments`, `attach_project_apply_statuses`, and `ProjectConfigStore` without expanding the broader project sync regression module.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

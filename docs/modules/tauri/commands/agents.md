@@ -19,3 +19,7 @@ Provides thin Tauri commands for agent inventory, per-agent configuration, and m
 ## Core Logic
 
 `apply_agent_sync` resolves sync mode from either the command argument or `settings.json`, validates optional single-agent scope, and then delegates orchestration to `core::agents::sync`. The command layer only translates persisted `AgentSyncMode` into `target_sync::SyncMode`.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

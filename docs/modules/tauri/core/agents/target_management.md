@@ -30,3 +30,7 @@ Validates that callers only operate on single target-directory entry names, reus
 ## Interactions
 
 Keep aligned with `target_manifest.rs` manifest semantics, `target_sync.rs` overwrite protection, the Agent Sync UI confirmations in `src/views/AgentsView.tsx`, and the import destination rules expected by `src-tauri/src/core/skills/scan.rs`.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

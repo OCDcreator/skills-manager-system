@@ -16,3 +16,7 @@ Provides the SHA-256 helper used for stable ids, path deconfliction, and variant
 ## Interactions
 
 Shared by `imports.rs` and `git_repo.rs`. Keep it tiny and deterministic; higher-level fingerprint serialization rules belong in those callers.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

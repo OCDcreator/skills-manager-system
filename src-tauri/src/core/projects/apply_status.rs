@@ -14,9 +14,7 @@ use crate::core::platform_paths::portable_path_string;
 use super::store::{
     ProjectAgentApplyStatus, ProjectAgentAssignment, ProjectApplyFreshness, ProjectAssignment,
 };
-use super::sync_ledger::{
-    ledger_key, normalize_legacy_target_for_comparison, ProjectSyncLedger,
-};
+use super::sync_ledger::{ledger_key, normalize_legacy_target_for_comparison, ProjectSyncLedger};
 
 pub(super) fn project_apply_statuses(
     project: &ProjectAssignment,
@@ -30,15 +28,24 @@ pub(super) fn project_apply_statuses(
     for agent_key in &project.agent_keys {
         statuses.insert(
             agent_key.clone(),
-            project_agent_apply_status(project, agent_key, agents, skill_context, sync_mode, ledger),
+            project_agent_apply_status(
+                project,
+                agent_key,
+                agents,
+                skill_context,
+                sync_mode,
+                ledger,
+            ),
         );
     }
 
     for agent_key in &project.unsupported_agent_keys {
-        statuses.entry(agent_key.clone()).or_insert(ProjectAgentApplyStatus {
-            apply_status: ProjectApplyFreshness::Unsupported,
-            last_applied_at: None,
-        });
+        statuses
+            .entry(agent_key.clone())
+            .or_insert(ProjectAgentApplyStatus {
+                apply_status: ProjectApplyFreshness::Unsupported,
+                last_applied_at: None,
+            });
     }
 
     statuses
@@ -80,7 +87,10 @@ fn project_agent_apply_status(
         sync_mode,
     );
 
-    match ledger.assignments.get(&ledger_key(&project.project_path, agent_key)) {
+    match ledger
+        .assignments
+        .get(&ledger_key(&project.project_path, agent_key))
+    {
         None => ProjectAgentApplyStatus {
             apply_status: ProjectApplyFreshness::NeverApplied,
             last_applied_at: None,
@@ -97,7 +107,11 @@ fn project_agent_apply_status(
         }
         Some(entry) => ProjectAgentApplyStatus {
             apply_status: ProjectApplyFreshness::Stale,
-            last_applied_at: if entry.applied_at == 0 { None } else { Some(entry.applied_at) },
+            last_applied_at: if entry.applied_at == 0 {
+                None
+            } else {
+                Some(entry.applied_at)
+            },
         },
     }
 }
@@ -130,7 +144,11 @@ pub(super) fn project_resolution_hash(
         "targetDir": portable_path_string(&Path::new(&project.project_path).join(target_rule)),
         "syncMode": sync_mode_label(sync_mode),
     });
-    stable_hash(serde_json::to_string(&payload).unwrap_or_default().as_bytes())
+    stable_hash(
+        serde_json::to_string(&payload)
+            .unwrap_or_default()
+            .as_bytes(),
+    )
 }
 
 fn unsupported_status() -> ProjectAgentApplyStatus {

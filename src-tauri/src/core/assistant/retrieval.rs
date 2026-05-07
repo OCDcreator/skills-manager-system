@@ -101,12 +101,7 @@ fn excerpt_for_match(content: &str, tokens: &BTreeSet<String>) -> String {
             return line.trim().to_string();
         }
     }
-    content
-        .lines()
-        .next()
-        .unwrap_or("")
-        .trim()
-        .to_string()
+    content.lines().next().unwrap_or("").trim().to_string()
 }
 
 pub fn retrieve_relevant_chunks(
@@ -127,11 +122,7 @@ pub fn retrieve_relevant_chunks(
 
         for chunk in &chunks {
             let body_lower = chunk.body.to_lowercase();
-            let heading_lower = chunk
-                .heading
-                .as_deref()
-                .unwrap_or("")
-                .to_lowercase();
+            let heading_lower = chunk.heading.as_deref().unwrap_or("").to_lowercase();
 
             let mut score = 0;
             for token in &tokens {
@@ -194,8 +185,7 @@ mod tests {
 
     #[test]
     fn assistant_retrieval_prefers_verify_related_chunks() {
-        let chunks =
-            retrieve_relevant_chunks("how do I verify this project", &sample_documents());
+        let chunks = retrieve_relevant_chunks("how do I verify this project", &sample_documents());
 
         assert!(!chunks.is_empty());
         assert_eq!(chunks[0].path, "AGENTS.md");
@@ -204,8 +194,7 @@ mod tests {
 
     #[test]
     fn assistant_retrieval_returns_empty_for_irrelevant_questions() {
-        let chunks =
-            retrieve_relevant_chunks("what is the weather today", &sample_documents());
+        let chunks = retrieve_relevant_chunks("what is the weather today", &sample_documents());
 
         assert!(chunks.is_empty());
     }
@@ -251,7 +240,10 @@ mod tests {
             content: "## \u{9a8c}\u{8bc1}\u{65b9}\u{5f0f}\nnpm run verify\n\u{63d0}\u{4ea4}\u{524d}\u{81f3}\u{5c11}\u{8fd0}\u{884c} npm run verify".into(),
         }];
 
-        let chunks = retrieve_relevant_chunks("\u{600e}\u{4e48}\u{9a8c}\u{8bc1}\u{9879}\u{76ee}", &documents);
+        let chunks = retrieve_relevant_chunks(
+            "\u{600e}\u{4e48}\u{9a8c}\u{8bc1}\u{9879}\u{76ee}",
+            &documents,
+        );
 
         assert!(
             !chunks.is_empty(),

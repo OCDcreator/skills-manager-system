@@ -111,7 +111,10 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(result.unsupported_agent_keys, vec!["unknown_agent".to_string()]);
+        assert_eq!(
+            result.unsupported_agent_keys,
+            vec!["unknown_agent".to_string()]
+        );
     }
 
     #[test]
@@ -126,7 +129,9 @@ mod tests {
         )
         .unwrap();
 
-        assert!(result.agents[0].target_dir.ends_with("/app/.opencode/skills"));
+        assert!(result.agents[0]
+            .target_dir
+            .ends_with("/app/.opencode/skills"));
         assert!(result.agents[1].target_dir.ends_with("/app/.cursor/skills"));
     }
 }

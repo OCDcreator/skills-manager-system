@@ -21,3 +21,7 @@ preferences from persisted settings.
 This module is intentionally separate from `session.rs`. PTY session state owns
 runtime process management, while `workspace.rs` owns the file-backed config
 workspace that the launcher should open by default.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

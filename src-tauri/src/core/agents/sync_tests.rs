@@ -1,6 +1,3 @@
-use std::fs;
-use std::path::{Path, PathBuf};
-use tempfile::tempdir;
 use crate::core::agents::config::AgentConfigStore;
 use crate::core::agents::discovery::{load_agent_inventory, AgentInventoryItem, AgentSystemDirs};
 use crate::core::agents::selection::{
@@ -11,6 +8,9 @@ use crate::core::agents::sync::{apply_agent_sync, apply_agent_sync_for_agent};
 use crate::core::agents::target_sync::SyncMode;
 use crate::core::scenes::config::SceneConfigStore;
 use crate::core::skills::state::SkillStateStore;
+use std::fs;
+use std::path::{Path, PathBuf};
+use tempfile::tempdir;
 
 fn create_skill(repo_root: &Path, relative_path: &str) -> PathBuf {
     let skill_dir = repo_root.join(relative_path);

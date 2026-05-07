@@ -36,3 +36,7 @@ Used by `retrieval.rs` during `retrieve_relevant_chunks`. Heading depth is limit
 ## Configuration
 
 None.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

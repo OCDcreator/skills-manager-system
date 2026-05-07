@@ -75,7 +75,9 @@ pub fn import_unmanaged_target_skill(
         ));
     }
     if !source_dir.is_dir() {
-        return Err(anyhow!("Only directory-based target skills can be imported"));
+        return Err(anyhow!(
+            "Only directory-based target skills can be imported"
+        ));
     }
     if !source_dir.join("SKILL.md").exists() {
         return Err(anyhow!("Target entry does not contain SKILL.md"));

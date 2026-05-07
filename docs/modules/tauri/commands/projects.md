@@ -25,3 +25,7 @@ Thin Tauri command wrappers for project assignment operations. Maps core results
 - `core::projects::store` — CRUD operations and per-agent project-layer persistence
 - `core::projects::path_inspection` — preview inspection logic
 - `core::projects::sync` — apply logic
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

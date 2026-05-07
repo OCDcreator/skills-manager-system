@@ -8,8 +8,7 @@ use crate::core::agents::discovery::{
     load_agent_inventory, AgentInventorySnapshot, AgentSystemDirs,
 };
 use crate::core::agents::sync::{
-    apply_agent_sync as apply_agent_sync_core, apply_agent_sync_for_agent,
-    ApplyAgentSyncResponse,
+    apply_agent_sync as apply_agent_sync_core, apply_agent_sync_for_agent, ApplyAgentSyncResponse,
 };
 use crate::core::agents::target_sync::SyncMode;
 use crate::core::settings::{AgentSyncMode, SettingsStore};

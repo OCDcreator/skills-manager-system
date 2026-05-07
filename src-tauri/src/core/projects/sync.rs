@@ -21,12 +21,12 @@ use super::store::{
     ProjectAgentApplyStatus, ProjectAgentAssignment, ProjectApplyFreshness, ProjectAssignment,
     ProjectConfigSnapshot, ProjectConfigStore,
 };
+#[cfg(test)]
+use super::sync_ledger::normalize_legacy_target_for_comparison;
 use super::sync_ledger::{
     cleanup_retargeted_assignments, cleanup_stale_assignments, ledger_key, load_ledger,
     save_ledger, ProjectSyncLedger, ProjectSyncLedgerEntry,
 };
-#[cfg(test)]
-use super::sync_ledger::normalize_legacy_target_for_comparison;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -281,19 +281,37 @@ fn build_message(
     } else {
         format!("Applied {} skill(s).", written_count)
     };
-    if warnings.is_empty() { message } else { format!("{message} Warnings: {}", warnings.join("; ")) }
+    if warnings.is_empty() {
+        message
+    } else {
+        format!("{message} Warnings: {}", warnings.join("; "))
+    }
 }
 
 fn format_diagnostics(diagnostics: &SkillResolutionDiagnostics) -> Vec<String> {
     let mut warnings = Vec::new();
-    push_warning(&mut warnings, "missing scenes", &diagnostics.missing_scene_ids);
-    push_warning(&mut warnings, "missing skills", &diagnostics.missing_skill_ids);
-    push_warning(&mut warnings, "globally disabled", &diagnostics.globally_disabled_references);
+    push_warning(
+        &mut warnings,
+        "missing scenes",
+        &diagnostics.missing_scene_ids,
+    );
+    push_warning(
+        &mut warnings,
+        "missing skills",
+        &diagnostics.missing_skill_ids,
+    );
+    push_warning(
+        &mut warnings,
+        "globally disabled",
+        &diagnostics.globally_disabled_references,
+    );
     warnings
 }
 
 fn push_warning(warnings: &mut Vec<String>, label: &str, ids: &[String]) {
-    if !ids.is_empty() { warnings.push(format!("{label}: {}", ids.join(", "))); }
+    if !ids.is_empty() {
+        warnings.push(format!("{label}: {}", ids.join(", ")));
+    }
 }
 
 #[cfg(test)]

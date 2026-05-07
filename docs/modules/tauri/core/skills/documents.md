@@ -21,3 +21,7 @@ The module canonicalizes the requested relative path through `identity.rs`, acce
 ## Interactions
 
 Must stay aligned with scanner id generation and the frontend `SkillDetailPanel` contract.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

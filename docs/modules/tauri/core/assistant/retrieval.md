@@ -40,3 +40,7 @@ Scoring weights, chunk splitting rules, and CJK bigram generation may need tunin
 ## Configuration
 
 `MIN_SCORE` and `MAX_RESULTS` are module-level constants.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

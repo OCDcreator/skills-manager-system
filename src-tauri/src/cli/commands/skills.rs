@@ -6,7 +6,9 @@ use std::path::{Path, PathBuf};
 use crate::app_runtime::{AppRuntimeContext, CliCommandError, CliRunResult, CliWarning};
 use crate::cli::args::SkillsCommand;
 use crate::core::skills::documents::read_skill_document;
-use crate::core::skills::scan::{scan_repo_skills_with_external_sources, ManagedSourceInfo, SkillSummary};
+use crate::core::skills::scan::{
+    scan_repo_skills_with_external_sources, ManagedSourceInfo, SkillSummary,
+};
 use crate::core::skills::state::SkillStateStore;
 
 #[derive(Debug, Serialize, PartialEq, Eq)]
@@ -98,20 +100,21 @@ fn list(context: &AppRuntimeContext) -> CliRunResult {
         Err(result) => return result,
     };
 
-    let scan_response = match scan_repo_skills_with_external_sources(&repo_path, &context.config_dir) {
-        Ok(response) => response,
-        Err(error) => {
-            return CliRunResult::error(
-                "skills list",
-                CliCommandError::filesystem(
-                    "skill_scan_failed",
-                    format!("Failed to scan skills: {error}"),
-                ),
-                context,
-                Some(repo_path.as_path()),
-            );
-        }
-    };
+    let scan_response =
+        match scan_repo_skills_with_external_sources(&repo_path, &context.config_dir) {
+            Ok(response) => response,
+            Err(error) => {
+                return CliRunResult::error(
+                    "skills list",
+                    CliCommandError::filesystem(
+                        "skill_scan_failed",
+                        format!("Failed to scan skills: {error}"),
+                    ),
+                    context,
+                    Some(repo_path.as_path()),
+                );
+            }
+        };
 
     let state = match SkillStateStore::new(context.config_dir.clone()).load_for_repo(&repo_path) {
         Ok(snapshot) => snapshot,
@@ -159,20 +162,21 @@ fn doc(context: &AppRuntimeContext, target: &str) -> CliRunResult {
         Err(result) => return result,
     };
 
-    let scan_response = match scan_repo_skills_with_external_sources(&repo_path, &context.config_dir) {
-        Ok(response) => response,
-        Err(error) => {
-            return CliRunResult::error(
-                "skills doc",
-                CliCommandError::filesystem(
-                    "skill_scan_failed",
-                    format!("Failed to scan skills while resolving '{target}': {error}"),
-                ),
-                context,
-                Some(repo_path.as_path()),
-            );
-        }
-    };
+    let scan_response =
+        match scan_repo_skills_with_external_sources(&repo_path, &context.config_dir) {
+            Ok(response) => response,
+            Err(error) => {
+                return CliRunResult::error(
+                    "skills doc",
+                    CliCommandError::filesystem(
+                        "skill_scan_failed",
+                        format!("Failed to scan skills while resolving '{target}': {error}"),
+                    ),
+                    context,
+                    Some(repo_path.as_path()),
+                );
+            }
+        };
     let managed_source = scan_response
         .skills
         .iter()
@@ -183,11 +187,11 @@ fn doc(context: &AppRuntimeContext, target: &str) -> CliRunResult {
         Ok(mut document) => {
             document.managed_source = managed_source;
             CliRunResult::success(
-            "skills doc",
-            json!({ "document": document }),
-            context,
-            Some(repo_path.as_path()),
-        )
+                "skills doc",
+                json!({ "document": document }),
+                context,
+                Some(repo_path.as_path()),
+            )
         }
         Err(error) => CliRunResult::error(
             "skills doc",
@@ -225,17 +229,18 @@ fn resolve_document_target(
         return Ok(target.to_string());
     }
 
-    let scan_response = scan_repo_skills_with_external_sources(repo_path, config_dir).map_err(|error| {
-        CliRunResult::bootstrap_error(
-            "skills doc",
-            CliCommandError::filesystem(
-                "skill_scan_failed",
-                format!("Failed to scan skills while resolving '{target}': {error}"),
-            ),
-            None,
-            Some(repo_path),
-        )
-    })?;
+    let scan_response =
+        scan_repo_skills_with_external_sources(repo_path, config_dir).map_err(|error| {
+            CliRunResult::bootstrap_error(
+                "skills doc",
+                CliCommandError::filesystem(
+                    "skill_scan_failed",
+                    format!("Failed to scan skills while resolving '{target}': {error}"),
+                ),
+                None,
+                Some(repo_path),
+            )
+        })?;
 
     scan_response
         .skills

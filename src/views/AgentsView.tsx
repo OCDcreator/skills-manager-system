@@ -232,40 +232,20 @@ export function AgentsView() {
       <div id="agent-sync-overview" className="scroll-mt-8">
         <AgentSyncSummary
           canApply={canApply}
+          dirtyAgentCount={dirtyAgentKeys.length}
           enabledAgentCount={enabledAgentCount}
           enabledSkillCount={availableSkillCount}
           isApplying={isApplyingAgentSync || isSavingAll}
+          isSavingDrafts={isSavingAll}
           isSavingMode={isSavingSyncMode}
           onApply={handleApplyAll}
+          onDiscardChanges={discardDrafts}
+          onSaveChanges={handleSaveAll}
           onSyncModeChange={handleSyncModeChange}
           repoPath={repoPath}
           syncMode={syncMode}
         />
       </div>
-
-      {hasDirtyDrafts ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-900/60 bg-sky-950/30 px-4 py-3 text-sm text-sky-200">
-          <span>{t("agents.unsavedBanner", { count: dirtyAgentKeys.length })}</span>
-          <div className="flex gap-2">
-            <button
-              className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-200"
-              disabled={isSavingAll}
-              onClick={discardDrafts}
-              type="button"
-            >
-              {t("agents.discardAll")}
-            </button>
-            <button
-              className="rounded-lg bg-sky-400 px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-60"
-              disabled={isSavingAll}
-              onClick={() => void handleSaveAll()}
-              type="button"
-            >
-              {isSavingAll ? t("agents.card.saving") : t("agents.saveAll")}
-            </button>
-          </div>
-        </div>
-      ) : null}
 
       {syncModeError ? (
         <div className="rounded-2xl border border-amber-900/60 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">

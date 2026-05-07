@@ -67,7 +67,10 @@ pub(super) fn validate_live_mirror_for_removal(
     import_record: &ImportedExternalSkillRecord,
 ) -> Result<ManagedSkillMirrorManifest> {
     if !target_dir.join("SKILL.md").is_file() {
-        bail!("Managed mirror is missing SKILL.md at {}", target_dir.display());
+        bail!(
+            "Managed mirror is missing SKILL.md at {}",
+            target_dir.display()
+        );
     }
 
     let manifest_path = target_dir.join(".skills-manager-source.json");
@@ -92,7 +95,10 @@ pub(super) fn validate_mirror_dir(
     manifest: &ManagedSkillMirrorManifest,
 ) -> Result<()> {
     if !target_dir.join("SKILL.md").is_file() {
-        bail!("Managed mirror is missing SKILL.md at {}", target_dir.display());
+        bail!(
+            "Managed mirror is missing SKILL.md at {}",
+            target_dir.display()
+        );
     }
     let manifest_path = target_dir.join(".skills-manager-source.json");
     let live_manifest = read_manifest(&manifest_path)?;
@@ -109,7 +115,10 @@ pub(super) fn validate_mirror_dir(
     Ok(())
 }
 
-pub(super) fn write_manifest(target_dir: &Path, manifest: &ManagedSkillMirrorManifest) -> Result<()> {
+pub(super) fn write_manifest(
+    target_dir: &Path,
+    manifest: &ManagedSkillMirrorManifest,
+) -> Result<()> {
     fs::create_dir_all(target_dir)
         .with_context(|| format!("Failed to create {}", target_dir.display()))?;
     let json = serde_json::to_string_pretty(manifest)?;
@@ -122,11 +131,9 @@ pub(super) fn upsert_import_record(
     snapshot: &mut ExternalSourcesSnapshot,
     new_record: ImportedExternalSkillRecord,
 ) {
-    if let Some(existing_record) = snapshot
-        .imports
-        .iter_mut()
-        .find(|record| record.import_id == new_record.import_id || record.skill_id == new_record.skill_id)
-    {
+    if let Some(existing_record) = snapshot.imports.iter_mut().find(|record| {
+        record.import_id == new_record.import_id || record.skill_id == new_record.skill_id
+    }) {
         *existing_record = new_record;
     } else {
         snapshot.imports.push(new_record);
@@ -136,7 +143,11 @@ pub(super) fn upsert_import_record(
     }
 }
 
-pub(super) fn create_operation_dir(repo_root: &Path, purpose: &str, import_id: &str) -> Result<PathBuf> {
+pub(super) fn create_operation_dir(
+    repo_root: &Path,
+    purpose: &str,
+    import_id: &str,
+) -> Result<PathBuf> {
     let dir = repo_root
         .join(".tmp-skills")
         .join("external-sources")
@@ -156,7 +167,10 @@ pub(super) fn create_sibling_path(target_dir: &Path, purpose: &str) -> PathBuf {
 pub(super) fn restore_previous_target(target_dir: &Path, backup_dir: Option<&Path>) -> Result<()> {
     if target_dir.exists() {
         fs::remove_dir_all(target_dir).with_context(|| {
-            format!("Failed to remove incomplete mirror {}", target_dir.display())
+            format!(
+                "Failed to remove incomplete mirror {}",
+                target_dir.display()
+            )
         })?;
     }
     if let Some(backup_dir) = backup_dir {

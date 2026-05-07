@@ -5,8 +5,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use portable_pty::{native_pty_system, Child, CommandBuilder, MasterPty, PtySize};
 
 use super::model::{
-    TerminalDrainResponse, TerminalLaunchInput, TerminalSessionSnapshot,
-    TerminalSessionStatus,
+    TerminalDrainResponse, TerminalLaunchInput, TerminalSessionSnapshot, TerminalSessionStatus,
 };
 use super::{build_launch_spec, io::spawn_output_pump};
 
@@ -130,11 +129,7 @@ impl TerminalState {
         Ok(())
     }
 
-    pub fn resize(
-        &self,
-        cols: u16,
-        rows: u16,
-    ) -> Result<Option<TerminalSessionSnapshot>> {
+    pub fn resize(&self, cols: u16, rows: u16) -> Result<Option<TerminalSessionSnapshot>> {
         let mut guard = self.inner.lock().unwrap();
         let Some(session) = guard.as_mut() else {
             return Ok(None);

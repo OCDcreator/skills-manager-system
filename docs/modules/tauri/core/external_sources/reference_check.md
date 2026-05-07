@@ -21,3 +21,7 @@ The module reads scene, agent, and project config stores, then reports any refer
 ## Interactions
 
 Used by `imports.rs` and transitively by `remove_external_source()`. This module is intentionally read-only and should remain the shared deletion-safety checker instead of duplicating reference scans in multiple domains.
+
+## Current Note
+
+The current branch change for this module is formatting-only; runtime behavior is unchanged.

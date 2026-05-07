@@ -1,6 +1,6 @@
 use super::*;
 use crate::core::projects::store::{
-    ProjectAgentAssignment, ProjectApplyFreshness, ProjectConfigStore, ProjectConfigSnapshot,
+    ProjectAgentAssignment, ProjectApplyFreshness, ProjectConfigSnapshot, ProjectConfigStore,
 };
 use std::collections::BTreeMap;
 use std::fs;
@@ -26,8 +26,7 @@ fn project_status(
     project_dir: &Path,
     agent_key: &str,
 ) -> ProjectApplyFreshness {
-    snapshot.projects[&project_dir.to_string_lossy().replace('\\', "/")].apply_statuses
-        [agent_key]
+    snapshot.projects[&project_dir.to_string_lossy().replace('\\', "/")].apply_statuses[agent_key]
         .apply_status
         .clone()
 }

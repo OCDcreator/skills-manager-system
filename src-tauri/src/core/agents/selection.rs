@@ -2,11 +2,11 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use super::discovery::AgentInventoryItem;
+use crate::core::projects::store::ProjectAgentAssignment;
 use crate::core::scenes::config::{SceneConfigStore, SceneEntry, SceneSkillSelectionMode};
 use crate::core::skills::scan::{scan_repo_skills, SkillSummary};
 use crate::core::skills::state::SkillStateStore;
-use crate::core::projects::store::ProjectAgentAssignment;
-use super::discovery::AgentInventoryItem;
 
 pub(crate) struct SkillSelectionContext {
     skills: Vec<SkillSummary>,
@@ -18,9 +18,15 @@ pub(crate) struct SkillSelectionContext {
 #[allow(dead_code)]
 pub(crate) enum SkillSourceLabel {
     GlobalDirect,
-    GlobalScene { scene_id: String, scene_name: String },
+    GlobalScene {
+        scene_id: String,
+        scene_name: String,
+    },
     ProjectDirect,
-    ProjectScene { scene_id: String, scene_name: String },
+    ProjectScene {
+        scene_id: String,
+        scene_name: String,
+    },
 }
 
 impl SkillSourceLabel {
@@ -62,14 +68,23 @@ impl SkillResolutionResult {
         self.entries
             .iter()
             .find(|entry| entry.skill.id == skill_id)
-            .map(|entry| entry.sources.iter().map(SkillSourceLabel::stable_label).collect())
+            .map(|entry| {
+                entry
+                    .sources
+                    .iter()
+                    .map(SkillSourceLabel::stable_label)
+                    .collect()
+            })
             .unwrap_or_default()
     }
 }
 
 impl SkillSelectionContext {
     pub(crate) fn available_skill_count(&self) -> usize {
-        self.skills.iter().filter(|skill| !self.globally_disabled_skill_ids.contains(&skill.id)).count()
+        self.skills
+            .iter()
+            .filter(|skill| !self.globally_disabled_skill_ids.contains(&skill.id))
+            .count()
     }
 }
 
@@ -83,7 +98,9 @@ pub(crate) fn load_skill_selection_context(
         .disabled_skill_ids
         .into_iter()
         .collect::<BTreeSet<_>>();
-    let scenes = SceneConfigStore::new(config_dir.to_path_buf()).load()?.scenes;
+    let scenes = SceneConfigStore::new(config_dir.to_path_buf())
+        .load()?
+        .scenes;
 
     Ok(SkillSelectionContext {
         skills: scan_result.skills,
@@ -286,7 +303,11 @@ fn normalize_diagnostics(diagnostics: &mut SkillResolutionDiagnostics) {
 }
 
 fn skill_lookup(context: &SkillSelectionContext) -> BTreeMap<&str, &SkillSummary> {
-    context.skills.iter().map(|skill| (skill.id.as_str(), skill)).collect()
+    context
+        .skills
+        .iter()
+        .map(|skill| (skill.id.as_str(), skill))
+        .collect()
 }
 
 fn id_set(ids: &[String]) -> BTreeSet<String> {
@@ -312,7 +333,11 @@ fn ordered_result(
     mut diagnostics: SkillResolutionDiagnostics,
 ) -> SkillResolutionResult {
     normalize_diagnostics(&mut diagnostics);
-    let entries = context.skills.iter().filter_map(|skill| entries.remove(&skill.id)).collect();
+    let entries = context
+        .skills
+        .iter()
+        .filter_map(|skill| entries.remove(&skill.id))
+        .collect();
     SkillResolutionResult {
         entries,
         diagnostics,
