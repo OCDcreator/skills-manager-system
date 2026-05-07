@@ -249,20 +249,27 @@ test("SkillDetailPanel surfaces managed source metadata and import warning state
   assert.match(source, /managedImport\?\.upstreamVariantPath\s*\?\?\s*skill\.relativePath/);
 });
 
-test("AgentsView mounts an agent-scoped external variant panel", () => {
+test("Agent sync keeps external variants inside each agent workbench block", () => {
   const panelSource = fs.readFileSync(
     path.resolve("src/components/agents/AgentExternalVariantPanel.tsx"),
     "utf8",
   );
   const viewSource = fs.readFileSync(path.resolve("src/views/AgentsView.tsx"), "utf8");
+  const targetsSource = fs.readFileSync(
+    path.resolve("src/components/agents/AgentTargetsSection.tsx"),
+    "utf8",
+  );
 
   assert.match(panelSource, /t\("externalSources\.agentPanel\.title"\)/);
   assert.match(panelSource, /onImportVariant/);
   assert.match(panelSource, /onUpdateImport/);
-  assert.match(viewSource, /AgentExternalVariantPanel/);
   assert.match(viewSource, /externalSources/);
   assert.match(viewSource, /importExternalVariant/);
   assert.match(viewSource, /updateExternalImport/);
+  assert.doesNotMatch(viewSource, /AgentExternalVariantPanel/);
+  assert.match(targetsSource, /AgentExternalVariantPanel/);
+  assert.match(targetsSource, /id=\{`agent-sync-target-\$\{agent\.key\}`\}/);
+  assert.match(targetsSource, /sources=\{externalSources\}/);
 });
 
 test("Agent external source section keeps repair busy state independent from update availability", () => {

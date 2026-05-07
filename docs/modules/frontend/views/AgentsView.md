@@ -5,7 +5,7 @@
 
 ## Overview
 
-Assembles the per-agent sync editor, explicit target management, and the new agent-scoped external-variant import/update/repair surface, while routing unsaved-draft status into the fixed summary area so draft toggles do not insert a separate top-of-page banner.
+Assembles the Agent Sync page, keeps global apply state in the summary, and routes agent-scoped configuration, target management, and external-variant import/update/repair data into the per-agent workbench section.
 
 ## Public Surface
 
@@ -15,7 +15,7 @@ Assembles the per-agent sync editor, explicit target management, and the new age
 
 ## Core Logic
 
-The view still owns sync mode, scene loading, editable drafts, save/apply flows, order persistence, and target-management action wiring. It now passes aggregate dirty-draft state plus save/discard handlers into `AgentSyncSummary` instead of conditionally inserting a standalone unsaved banner in the page flow. It continues to pass single-entry and batch target actions into `AgentTargetsSection`, while the sidecar components keep local checkbox selection state. After the external GitHub source work it also reads `externalSources` from context and renders one `AgentExternalVariantPanel` per sorted agent below the target-management section. That panel is intentionally agent-scoped: `AgentsView` passes repo-path awareness and import/update/repair callbacks, but source creation, fetch, and deletion remain on the dedicated `ExternalSourcesView`.
+The view still owns sync mode, scene loading, editable drafts, save/apply flows, order persistence, and target-management action wiring. It passes aggregate dirty-draft state plus save/discard handlers into `AgentSyncSummary` instead of conditionally inserting a standalone unsaved banner in the page flow. It also passes single-entry target actions, batch target actions, external-source snapshots, and import/update/repair callbacks into `AgentTargetsSection`, so each rendered agent block can keep configuration, target-directory state, and external variants together. Source creation, fetch, and deletion remain on the dedicated `ExternalSourcesView`.
 
 The view also owns the floating side-rail visibility preference. It persists a local `show enabled only` toggle in `localStorage`, rehydrates it on load, and derives a control-specific agent inventory that reflects unsaved draft enabled-state changes. That derived list feeds both the fixed `AgentFloatingNav` rail and the order modal's enabled/disabled badges, so the rail can hide disabled agents without waiting for a save.
 

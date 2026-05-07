@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AgentApplyResults } from "../components/agents/AgentApplyResults";
-import { AgentExternalVariantPanel } from "../components/agents/AgentExternalVariantPanel";
 import { AgentFloatingNav } from "../components/agents/AgentFloatingNav";
 import { AgentOrderModal } from "../components/agents/AgentOrderModal";
 import { AgentSyncSummary } from "../components/agents/AgentSyncSummary";
@@ -290,38 +289,27 @@ export function AgentsView() {
             deleteTargetSkill={deleteTargetSkill}
             disabledSkillIds={disabledSkillIds}
             drafts={drafts}
+            externalSources={externalSources}
             importTargetSkill={importTargetSkill}
+            isLoadingExternalSources={isLoadingExternalSources}
             isSavingAll={isSavingAll}
+            onImportVariant={importExternalVariant}
             onDraftChange={(agentKey, nextDraft) =>
               setDrafts((current) => ({ ...current, [agentKey]: nextDraft }))
             }
+            onRepairImport={repairExternalImport}
             onSaveAgent={handleSaveAgent}
+            onUpdateImport={updateExternalImport}
+            repoPath={repoPath}
             savingAgentKey={savingAgentKey}
             sceneConfig={sceneConfig}
             scenes={sceneList}
             skills={scanResult.skills}
             takeOverTargetSkill={takeOverTargetSkill}
             updatingAgentKey={updatingAgentKey}
+            updatingExternalImportId={updatingExternalImportId}
+            updatingExternalSourceId={updatingExternalSourceId}
           />
-        )}
-      </section>
-      <section className="space-y-4">
-        {isLoadingExternalSources ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-400">{t("sources.loading")}</div>
-        ) : (
-          sortedAgentInventory.map((agent) => (
-            <AgentExternalVariantPanel
-              agent={agent}
-              key={`external-${agent.key}`}
-              onImportVariant={importExternalVariant}
-              onRepairImport={repairExternalImport}
-              onUpdateImport={updateExternalImport}
-              repoPath={repoPath}
-              sources={externalSources}
-              updatingExternalImportId={updatingExternalImportId}
-              updatingExternalSourceId={updatingExternalSourceId}
-            />
-          ))
         )}
       </section>
       <div id="agent-sync-results" className="scroll-mt-8">

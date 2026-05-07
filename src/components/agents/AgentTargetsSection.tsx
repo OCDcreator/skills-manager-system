@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   draftFromAgent,
   isAgentDraftDirty,
@@ -5,7 +6,13 @@ import {
   type AgentConfigDraft,
 } from "../../lib/agent-selection";
 import type { SceneConfigSnapshot, SceneEntry } from "../../lib/scenes";
-import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
+import type {
+  AgentInventoryItem,
+  ExternalSourceSnapshotItem,
+  ExternalVariantKey,
+  SkillSummary,
+} from "../../lib/tauri";
+import { AgentExternalVariantPanel } from "./AgentExternalVariantPanel";
 import { AgentGlobalSkillList } from "./AgentGlobalSkillList";
 import { AgentTargetCard } from "./AgentTargetCard";
 
@@ -36,12 +43,14 @@ interface AgentTargetsSectionProps {
   ) => Promise<void>;
   disabledSkillIds: string[];
   drafts: Record<string, AgentConfigDraft>;
+  externalSources: ExternalSourceSnapshotItem[];
   importTargetSkill: (
     agentKey: string,
     agentDisplayName: string,
     entry: AgentInventoryItem["targetSkillEntries"][number],
     deleteSourceAfterImport: boolean,
   ) => Promise<void>;
+  isLoadingExternalSources: boolean;
   savingAgentKey: string | null;
   sceneConfig: SceneConfigSnapshot | null;
   scenes: SceneEntry[];
@@ -52,9 +61,19 @@ interface AgentTargetsSectionProps {
     entry: AgentInventoryItem["targetSkillEntries"][number],
   ) => Promise<void>;
   updatingAgentKey: string | null;
+  updatingExternalImportId: string | null;
+  updatingExternalSourceId: string | null;
   isSavingAll: boolean;
   onDraftChange: (agentKey: string, nextDraft: AgentConfigDraft) => void;
+  onImportVariant: (
+    sourceId: string,
+    agentKey: ExternalVariantKey,
+    variantPath: string,
+  ) => Promise<void>;
+  onRepairImport: (importId: string) => Promise<void>;
   onSaveAgent: (agentKey: string) => Promise<void>;
+  onUpdateImport: (importId: string) => Promise<void>;
+  repoPath: string | null;
 }
 
 export function AgentTargetsSection({
@@ -67,17 +86,27 @@ export function AgentTargetsSection({
   deleteTargetSkill,
   disabledSkillIds,
   drafts,
+  externalSources,
   importTargetSkill,
+  isLoadingExternalSources,
   savingAgentKey,
   sceneConfig,
   scenes,
   skills,
   takeOverTargetSkill,
   updatingAgentKey,
+  updatingExternalImportId,
+  updatingExternalSourceId,
   isSavingAll,
   onDraftChange,
+  onImportVariant,
+  onRepairImport,
   onSaveAgent,
+  onUpdateImport,
+  repoPath,
 }: AgentTargetsSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="grid gap-4">
       {agents.map((agent) => {
@@ -146,6 +175,24 @@ export function AgentTargetsSection({
                   />
                 </div>
               </div>
+            </div>
+            <div className="mt-4">
+              {isLoadingExternalSources ? (
+                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-400">
+                  {t("sources.loading")}
+                </div>
+              ) : (
+                <AgentExternalVariantPanel
+                  agent={agent}
+                  onImportVariant={onImportVariant}
+                  onRepairImport={onRepairImport}
+                  onUpdateImport={onUpdateImport}
+                  repoPath={repoPath}
+                  sources={externalSources}
+                  updatingExternalImportId={updatingExternalImportId}
+                  updatingExternalSourceId={updatingExternalSourceId}
+                />
+              )}
             </div>
           </div>
         );
