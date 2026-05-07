@@ -6,5 +6,8 @@
 		{
 			"path": "../my-skills"
 		}
-	]
+	],
+	"settings": {
+		"powershell.cwd": "skills-manager-system"
+	}
 }
