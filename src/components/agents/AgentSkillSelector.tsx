@@ -3,6 +3,11 @@ import { useTranslation } from "react-i18next";
 import { toggleId, type AgentConfigDraft } from "../../lib/agent-selection";
 import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import {
+  buildExternalGroupSummaries,
+  getExternalGroupKey,
+  type ExternalGroupFilter,
+} from "../../lib/scene-skill-filters";
+import {
   buildSkillPathSummaries,
   matchesSkillPathFilter,
   type SkillPathFilter,
@@ -26,9 +31,18 @@ export function AgentSkillSelector({
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [pathFilter, setPathFilter] = useState<SkillPathFilter>("all");
+  const [externalGroupFilter, setExternalGroupFilter] = useState<ExternalGroupFilter>("all");
+  const [isExternalGroupOpen, setIsExternalGroupOpen] = useState(false);
   const disabled = useMemo(() => new Set(disabledSkillIds), [disabledSkillIds]);
   const selected = useMemo(() => new Set(draft.selectedSkillIds), [draft.selectedSkillIds]);
   const pathSummaries = useMemo(() => buildSkillPathSummaries(skills), [skills]);
+  const externalGroupSummaries = useMemo(
+    () => buildExternalGroupSummaries(skills, t("agents.card.externalGroups.all")),
+    [skills, t],
+  );
+  const selectedExternalGroup =
+    externalGroupSummaries.find((summary) => summary.key === externalGroupFilter) ??
+    externalGroupSummaries[0];
   const filteredSkills = useMemo(() => {
     const lowered = search.trim().toLowerCase();
     return skills.filter((skill) => {
@@ -36,6 +50,13 @@ export function AgentSkillSelector({
         return false;
       }
       if (!matchesSkillPathFilter(skill, pathFilter)) {
+        return false;
+      }
+      if (
+        pathFilter === "external" &&
+        externalGroupFilter !== "all" &&
+        getExternalGroupKey(skill) !== externalGroupFilter
+      ) {
         return false;
       }
       if (!lowered) {
@@ -46,14 +67,22 @@ export function AgentSkillSelector({
         .toLowerCase()
         .includes(lowered);
     });
-  }, [pathFilter, search, selected, showSelectedOnly, skills]);
+  }, [externalGroupFilter, pathFilter, search, selected, showSelectedOnly, skills]);
   const scrollRef = useRememberedScrollPosition(`agents:skill-selector:${draft.key}`);
-  const pathButtonClass = (key: SkillPathFilter) =>
+  const filterPillClass = (active: boolean) =>
     `rounded-full border px-2 py-1 transition ${
-      pathFilter === key
+      active
         ? "border-sky-500/60 bg-sky-500/15 text-sky-100"
         : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
     }`;
+
+  const changePathFilter = (nextFilter: SkillPathFilter) => {
+    setPathFilter(nextFilter);
+    setIsExternalGroupOpen(nextFilter === "external");
+    if (nextFilter !== "external") {
+      setExternalGroupFilter("all");
+    }
+  };
 
   const toggleSkill = (skillId: string) => {
     const nextSelected = toggleId(draft.selectedSkillIds, skillId);
@@ -96,12 +125,12 @@ export function AgentSkillSelector({
           {t("agents.card.selectedOnly")}
         </button>
       </div>
-      <div className="flex flex-wrap gap-2 text-[11px] text-slate-400">
+      <div className="relative flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
         {pathSummaries.map((summary) => (
           <button
-            className={pathButtonClass(summary.key)}
+            className={filterPillClass(pathFilter === summary.key)}
             key={summary.key}
-            onClick={() => setPathFilter(summary.key)}
+            onClick={() => changePathFilter(summary.key)}
             type="button"
           >
             {summary.key === "all"
@@ -109,6 +138,43 @@ export function AgentSkillSelector({
               : `${summary.key} · ${summary.count}`}
           </button>
         ))}
+        {pathFilter === "external" ? (
+          <span className="relative inline-flex">
+            <button
+              className={filterPillClass(isExternalGroupOpen)}
+              onClick={() => setIsExternalGroupOpen((current) => !current)}
+              type="button"
+            >
+              {selectedExternalGroup
+                ? `${selectedExternalGroup.label} · ${selectedExternalGroup.count}`
+                : t("agents.card.externalGroups.empty")}
+            </button>
+            {isExternalGroupOpen ? (
+              <div className="absolute bottom-full left-0 z-50 mb-2 max-h-64 min-w-72 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-2xl shadow-slate-950/70">
+                <div className="skill-markdown-scroll max-h-64 overflow-y-auto p-2">
+                  {externalGroupSummaries.map((summary) => (
+                    <button
+                      className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-xs ${
+                        externalGroupFilter === summary.key
+                          ? "bg-sky-500/15 text-sky-100"
+                          : "text-slate-300 hover:bg-slate-900"
+                      }`}
+                      key={summary.key}
+                      onClick={() => {
+                        setExternalGroupFilter(summary.key);
+                        setIsExternalGroupOpen(false);
+                      }}
+                      type="button"
+                    >
+                      <span className="min-w-0 flex-1 truncate">{summary.label}</span>
+                      <span className="text-slate-500">{summary.count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </span>
+        ) : null}
       </div>
       <div
         className="skill-markdown-scroll max-h-56 space-y-1 overflow-y-auto pr-1"

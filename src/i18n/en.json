@@ -46,6 +46,8 @@
   "agents.card.selectedOnly": "Selected",
   "agents.card.searchSkills": "Search skills for this agent",
   "agents.card.allPaths": "All paths · {{count}}",
+  "agents.card.externalGroups.all": "All external",
+  "agents.card.externalGroups.empty": "No external groups",
   "agents.card.globalDisabled": "Global disable",
   "agents.card.syncCount": "{{count}} will sync",
   "agents.card.syncedCount": "{{count}} synced",

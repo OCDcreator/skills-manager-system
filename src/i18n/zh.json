@@ -46,6 +46,8 @@
   "agents.card.selectedOnly": "已选中",
   "agents.card.searchSkills": "搜索这个 Agent 的技能",
   "agents.card.allPaths": "全部路径 {{count}} 个",
+  "agents.card.externalGroups.all": "全部 external",
+  "agents.card.externalGroups.empty": "无 external 集合",
   "agents.card.globalDisabled": "全局禁用",
   "agents.card.syncCount": "将同步 {{count}} 个",
   "agents.card.syncedCount": "已同步 {{count}} 个",

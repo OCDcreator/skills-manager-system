@@ -178,6 +178,27 @@ test('Agent skill selector exposes path-based filter pills for skill directories
   assert.match(i18nZh, /"agents\.card\.allPaths"/);
 });
 
+test('Agent skill selector reuses external subgroup filtering when the external path is active', () => {
+  const selectorSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSkillSelector.tsx'),
+    'utf8',
+  );
+  const i18nEn = fs.readFileSync(path.resolve('src/i18n/en.json'), 'utf8');
+  const i18nZh = fs.readFileSync(path.resolve('src/i18n/zh.json'), 'utf8');
+
+  assert.match(selectorSource, /buildExternalGroupSummaries/);
+  assert.match(selectorSource, /externalGroupFilter/);
+  assert.match(selectorSource, /isExternalGroupOpen/);
+  assert.match(selectorSource, /pathFilter === "external"/);
+  assert.match(selectorSource, /externalGroupSummaries\.map/);
+  assert.match(selectorSource, /agents\.card\.externalGroups\.all/);
+  assert.match(selectorSource, /agents\.card\.externalGroups\.empty/);
+  assert.match(i18nEn, /"agents\.card\.externalGroups\.all"/);
+  assert.match(i18nEn, /"agents\.card\.externalGroups\.empty"/);
+  assert.match(i18nZh, /"agents\.card\.externalGroups\.all"/);
+  assert.match(i18nZh, /"agents\.card\.externalGroups\.empty"/);
+});
+
 test('Agent global skill list exposes batch target actions in selection mode', () => {
   const listSource = fs.readFileSync(
     path.resolve('src/components/agents/AgentGlobalSkillList.tsx'),
