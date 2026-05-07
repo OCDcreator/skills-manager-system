@@ -292,3 +292,68 @@ test('Agent floating nav hides its own scrollbar while remaining scrollable', ()
   assert.match(agentStyleSource, /\.agent-floating-nav-scroll::\-webkit-scrollbar\s*\{/);
   assert.match(agentStyleSource, /display:\s*none/);
 });
+
+test('Agent unsaved actions stay inside the summary card instead of inserting a top-level banner', () => {
+  const viewSource = fs.readFileSync(path.resolve('src/views/AgentsView.tsx'), 'utf8');
+  const summarySource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSyncSummary.tsx'),
+    'utf8',
+  );
+
+  assert.match(viewSource, /dirtyAgentCount=\{dirtyAgentKeys\.length\}/);
+  assert.doesNotMatch(viewSource, /t\("agents\.unsavedBanner"/);
+  assert.match(summarySource, /t\("agents\.unsavedBanner"/);
+  assert.match(summarySource, /min-h-\[/);
+  assert.match(summarySource, /onDiscardChanges/);
+  assert.match(summarySource, /onSaveChanges/);
+});
+
+test('Agent selector cards keep an independent header layout inside a capped three-panel row', () => {
+  const targetCardSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentTargetCard.tsx'),
+    'utf8',
+  );
+  const selectorSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSkillSelector.tsx'),
+    'utf8',
+  );
+  const sceneSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSceneSelector.tsx'),
+    'utf8',
+  );
+  const summarySource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentSelectionSummary.tsx'),
+    'utf8',
+  );
+  assert.match(
+    targetCardSource,
+    /className=\{`rounded-2xl border p-5 xl:flex xl:min-h-0 xl:flex-col/,
+  );
+  assert.match(
+    targetCardSource,
+    /className="mt-4 grid gap-4 xl:max-h-\[clamp\(20rem,calc\(100vh-38rem\),30rem\)\] xl:min-h-0 xl:grid-cols-3"/,
+  );
+  assert.match(selectorSource, /className="flex h-full min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950\/50 p-3"/);
+  assert.match(sceneSource, /className="flex h-full min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950\/50 p-3"/);
+  assert.match(summarySource, /className="flex h-full min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950\/50 p-3"/);
+  assert.match(summarySource, /className="flex flex-wrap items-center gap-2 text-\[11px\] text-slate-400"/);
+  assert.match(
+    selectorSource,
+    /className="skill-markdown-scroll mt-2 max-h-56 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 xl:max-h-none"/,
+  );
+  assert.match(
+    sceneSource,
+    /className="skill-markdown-scroll mt-2 max-h-40 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 xl:max-h-none"/,
+  );
+  assert.match(
+    summarySource,
+    /className="skill-markdown-scroll mt-2 max-h-64 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 xl:max-h-none"/,
+  );
+  assert.doesNotMatch(targetCardSource, /useAgentPanelHeaderHeight/);
+  assert.doesNotMatch(targetCardSource, /xl:overflow-hidden/);
+  assert.doesNotMatch(selectorSource, /headerStyle/);
+  assert.doesNotMatch(sceneSource, /headerStyle/);
+  assert.doesNotMatch(summarySource, /headerStyle/);
+  assert.doesNotMatch(summarySource, /clamp\(18rem,calc\(100vh-20rem\),40rem\)/);
+  assert.doesNotMatch(summarySource, /overflow-x-auto px-1 pb-1/);
+});

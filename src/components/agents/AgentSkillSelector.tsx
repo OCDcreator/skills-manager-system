@@ -97,87 +97,89 @@ export function AgentSkillSelector({
   };
 
   return (
-    <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-      <div className="flex items-center justify-between gap-3">
-        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          {t("agents.card.directSkills")}
-        </label>
-        <span className="text-[11px] text-slate-500">
-          {t("agents.card.selectedCount", { count: draft.selectedSkillIds.length })}
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 outline-none focus:border-sky-400"
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder={t("agents.card.searchSkills")}
-          value={search}
-        />
-        <button
-          className={`shrink-0 rounded-lg border px-3 py-2 text-xs transition ${
-            showSelectedOnly
-              ? "border-sky-500/70 bg-sky-500/15 text-sky-100"
-              : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
-          }`}
-          onClick={() => setShowSelectedOnly((current) => !current)}
-          type="button"
-        >
-          {t("agents.card.selectedOnly")}
-        </button>
-      </div>
-      <div className="relative flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-        {pathSummaries.map((summary) => (
+    <div className="flex h-full min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {t("agents.card.directSkills")}
+          </label>
+          <span className="text-[11px] text-slate-500">
+            {t("agents.card.selectedCount", { count: draft.selectedSkillIds.length })}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 outline-none focus:border-sky-400"
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={t("agents.card.searchSkills")}
+            value={search}
+          />
           <button
-            className={filterPillClass(pathFilter === summary.key)}
-            key={summary.key}
-            onClick={() => changePathFilter(summary.key)}
+            className={`shrink-0 rounded-lg border px-3 py-2 text-xs transition ${
+              showSelectedOnly
+                ? "border-sky-500/70 bg-sky-500/15 text-sky-100"
+                : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
+            }`}
+            onClick={() => setShowSelectedOnly((current) => !current)}
             type="button"
           >
-            {summary.key === "all"
-              ? t("agents.card.allPaths", { count: summary.count })
-              : `${summary.key} · ${summary.count}`}
+            {t("agents.card.selectedOnly")}
           </button>
-        ))}
-        {pathFilter === "external" ? (
-          <span className="relative inline-flex">
+        </div>
+        <div className="relative flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+          {pathSummaries.map((summary) => (
             <button
-              className={filterPillClass(isExternalGroupOpen)}
-              onClick={() => setIsExternalGroupOpen((current) => !current)}
+              className={filterPillClass(pathFilter === summary.key)}
+              key={summary.key}
+              onClick={() => changePathFilter(summary.key)}
               type="button"
             >
-              {selectedExternalGroup
-                ? `${selectedExternalGroup.label} · ${selectedExternalGroup.count}`
-                : t("agents.card.externalGroups.empty")}
+              {summary.key === "all"
+                ? t("agents.card.allPaths", { count: summary.count })
+                : `${summary.key} · ${summary.count}`}
             </button>
-            {isExternalGroupOpen ? (
-              <div className="absolute bottom-full left-0 z-50 mb-2 max-h-64 min-w-72 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-2xl shadow-slate-950/70">
-                <div className="skill-markdown-scroll max-h-64 overflow-y-auto p-2">
-                  {externalGroupSummaries.map((summary) => (
-                    <button
-                      className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-xs ${
-                        externalGroupFilter === summary.key
-                          ? "bg-sky-500/15 text-sky-100"
-                          : "text-slate-300 hover:bg-slate-900"
-                      }`}
-                      key={summary.key}
-                      onClick={() => {
-                        setExternalGroupFilter(summary.key);
-                        setIsExternalGroupOpen(false);
-                      }}
-                      type="button"
-                    >
-                      <span className="min-w-0 flex-1 truncate">{summary.label}</span>
-                      <span className="text-slate-500">{summary.count}</span>
-                    </button>
-                  ))}
+          ))}
+          {pathFilter === "external" ? (
+            <span className="relative inline-flex">
+              <button
+                className={filterPillClass(isExternalGroupOpen)}
+                onClick={() => setIsExternalGroupOpen((current) => !current)}
+                type="button"
+              >
+                {selectedExternalGroup
+                  ? `${selectedExternalGroup.label} · ${selectedExternalGroup.count}`
+                  : t("agents.card.externalGroups.empty")}
+              </button>
+              {isExternalGroupOpen ? (
+                <div className="absolute bottom-full left-0 z-50 mb-2 max-h-64 min-w-72 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-2xl shadow-slate-950/70">
+                  <div className="skill-markdown-scroll max-h-64 overflow-y-auto p-2">
+                    {externalGroupSummaries.map((summary) => (
+                      <button
+                        className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-xs ${
+                          externalGroupFilter === summary.key
+                            ? "bg-sky-500/15 text-sky-100"
+                            : "text-slate-300 hover:bg-slate-900"
+                        }`}
+                        key={summary.key}
+                        onClick={() => {
+                          setExternalGroupFilter(summary.key);
+                          setIsExternalGroupOpen(false);
+                        }}
+                        type="button"
+                      >
+                        <span className="min-w-0 flex-1 truncate">{summary.label}</span>
+                        <span className="text-slate-500">{summary.count}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : null}
-          </span>
-        ) : null}
+              ) : null}
+            </span>
+          ) : null}
+        </div>
       </div>
       <div
-        className="skill-markdown-scroll max-h-56 space-y-1 overflow-y-auto pr-1"
+        className="skill-markdown-scroll mt-2 max-h-56 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 xl:max-h-none"
         ref={scrollRef}
       >
         {filteredSkills.length === 0 ? (

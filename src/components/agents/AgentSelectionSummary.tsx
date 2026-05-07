@@ -39,9 +39,7 @@ export function AgentSelectionSummary({
       }),
     [activeFilter, preview.items],
   );
-  const selectedItems = preview.items.filter((item) =>
-    selectedPreviewSkillSet.has(item.skill.id),
-  );
+  const selectedItems = preview.items.filter((item) => selectedPreviewSkillSet.has(item.skill.id));
   const selectedDirectItems = selectedItems.filter((item) => item.isDirect);
   const hasSelectedItems = selectedItems.length > 0;
   const hasSelectedDirectItems = selectedDirectItems.length > 0;
@@ -60,6 +58,7 @@ export function AgentSelectionSummary({
         : [...current, skillId],
     );
   };
+
   const toggleFilter = (filter: PreviewFilter) => {
     setActiveFilter((current) => (current === filter ? "all" : filter));
   };
@@ -86,6 +85,7 @@ export function AgentSelectionSummary({
       selectedSkillIds: removeId(draft.selectedSkillIds, item.skill.id),
     });
   };
+
   const batchExcludeSelected = () => {
     if (!selectedItems.length) return;
 
@@ -125,7 +125,7 @@ export function AgentSelectionSummary({
   };
 
   return (
-    <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+    <div className="flex h-full min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950/50 p-3">
       <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
         <button
           className={filterButtonClass(
@@ -191,7 +191,7 @@ export function AgentSelectionSummary({
       </div>
 
       <div
-        className="skill-markdown-scroll max-h-48 space-y-1 overflow-y-auto pr-1"
+        className="skill-markdown-scroll mt-2 max-h-64 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 xl:max-h-none"
         ref={scrollRef}
       >
         {preview.items.length === 0 ? (
@@ -200,10 +200,7 @@ export function AgentSelectionSummary({
           <div className="text-xs text-slate-500">{t("agents.card.noMatchingPreviewSkills")}</div>
         ) : (
           filteredItems.map((item) => {
-            const sourceText = [
-              item.isDirect ? t("agents.card.sourceDirect") : null,
-              ...item.sceneNames,
-            ]
+            const sourceText = [item.isDirect ? t("agents.card.sourceDirect") : null, ...item.sceneNames]
               .filter(Boolean)
               .join(" + ");
             return (
@@ -237,9 +234,9 @@ export function AgentSelectionSummary({
                     ? t("agents.card.willSync")
                     : item.isSynced
                       ? t("agents.card.synced")
-                    : item.isGloballyDisabled
-                      ? t("agents.card.globalDisabled")
-                      : t("agents.card.excluded")}
+                      : item.isGloballyDisabled
+                        ? t("agents.card.globalDisabled")
+                        : t("agents.card.excluded")}
                 </span>
                 <span className="flex shrink-0 flex-wrap justify-end gap-1">
                   {item.isDirect ? (

@@ -20,17 +20,19 @@ export function AgentSceneSelector({
   const scrollRef = useRememberedScrollPosition(`agents:scene-selector:${draft.key}`);
 
   return (
-    <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-      <div className="flex items-center justify-between gap-3">
-        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          {t("agents.card.scenes")}
-        </label>
-        <span className="text-[11px] text-slate-500">
-          {t("agents.card.selectedCount", { count: draft.selectedSceneIds.length })}
-        </span>
+    <div className="flex h-full min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {t("agents.card.scenes")}
+          </label>
+          <span className="text-[11px] text-slate-500">
+            {t("agents.card.selectedCount", { count: draft.selectedSceneIds.length })}
+          </span>
+        </div>
       </div>
       <div
-        className="skill-markdown-scroll max-h-40 space-y-1 overflow-y-auto pr-1"
+        className="skill-markdown-scroll mt-2 max-h-40 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 xl:max-h-none"
         ref={scrollRef}
       >
         {scenes.length === 0 ? (

@@ -39,7 +39,7 @@ export function AgentTargetCard({
 
   return (
     <article
-      className={`space-y-4 rounded-2xl border p-5 ${
+      className={`rounded-2xl border p-5 xl:flex xl:min-h-0 xl:flex-col ${
         isDirty ? "border-sky-700 bg-sky-950/20" : "border-slate-800 bg-slate-900"
       }`}
     >
@@ -90,7 +90,7 @@ export function AgentTargetCard({
         </button>
       </header>
 
-      <dl className="grid gap-3 text-sm md:grid-cols-3">
+      <dl className="mt-4 grid gap-3 text-sm md:grid-cols-3">
         <div>
           <dt className="text-xs uppercase tracking-wide text-slate-500">
             {t("agents.card.defaultPath")}
@@ -115,7 +115,7 @@ export function AgentTargetCard({
         </div>
       </dl>
 
-      <div className="space-y-2">
+      <div className="mt-4 space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           {t("agents.card.overridePath")}
         </label>
@@ -135,14 +135,18 @@ export function AgentTargetCard({
         </button>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="mt-4 grid gap-4 xl:max-h-[clamp(20rem,calc(100vh-38rem),30rem)] xl:min-h-0 xl:grid-cols-3">
         <AgentSkillSelector
           disabledSkillIds={disabledSkillIds}
           draft={draft}
           onDraftChange={onDraftChange}
           skills={skills}
         />
-        <AgentSceneSelector draft={draft} onDraftChange={onDraftChange} scenes={scenes} />
+        <AgentSceneSelector
+          draft={draft}
+          onDraftChange={onDraftChange}
+          scenes={scenes}
+        />
         <AgentSelectionSummary
           draft={draft}
           onDraftChange={onDraftChange}
@@ -150,7 +154,7 @@ export function AgentTargetCard({
         />
       </div>
 
-      <div className="flex justify-end">
+      <div className="mt-4 flex justify-end">
         <button
           className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-60"
           disabled={saveDisabled}
