@@ -5,6 +5,7 @@ use tauri::Manager;
 
 use crate::core::agents::discovery::AgentSystemDirs;
 use crate::core::projects::path_inspection::{
+    delete_project_target_skill as delete_project_target_skill_core,
     inspect_project_assignment_path as inspect_project_assignment_path_core, ProjectPathInspection,
 };
 use crate::core::projects::store::{
@@ -134,6 +135,16 @@ pub fn inspect_project_assignment_path(
     agent_keys: Vec<String>,
 ) -> Result<ProjectPathInspection, String> {
     inspect_project_assignment_path_core(&project_path, &agent_keys)
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn delete_project_target_skill(
+    project_path: String,
+    agent_key: String,
+    entry_name: String,
+) -> Result<(), String> {
+    delete_project_target_skill_core(&project_path, &agent_key, &entry_name)
         .map_err(|error| error.to_string())
 }
 

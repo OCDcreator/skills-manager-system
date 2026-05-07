@@ -13,6 +13,7 @@ Composes the editable project assignment surface: project identity, per-agent pr
 - passes identity save controls to `ProjectIdentityPanel`
 - wires `ProjectAssignmentEditor` to the active agent layer, filtered skills, external group summaries, and scenes
 - wires `ProjectAssignmentSummary` to the derived per-agent preview counts and unsupported saved agents
+- forwards target skill management callbacks and pending action state to the summary inspector
 - owns the responsive two-column workbench grid and sticky right inspector placement
 
 ## Interactions

@@ -1,10 +1,5 @@
 import type { ProjectAssignment } from "./projects";
-import { getExternalGroupKey, type ExternalGroupFilter } from "./scene-skill-filters";
-import { matchesSkillPathFilter, type SkillPathFilter } from "./skills/filters";
-import type { AgentInventoryItem, SkillSummary } from "./tauri";
-
-export type ProjectAgentStatusFilter = "all" | "enabled" | "disabled";
-export type ProjectSkillSelectionFilter = "all" | "selected" | "unselected";
+import type { AgentInventoryItem } from "./tauri";
 
 export interface ProjectAgentDraft {
   selectedSkillIds: string[];
@@ -120,7 +115,23 @@ export function removeProjectAgentDraft(draft: ProjectDraft, agentKey: string) {
 }
 
 export function toggleProjectAgentSkill(draft: ProjectDraft, agentKey: string, skillId: string) {
-  return toggleProjectAgentList(draft, agentKey, "selectedSkillIds", skillId);
+  const ensured = ensureProjectAgentDraft(draft, agentKey);
+  const agentDraft = ensured.agents[agentKey];
+  const wasSelected = agentDraft.selectedSkillIds.includes(skillId);
+
+  return {
+    ...ensured,
+    agents: {
+      ...ensured.agents,
+      [agentKey]: {
+        ...agentDraft,
+        selectedSkillIds: toggleId(agentDraft.selectedSkillIds, skillId),
+        excludedSkillIds: wasSelected
+          ? agentDraft.excludedSkillIds
+          : removeId(agentDraft.excludedSkillIds, skillId),
+      },
+    },
+  };
 }
 
 export function toggleProjectAgentScene(draft: ProjectDraft, agentKey: string, sceneId: string) {
@@ -135,87 +146,25 @@ export function toggleProjectAgentExclusion(
   return toggleProjectAgentList(draft, agentKey, "excludedSkillIds", skillId);
 }
 
-export function filterProjectSkills(
-  skills: SkillSummary[],
-  query: string,
-  pathFilter: SkillPathFilter = "all",
-  externalGroupFilter: ExternalGroupFilter = "all",
-  selectionFilter: ProjectSkillSelectionFilter = "all",
-  selectedSkillIds: string[] = [],
+export function removeProjectManagedTargetSkill(
+  draft: ProjectDraft,
+  agentKey: string,
+  skillId: string,
 ) {
-  const needle = query.trim().toLowerCase();
-  const selectedSkillIdSet = new Set(selectedSkillIds);
-  return skills.filter((skill) => {
-    if (!matchesSkillPathFilter(skill, pathFilter)) {
-      return false;
-    }
-    if (pathFilter === "external" && externalGroupFilter !== "all" && getExternalGroupKey(skill) !== externalGroupFilter) {
-      return false;
-    }
+  const ensured = ensureProjectAgentDraft(draft, agentKey);
+  const agentDraft = ensured.agents[agentKey];
 
-    const isSelected = selectedSkillIdSet.has(skill.id);
-    if (selectionFilter === "selected" && !isSelected) {
-      return false;
-    }
-    if (selectionFilter === "unselected" && isSelected) {
-      return false;
-    }
-
-    if (!needle) {
-      return true;
-    }
-
-    return `${skill.name} ${skill.description} ${skill.relativePath}`
-      .toLowerCase()
-      .includes(needle);
-  });
-}
-
-export function filterProjectAgents(
-  agents: AgentInventoryItem[],
-  query: string,
-  statusFilter: ProjectAgentStatusFilter = "all",
-) {
-  const needle = query.trim().toLowerCase();
-  return agents.filter((agent) => {
-    if (statusFilter === "enabled" && !agent.enabled) {
-      return false;
-    }
-
-    if (statusFilter === "disabled" && agent.enabled) {
-      return false;
-    }
-
-    if (!needle) {
-      return true;
-    }
-
-    return `${agent.displayName} ${agent.key} ${agent.projectSkillsDirRule}`
-      .toLowerCase()
-      .includes(needle);
-  });
-}
-
-export function sortProjectAgentsForEditor(
-  agents: AgentInventoryItem[],
-  selectedAgentKeys: string[],
-  prioritizeSelected: boolean,
-) {
-  if (!prioritizeSelected || selectedAgentKeys.length === 0) {
-    return agents;
-  }
-
-  const selected = new Set(selectedAgentKeys);
-  return [...agents].sort((left, right) => {
-    const leftSelected = selected.has(left.key);
-    const rightSelected = selected.has(right.key);
-
-    if (leftSelected !== rightSelected) {
-      return leftSelected ? -1 : 1;
-    }
-
-    return 0;
-  });
+  return {
+    ...ensured,
+    agents: {
+      ...ensured.agents,
+      [agentKey]: {
+        ...agentDraft,
+        selectedSkillIds: removeId(agentDraft.selectedSkillIds, skillId),
+        excludedSkillIds: normalizeIds([...agentDraft.excludedSkillIds, skillId]),
+      },
+    },
+  };
 }
 
 export function applyProjectPathToDraft(draft: ProjectDraft, projectPath: string) {
@@ -311,6 +260,10 @@ function serializeAgents(
 
 function toggleId(ids: string[], id: string) {
   return ids.includes(id) ? ids.filter((candidate) => candidate !== id) : normalizeIds([...ids, id]);
+}
+
+function removeId(ids: string[], id: string) {
+  return ids.filter((candidate) => candidate !== id);
 }
 
 function normalizeIds(ids: string[]) {

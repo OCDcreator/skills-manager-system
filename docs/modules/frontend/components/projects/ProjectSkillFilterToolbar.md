@@ -18,3 +18,5 @@ Dedicated filter toolbar for the Projects workbench skill chooser.
 ## Interaction Notes
 
 The external group popover mirrors `SceneSkillChooser`: it is anchored to the active external group button, floats above the filter row, and lists summaries produced by `buildExternalGroupSummaries()`. Selecting `all` or `custom` resets the external group filter to `all`, so hidden subgroup state does not keep affecting the visible skill list.
+
+The toolbar consumes the selected-state filter type from `src/lib/project-filters.ts`; it does not own the actual filtering pass.

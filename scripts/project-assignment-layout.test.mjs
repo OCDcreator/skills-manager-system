@@ -8,6 +8,7 @@ const editorPath = path.resolve("src/components/projects/ProjectAssignmentEditor
 const filterToolbarPath = path.resolve("src/components/projects/ProjectSkillFilterToolbar.tsx");
 const workbenchPath = path.resolve("src/components/projects/ProjectLayerWorkbench.tsx");
 const summaryPath = path.resolve("src/components/projects/ProjectAssignmentSummary.tsx");
+const targetSkillListPath = path.resolve("src/components/projects/ProjectTargetSkillList.tsx");
 const projectsViewPath = path.resolve("src/views/ProjectsView.tsx");
 const projectCardPath = path.resolve("src/components/projects/ProjectCard.tsx");
 
@@ -92,6 +93,38 @@ test("project assignment summary mirrors selected skills and agents before targe
   assert.doesNotMatch(source, /item\.isExcludedByProject/);
 });
 
+test("project assignment summary shows collapsible existing project target skills with scoped management", () => {
+  const source = fs.readFileSync(summaryPath, "utf8");
+  const targetSkillListSource = fs.readFileSync(targetSkillListPath, "utf8");
+  const summarySource = fs.readFileSync(path.resolve("src/lib/project-summary.ts"), "utf8");
+  const projectsApiSource = fs.readFileSync(path.resolve("src/lib/projects.ts"), "utf8");
+  const workbenchSource = fs.readFileSync(workbenchPath, "utf8");
+  const enSource = fs.readFileSync(path.resolve("src/i18n/en.json"), "utf8");
+  const zhSource = fs.readFileSync(path.resolve("src/i18n/zh.json"), "utf8");
+
+  assert.match(projectsApiSource, /targetSkillEntries: AgentTargetSkillEntry\[\]/);
+  assert.match(projectsApiSource, /targetSkillScanError: string \| null/);
+  assert.match(summarySource, /targetSkillEntries: AgentTargetSkillEntry\[\]/);
+  assert.match(source, /summary\.targetSkillEntries/);
+  assert.match(source, /ProjectTargetSkillList/);
+  assert.match(targetSkillListSource, /projects\.summary\.existingTargetSkills/);
+  assert.match(targetSkillListSource, /props\.entries\.length/);
+  assert.match(targetSkillListSource, /entry\.managed/);
+  assert.match(targetSkillListSource, /entry\.hasSkillDocument/);
+  assert.match(targetSkillListSource, /projects\.summary\.managed/);
+  assert.match(targetSkillListSource, /projects\.summary\.unmanaged/);
+  assert.match(targetSkillListSource, /projects\.summary\.noSkillDocument/);
+  assert.match(source, /expandedTargetSkillGroups/);
+  assert.match(targetSkillListSource, /aria-expanded=\{props\.isExpanded\}/);
+  assert.match(targetSkillListSource, /max-h-64/);
+  assert.match(source, /onDeleteTargetSkill/);
+  assert.match(targetSkillListSource, /projects\.summary\.cancelSelection/);
+  assert.match(targetSkillListSource, /projects\.summary\.deleteTargetSkill/);
+  assert.match(workbenchSource, /onDeleteTargetSkill=\{props\.onDeleteTargetSkill\}/);
+  assert.match(enSource, /projects\.summary\.existingTargetSkills/);
+  assert.match(zhSource, /projects\.summary\.existingTargetSkills/);
+});
+
 test("projects view forwards save props to the identity panel instead of the summary panel", () => {
   const source = fs.readFileSync(workbenchPath, "utf8");
   const viewSource = fs.readFileSync(projectsViewPath, "utf8");
@@ -122,13 +155,13 @@ test("projects view keeps the right summary as a natural sticky inspector", () =
 test("project skill external filter uses the scene-style group popover", () => {
   const toolbarSource = fs.readFileSync(filterToolbarPath, "utf8");
   const viewSource = fs.readFileSync(projectsViewPath, "utf8");
-  const draftSource = fs.readFileSync(path.resolve("src/lib/project-draft.ts"), "utf8");
+  const filtersSource = fs.readFileSync(path.resolve("src/lib/project-filters.ts"), "utf8");
   const editorSource = fs.readFileSync(editorPath, "utf8");
 
   assert.match(viewSource, /buildExternalGroupSummaries/);
   assert.match(viewSource, /externalGroupFilter/);
   assert.match(viewSource, /setExternalGroupFilter\("all"\)/);
-  assert.match(draftSource, /getExternalGroupKey/);
+  assert.match(filtersSource, /getExternalGroupKey/);
   assert.match(toolbarSource, /isExternalGroupOpen/);
   assert.match(toolbarSource, /selectedExternalGroup/);
   assert.match(toolbarSource, /absolute bottom-full left-0 z-50 mb-2/);

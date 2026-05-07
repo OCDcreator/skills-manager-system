@@ -4,10 +4,12 @@ import { ProjectAssignmentSummary } from "./ProjectAssignmentSummary";
 import { ProjectIdentityPanel } from "./ProjectIdentityPanel";
 import type {
   ProjectAgentDraft,
-  ProjectAgentStatusFilter,
   ProjectDraft,
-  ProjectSkillSelectionFilter,
 } from "../../lib/project-draft";
+import type {
+  ProjectAgentStatusFilter,
+  ProjectSkillSelectionFilter,
+} from "../../lib/project-filters";
 import type { ProjectAgentSummary } from "../../lib/project-summary";
 import type {
   ExternalGroupFilter,
@@ -15,7 +17,7 @@ import type {
 } from "../../lib/scene-skill-filters";
 import type { SceneEntry } from "../../lib/scenes";
 import type { SkillPathSummary, SkillPathFilter } from "../../lib/skills/filters";
-import type { AgentInventoryItem, SkillSummary } from "../../lib/tauri";
+import type { AgentInventoryItem, AgentTargetSkillEntry, SkillSummary } from "../../lib/tauri";
 
 interface ProjectLayerWorkbenchProps {
   draft: ProjectDraft;
@@ -38,6 +40,7 @@ interface ProjectLayerWorkbenchProps {
   skillPathSummaries: SkillPathSummary[];
   skillQuery: string;
   skills: SkillSummary[];
+  targetActionId: string | null;
   summary: {
     selectedAgentCount: number;
     projectDirectSkillCount: number;
@@ -49,6 +52,7 @@ interface ProjectLayerWorkbenchProps {
   onAgentStatusFilterChange: (value: ProjectAgentStatusFilter) => void;
   onBrowseProjectPath: () => void;
   onCancelEdit: () => void;
+  onDeleteTargetSkill: (agentKey: string, entry: AgentTargetSkillEntry) => void;
   onDisplayNameChange: (value: string) => void;
   onProjectPathChange: (value: string) => void;
   onSave: () => void;
@@ -122,9 +126,11 @@ export function ProjectLayerWorkbench(props: ProjectLayerWorkbenchProps) {
           agentSummaries={props.summary.agentSummaries}
           duplicatePath={props.duplicatePath}
           isInspecting={props.isInspecting}
+          onDeleteTargetSkill={props.onDeleteTargetSkill}
           projectDirectSkillCount={props.summary.projectDirectSkillCount}
           projectSceneCount={props.summary.projectSceneCount}
           selectedAgentCount={props.summary.selectedAgentCount}
+          targetActionId={props.targetActionId}
           title={
             props.draft.mode === "edit"
               ? t("projects.summary.editTitle")

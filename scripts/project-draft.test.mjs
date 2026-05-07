@@ -4,20 +4,22 @@ import fs from "node:fs";
 import path from "node:path";
 
 const sourcePath = path.resolve("src/lib/project-draft.ts");
+const filtersPath = path.resolve("src/lib/project-filters.ts");
 const summaryPath = path.resolve("src/lib/project-summary.ts");
 const identityPanelPath = path.resolve("src/components/projects/ProjectIdentityPanel.tsx");
 const projectsViewPath = path.resolve("src/views/ProjectsView.tsx");
 
 test("project draft helper exports the expected pure helpers", () => {
   const source = fs.readFileSync(sourcePath, "utf8");
+  const filtersSource = fs.readFileSync(filtersPath, "utf8");
   const summarySource = fs.readFileSync(summaryPath, "utf8");
 
   assert.match(source, /export interface ProjectDraft/);
   assert.match(source, /export function suggestProjectDisplayName/);
   assert.match(source, /export function isProjectDraftDirty/);
-  assert.match(source, /export function filterProjectSkills/);
-  assert.match(source, /export function filterProjectAgents/);
-  assert.match(source, /export function sortProjectAgentsForEditor/);
+  assert.match(filtersSource, /export function filterProjectSkills/);
+  assert.match(filtersSource, /export function filterProjectAgents/);
+  assert.match(filtersSource, /export function sortProjectAgentsForEditor/);
   assert.match(source, /export function applyProjectPathToDraft/);
   assert.match(source, /export function applyProjectDisplayNameToDraft/);
   assert.match(summarySource, /export function buildProjectSummary/);
@@ -44,6 +46,14 @@ test("project draft stores selected scenes per agent", () => {
   assert.match(source, /export function ensureProjectAgentDraft/);
   assert.match(source, /export function toggleProjectAgentScene/);
   assert.match(source, /agents: \{\s*\.\.\.ensured\.agents,\s*\[agentKey\]: \{/s);
+});
+
+test("project draft helper cancels managed target skills through project exclusions", () => {
+  const source = fs.readFileSync(sourcePath, "utf8");
+
+  assert.match(source, /removeProjectManagedTargetSkill/);
+  assert.match(source, /selectedSkillIds: removeId\(agentDraft\.selectedSkillIds, skillId\)/);
+  assert.match(source, /excludedSkillIds: normalizeIds\(\[\.\.\.agentDraft\.excludedSkillIds, skillId\]\)/);
 });
 
 test("project summary marks inherited global skills and local exclusions", () => {
@@ -123,7 +133,7 @@ test("project draft auto-fills display names until the user edits them", () => {
 });
 
 test("project draft filters skills by path and agents by enabled state", () => {
-  const helperSource = fs.readFileSync(sourcePath, "utf8");
+  const helperSource = fs.readFileSync(filtersPath, "utf8");
 
   assert.match(helperSource, /matchesSkillPathFilter/);
   assert.match(helperSource, /skill\.relativePath/);
@@ -133,7 +143,7 @@ test("project draft filters skills by path and agents by enabled state", () => {
 });
 
 test("project draft can sort selected agents ahead of unselected ones while editing", () => {
-  const helperSource = fs.readFileSync(sourcePath, "utf8");
+  const helperSource = fs.readFileSync(filtersPath, "utf8");
 
   assert.match(helperSource, /selectedAgentKeys/);
   assert.match(helperSource, /selected\.has\(left\.key\)/);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { ProjectSkillSelectionFilter } from "../../lib/project-draft";
+import type { ProjectSkillSelectionFilter } from "../../lib/project-filters";
 import type {
   ExternalGroupFilter,
   ExternalGroupSummary,

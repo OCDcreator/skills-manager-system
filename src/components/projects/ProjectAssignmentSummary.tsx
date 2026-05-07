@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ProjectTargetSkillList } from "./ProjectTargetSkillList";
 import { useRememberedScrollPosition } from "../../lib/scroll-memory";
 import type { ProjectAgentSummary } from "../../lib/project-summary";
+import type { AgentTargetSkillEntry } from "../../lib/tauri";
 
 interface ProjectAssignmentSummaryProps {
   title: string;
@@ -11,11 +14,14 @@ interface ProjectAssignmentSummaryProps {
   duplicatePath: boolean;
   unsupportedAgentKeys: string[];
   isInspecting: boolean;
+  targetActionId: string | null;
+  onDeleteTargetSkill: (agentKey: string, entry: AgentTargetSkillEntry) => void;
 }
 
 export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
   const { t } = useTranslation();
   const scrollRef = useRememberedScrollPosition(`projects:summary:${props.title}`);
+  const [expandedTargetSkillGroups, setExpandedTargetSkillGroups] = useState<Record<string, boolean>>({});
 
   return (
     <aside className="flex h-full min-h-0 max-h-[clamp(22rem,calc(100vh-13rem),34rem)] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 min-[1380px]:absolute min-[1380px]:inset-0 min-[1380px]:max-h-none">
@@ -40,7 +46,19 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
           {props.agentSummaries.length ? (
             <div className="mt-2 space-y-2">
               {props.agentSummaries.map((summary) => (
-                <AgentPreviewGroup key={summary.agentKey} summary={summary} />
+                <AgentPreviewGroup
+                  expandedTargetSkillGroups={expandedTargetSkillGroups}
+                  key={summary.agentKey}
+                  onDeleteTargetSkill={props.onDeleteTargetSkill}
+                  onToggleTargetSkillGroup={() =>
+                    setExpandedTargetSkillGroups((current) => ({
+                      ...current,
+                      [summary.agentKey]: !current[summary.agentKey],
+                    }))
+                  }
+                  summary={summary}
+                  targetActionId={props.targetActionId}
+                />
               ))}
             </div>
           ) : (
@@ -81,10 +99,23 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
   );
 }
 
-function AgentPreviewGroup({ summary }: { summary: ProjectAgentSummary }) {
+function AgentPreviewGroup({
+  expandedTargetSkillGroups,
+  onDeleteTargetSkill,
+  onToggleTargetSkillGroup,
+  summary,
+  targetActionId,
+}: {
+  expandedTargetSkillGroups: Record<string, boolean>;
+  onDeleteTargetSkill: (agentKey: string, entry: AgentTargetSkillEntry) => void;
+  onToggleTargetSkillGroup: () => void;
+  summary: ProjectAgentSummary;
+  targetActionId: string | null;
+}) {
   const { t } = useTranslation();
   const chipClassName =
     "rounded-full border border-slate-700/80 bg-slate-950/70 px-2.5 py-1 text-[11px] text-slate-200";
+  const isTargetSkillExpanded = Boolean(expandedTargetSkillGroups[summary.agentKey]);
 
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
@@ -144,6 +175,16 @@ function AgentPreviewGroup({ summary }: { summary: ProjectAgentSummary }) {
             : t("projects.summary.missing")}
         </div>
       ) : null}
+      <ProjectTargetSkillList
+        agentKey={summary.agentKey}
+        entries={summary.targetSkillEntries}
+        isExpanded={isTargetSkillExpanded}
+        onDeleteTargetSkill={onDeleteTargetSkill}
+        onToggle={onToggleTargetSkillGroup}
+        scanError={summary.targetSkillScanError}
+        targetActionId={targetActionId}
+        targetDir={summary.targetDir}
+      />
     </div>
   );
 }

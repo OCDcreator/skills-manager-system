@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import { ProjectSkillFilterToolbar } from "./ProjectSkillFilterToolbar";
 import { useRememberedScrollPosition } from "../../lib/scroll-memory";
+import type { ProjectAgentDraft } from "../../lib/project-draft";
 import type {
-  ProjectAgentDraft,
   ProjectAgentStatusFilter,
   ProjectSkillSelectionFilter,
-} from "../../lib/project-draft";
+} from "../../lib/project-filters";
 import type {
   ExternalGroupFilter,
   ExternalGroupSummary,

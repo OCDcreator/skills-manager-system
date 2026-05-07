@@ -52,6 +52,7 @@ pub fn run() {
             commands::projects::update_project_with_agents,
             commands::projects::remove_project,
             commands::projects::inspect_project_assignment_path,
+            commands::projects::delete_project_target_skill,
             commands::projects::apply_project_assignments,
             commands::git::run_sync_script,
             commands::scenes::get_scene_config,

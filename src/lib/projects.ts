@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { AgentTargetSkillEntry } from "./tauri";
 
 export interface ProjectAssignment {
   projectPath: string;
@@ -58,6 +59,8 @@ export interface ProjectPathInspectionAgentResult {
   targetDir: string;
   markerExists: boolean;
   targetExists: boolean;
+  targetSkillEntries: AgentTargetSkillEntry[];
+  targetSkillScanError: string | null;
 }
 
 export interface ProjectPathInspection {
@@ -129,6 +132,17 @@ export const inspectProjectAssignmentPath = (
   invoke<ProjectPathInspection>("inspect_project_assignment_path", {
     projectPath,
     agentKeys,
+  });
+
+export const deleteProjectTargetSkill = (
+  projectPath: string,
+  agentKey: string,
+  entryName: string,
+) =>
+  invoke<void>("delete_project_target_skill", {
+    projectPath,
+    agentKey,
+    entryName,
   });
 
 export const applyProjectAssignments = () =>

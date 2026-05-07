@@ -18,6 +18,7 @@ Thin Tauri command wrappers for project assignment operations. Maps core results
 | `update_project_with_agents` | Modify a project with per-agent skills/scenes/exclusions |
 | `remove_project` | Remove a project assignment |
 | `inspect_project_assignment_path` | Read-only path validation and per-agent marker/target inspection |
+| `delete_project_target_skill` | Delete one unmanaged project-local target skill entry for an addressed agent |
 | `apply_project_assignments` | Deploy skills to project-local agent dirs |
 
 ## Interactions
@@ -28,4 +29,4 @@ Thin Tauri command wrappers for project assignment operations. Maps core results
 
 ## Current Note
 
-The current branch change for this module is formatting-only; runtime behavior is unchanged.
+The command layer stays thin: target deletion is delegated to `core::projects::path_inspection`, while managed target deselection remains a frontend draft operation followed by the normal project apply flow.

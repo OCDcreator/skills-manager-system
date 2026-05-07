@@ -4,25 +4,28 @@ import { useTranslation } from "react-i18next";
 import { ProjectLayerWorkbench } from "../components/projects/ProjectLayerWorkbench";
 import { SavedProjectsSection } from "../components/projects/SavedProjectsSection";
 import { useProjectDraftInspection } from "../components/projects/useProjectDraftInspection";
+import { useProjectTargetSkillActions } from "../components/projects/useProjectTargetSkillActions";
 import { useAppContext } from "../context/AppContext";
 import {
   applyProjectDisplayNameToDraft,
   applyProjectPathToDraft,
   ensureProjectAgentDraft,
-  filterProjectAgents,
-  filterProjectSkills,
   projectDraftAgentKeys,
   projectDraftFromAssignment,
   projectDraftToAgentAssignments,
   removeProjectAgentDraft,
-  sortProjectAgentsForEditor,
   suggestProjectDisplayName,
   toggleProjectAgentScene,
   toggleProjectAgentSkill,
-  type ProjectAgentStatusFilter,
-  type ProjectSkillSelectionFilter,
   type ProjectDraft,
 } from "../lib/project-draft";
+import {
+  filterProjectAgents,
+  filterProjectSkills,
+  sortProjectAgentsForEditor,
+  type ProjectAgentStatusFilter,
+  type ProjectSkillSelectionFilter,
+} from "../lib/project-filters";
 import { buildProjectSummary } from "../lib/project-summary";
 import * as projectsApi from "../lib/projects";
 import type { ProjectConfigSnapshot } from "../lib/projects";
@@ -40,6 +43,7 @@ export function ProjectsView() {
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [applying, setApplying] = useState<string | null>(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [inspectionRefreshKey, setInspectionRefreshKey] = useState(0);
   const [skillQuery, setSkillQuery] = useState("");
   const [agentQuery, setAgentQuery] = useState("");
   const [skillPathFilter, setSkillPathFilter] = useState<SkillPathFilter>("all");
@@ -47,9 +51,8 @@ export function ProjectsView() {
   const [skillSelectionFilter, setSkillSelectionFilter] = useState<ProjectSkillSelectionFilter>("all");
   const [agentStatusFilter, setAgentStatusFilter] = useState<ProjectAgentStatusFilter>("all");
   const [selectedAgentKey, setSelectedAgentKey] = useState<string | null>(null);
-  const [sessionProjectApplyFeedback, setSessionProjectApplyFeedback] = useState<
-    Record<string, string>
-  >({});
+  const [sessionProjectApplyFeedback, setSessionProjectApplyFeedback] =
+    useState<Record<string, string>>({});
 
   const emptyDraft = useMemo<ProjectDraft>(
     () => ({
@@ -82,9 +85,7 @@ export function ProjectsView() {
   }, []);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      void refresh();
-    });
+    queueMicrotask(() => void refresh());
   }, [refresh]);
 
   const projectList = config ? Object.values(config.projects) : [];
@@ -97,9 +98,14 @@ export function ProjectsView() {
     [sortedAgentInventory],
   );
   const { inspection, isInspecting, inspectionError } = useProjectDraftInspection(
-    draft.projectPath,
-    inspectableAgentKeys,
+    draft.projectPath, inspectableAgentKeys, inspectionRefreshKey,
   );
+  const { handleDeleteTargetSkill, targetActionId } = useProjectTargetSkillActions({
+    draft,
+    setDraft,
+    setInspectionRefreshKey,
+    setLastResult,
+  });
 
   const normalizedPath = inspection?.normalizedPath ?? draft.projectPath.trim();
   const duplicatePath =
@@ -297,12 +303,9 @@ export function ProjectsView() {
         onAgentStatusFilterChange={setAgentStatusFilter}
         onBrowseProjectPath={() => void handleBrowseProjectPath()}
         onCancelEdit={handleCancelEdit}
-        onDisplayNameChange={(value) =>
-          setDraft((current) => applyProjectDisplayNameToDraft(current, value))
-        }
-        onProjectPathChange={(value) =>
-          setDraft((current) => applyProjectPathToDraft(current, value))
-        }
+        onDeleteTargetSkill={(agentKey, entry) => void handleDeleteTargetSkill(agentKey, entry)}
+        onDisplayNameChange={(value) => setDraft((current) => applyProjectDisplayNameToDraft(current, value))}
+        onProjectPathChange={(value) => setDraft((current) => applyProjectPathToDraft(current, value))}
         onSave={() => void handleSaveDraft()}
         onSelectAgent={setSelectedAgentKey}
         onExternalGroupFilterChange={setExternalGroupFilter}
@@ -324,6 +327,7 @@ export function ProjectsView() {
         skillSelectionFilter={skillSelectionFilter}
         skills={visibleSkills}
         summary={summary}
+        targetActionId={targetActionId}
       />
 
       {isLoading ? (

@@ -4,7 +4,11 @@ import {
   type ProjectPathInspection,
 } from "../../lib/projects";
 
-export function useProjectDraftInspection(projectPath: string, agentKeys: string[]) {
+export function useProjectDraftInspection(
+  projectPath: string,
+  agentKeys: string[],
+  refreshKey = 0,
+) {
   const [inspection, setInspection] = useState<ProjectPathInspection | null>(null);
   const [isInspecting, setIsInspecting] = useState(false);
   const [inspectionError, setInspectionError] = useState<string | null>(null);
@@ -46,7 +50,7 @@ export function useProjectDraftInspection(projectPath: string, agentKeys: string
     }, 250);
 
     return () => window.clearTimeout(timeoutId);
-  }, [agentKeys, agentKeySignature, projectPath]);
+  }, [agentKeys, agentKeySignature, projectPath, refreshKey]);
 
   return { inspection, isInspecting, inspectionError };
 }

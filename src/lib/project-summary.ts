@@ -6,7 +6,7 @@ import {
   projectDraftAgentKeys,
 } from "./project-draft";
 import type { SceneEntry } from "./scenes";
-import type { AgentInventoryItem, SkillSummary } from "./tauri";
+import type { AgentInventoryItem, AgentTargetSkillEntry, SkillSummary } from "./tauri";
 
 export interface ProjectPreviewItem {
   skill: SkillSummary;
@@ -32,6 +32,8 @@ export interface ProjectAgentSummary {
   targetDir: string | null;
   markerExists: boolean | null;
   targetExists: boolean | null;
+  targetSkillEntries: AgentTargetSkillEntry[];
+  targetSkillScanError: string | null;
 }
 
 export function buildProjectSummary(
@@ -66,7 +68,7 @@ export function buildProjectSummary(
         ...inheritedGlobalSkillIds,
         ...projectDirectSkillIds,
         ...projectSceneSkillIds,
-      ]);
+      ].filter((skillId) => !excluded.has(skillId)));
       const projectSceneNames = agentDraft.selectedSceneIds.map(
         (sceneId) => scenes[sceneId]?.name || sceneId,
       );
@@ -107,6 +109,8 @@ export function buildProjectSummary(
         targetDir: inspectionTarget?.targetDir ?? null,
         markerExists: inspectionTarget?.markerExists ?? null,
         targetExists: inspectionTarget?.targetExists ?? null,
+        targetSkillEntries: inspectionTarget?.targetSkillEntries ?? [],
+        targetSkillScanError: inspectionTarget?.targetSkillScanError ?? null,
       };
     })
     .filter((summary): summary is ProjectAgentSummary => Boolean(summary));
