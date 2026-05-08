@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { CircleHelp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   removeId,
@@ -23,6 +24,7 @@ export function AgentSelectionSummary({
 }: AgentSelectionSummaryProps) {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<PreviewFilter>("all");
+  const [isExclusionHelpOpen, setIsExclusionHelpOpen] = useState(false);
   const [selectedPreviewSkillIds, setSelectedPreviewSkillIds] = useState<string[]>([]);
   const selectedPreviewSkillSet = useMemo(
     () => new Set(selectedPreviewSkillIds),
@@ -126,68 +128,86 @@ export function AgentSelectionSummary({
 
   return (
     <div className="flex h-full min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-      <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-        <button
-          className={filterButtonClass(
-            "will-sync",
-            "border-emerald-500/50 bg-emerald-500/15 text-emerald-100",
-          )}
-          onClick={() => toggleFilter("will-sync")}
-          type="button"
-        >
-          {t("agents.card.syncCount", { count: preview.syncCount })}
-        </button>
-        <button
-          className={filterButtonClass(
-            "synced",
-            "border-cyan-500/50 bg-cyan-500/15 text-cyan-100",
-          )}
-          onClick={() => toggleFilter("synced")}
-          type="button"
-        >
-          {t("agents.card.syncedCount", { count: preview.syncedCount })}
-        </button>
-        <button
-          className={filterButtonClass(
-            "excluded",
-            "border-amber-500/50 bg-amber-500/15 text-amber-100",
-          )}
-          onClick={() => toggleFilter("excluded")}
-          type="button"
-        >
-          {t("agents.card.excludedCount", { count: preview.excludedCount })}
-        </button>
-        <button
-          className={filterButtonClass(
-            "global-ignored",
-            "border-slate-600 bg-slate-800 text-slate-100",
-          )}
-          onClick={() => toggleFilter("global-ignored")}
-          type="button"
-        >
-          {t("agents.card.globalIgnoredCount", {
-            count: preview.globallyDisabledCount,
-          })}
-        </button>
-        <span className="rounded-full bg-slate-800 px-2 py-1 text-slate-300">
-          {t("agents.card.batchSelectedCount", { count: selectedPreviewSkillIds.length })}
-        </span>
-        <button
-          className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-200 hover:bg-slate-800 disabled:opacity-50"
-          disabled={!hasSelectedItems}
-          onClick={batchExcludeSelected}
-          type="button"
-        >
-          {t("agents.card.batchExclude")}
-        </button>
-        <button
-          className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-200 hover:bg-slate-800 disabled:opacity-50"
-          disabled={!hasSelectedDirectItems}
-          onClick={batchDeselectDirectSelected}
-          type="button"
-        >
-          {t("agents.card.batchDeselectDirect")}
-        </button>
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+          <button
+            className={filterButtonClass(
+              "will-sync",
+              "border-emerald-500/50 bg-emerald-500/15 text-emerald-100",
+            )}
+            onClick={() => toggleFilter("will-sync")}
+            type="button"
+          >
+            {t("agents.card.syncCount", { count: preview.syncCount })}
+          </button>
+          <button
+            className={filterButtonClass(
+              "synced",
+              "border-cyan-500/50 bg-cyan-500/15 text-cyan-100",
+            )}
+            onClick={() => toggleFilter("synced")}
+            type="button"
+          >
+            {t("agents.card.syncedCount", { count: preview.syncedCount })}
+          </button>
+          <button
+            className={filterButtonClass(
+              "excluded",
+              "border-amber-500/50 bg-amber-500/15 text-amber-100",
+            )}
+            onClick={() => toggleFilter("excluded")}
+            type="button"
+          >
+            {t("agents.card.excludedCount", { count: preview.excludedCount })}
+          </button>
+          <button
+            className={filterButtonClass(
+              "global-ignored",
+              "border-slate-600 bg-slate-800 text-slate-100",
+            )}
+            onClick={() => toggleFilter("global-ignored")}
+            type="button"
+          >
+            {t("agents.card.globalIgnoredCount", {
+              count: preview.globallyDisabledCount,
+            })}
+          </button>
+          <span className="rounded-full bg-slate-800 px-2 py-1 text-slate-300">
+            {t("agents.card.batchSelectedCount", { count: selectedPreviewSkillIds.length })}
+          </span>
+          <button
+            className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+            disabled={!hasSelectedItems}
+            onClick={batchExcludeSelected}
+            type="button"
+          >
+            {t("agents.card.batchExclude")}
+          </button>
+          <button
+            className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+            disabled={!hasSelectedDirectItems}
+            onClick={batchDeselectDirectSelected}
+            type="button"
+          >
+            {t("agents.card.batchDeselectDirect")}
+          </button>
+          <button
+            aria-expanded={isExclusionHelpOpen}
+            aria-label={t("agents.card.exclusionsHelpLabel")}
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-700 text-slate-300 transition hover:border-amber-400/70 hover:bg-amber-500/10 hover:text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+            onClick={() => setIsExclusionHelpOpen((current) => !current)}
+            title={t("agents.card.exclusionsHelpLabel")}
+            type="button"
+          >
+            <CircleHelp className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
+        {isExclusionHelpOpen ? (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-50">
+            <p className="font-semibold text-amber-100">{t("agents.card.exclusionsHelpTitle")}</p>
+            <p className="mt-1 text-amber-50/90">{t("agents.card.exclusionsHelpBody")}</p>
+          </div>
+        ) : null}
       </div>
 
       <div
