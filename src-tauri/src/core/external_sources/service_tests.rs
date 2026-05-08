@@ -25,17 +25,22 @@ fn list_external_sources_reads_variants_from_persisted_fetch_commit() {
     run_git(Command::new("git").arg("init").arg(&repo_dir));
     run_git(git_cmd(&repo_dir).args(["config", "user.email", "test@example.com"]));
     run_git(git_cmd(&repo_dir).args(["config", "user.name", "Test User"]));
-    let variant_dir = repo_dir.join("dist/agents/.agents/skills/fast-start");
-    fs::create_dir_all(&variant_dir).unwrap();
-    fs::create_dir_all(variant_dir.join("examples")).unwrap();
-    fs::create_dir_all(variant_dir.join("scripts")).unwrap();
-    fs::write(variant_dir.join("examples/demo.md"), "# Demo\n").unwrap();
-    fs::write(variant_dir.join("scripts/run.sh"), "echo hi\n").unwrap();
-    fs::write(
-        variant_dir.join("SKILL.md"),
-        "---\nname: Fast Start\ndescription: Loaded from git objects\n---\n# Fast Start\n",
-    )
-    .unwrap();
+    for variant_root in [
+        "dist/agents/.agents/skills/fast-start",
+        ".claude/skills/fast-start",
+    ] {
+        let variant_dir = repo_dir.join(variant_root);
+        fs::create_dir_all(&variant_dir).unwrap();
+        fs::create_dir_all(variant_dir.join("examples")).unwrap();
+        fs::create_dir_all(variant_dir.join("scripts")).unwrap();
+        fs::write(variant_dir.join("examples/demo.md"), "# Demo\n").unwrap();
+        fs::write(variant_dir.join("scripts/run.sh"), "echo hi\n").unwrap();
+        fs::write(
+            variant_dir.join("SKILL.md"),
+            "---\nname: Fast Start\ndescription: Loaded from git objects\n---\n# Fast Start\n",
+        )
+        .unwrap();
+    }
     run_git(git_cmd(&repo_dir).args(["add", "."]));
     run_git(git_cmd(&repo_dir).args(["commit", "-m", "cache snapshot"]));
     let head = run_git_output(git_cmd(&repo_dir).args(["rev-parse", "HEAD"]));
@@ -65,7 +70,7 @@ fn list_external_sources_reads_variants_from_persisted_fetch_commit() {
     let response = super::list_external_sources(&config_dir, None).unwrap();
 
     let variants = &response.sources[0].variants;
-    assert_eq!(variants.len(), 1);
+    assert_eq!(variants.len(), 2);
     assert_eq!(
         variants[0].variant_path,
         "dist/agents/.agents/skills/fast-start"
@@ -79,9 +84,12 @@ fn list_external_sources_reads_variants_from_persisted_fetch_commit() {
         variants[0].child_directories,
         vec!["examples".to_string(), "scripts".to_string()]
     );
+    assert_eq!(variants[0].child_files, vec!["SKILL.md".to_string()]);
+    assert_eq!(variants[1].variant_path, ".claude/skills/fast-start");
+    assert!(variants[0].content_fingerprint.is_some());
     assert_eq!(
-        variants[0].child_files,
-        vec!["SKILL.md".to_string()]
+        variants[0].content_fingerprint,
+        variants[1].content_fingerprint
     );
 }
 

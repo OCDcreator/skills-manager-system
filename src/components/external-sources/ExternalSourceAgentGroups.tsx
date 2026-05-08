@@ -4,8 +4,10 @@ import { CircleHelp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   agentLabel,
+  equivalentContentGroupCount,
   EXTERNAL_IMPORT_TARGETS,
   groupExternalVariantsByAgent,
+  variantsWithSameContent,
 } from "../../lib/external-sources";
 import type {
   AgentKey,
@@ -92,6 +94,10 @@ export function ExternalSourceAgentGroups({
     () => groupExternalVariantsByAgent(variants, imports),
     [imports, variants],
   );
+  const equivalentGroups = useMemo(
+    () => equivalentContentGroupCount(variants),
+    [variants],
+  );
 
   if (!groups.length) {
     return <p className="text-sm text-slate-400">{t("sources.variants.noneDetected")}</p>;
@@ -108,9 +114,16 @@ export function ExternalSourceAgentGroups({
             {t("sources.variants.groupDescription")}
           </p>
         </div>
-        <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-1 text-xs text-slate-300">
-          {t("sources.variants.count", { count: variants.length })}
-        </span>
+        <div className="flex flex-wrap gap-2">
+          {equivalentGroups ? (
+            <span className="rounded-full border border-emerald-800/80 bg-emerald-950/40 px-3 py-1 text-xs text-emerald-200">
+              {t("sources.variants.equivalentGroups", { count: equivalentGroups })}
+            </span>
+          ) : null}
+          <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-1 text-xs text-slate-300">
+            {t("sources.variants.count", { count: variants.length })}
+          </span>
+        </div>
       </div>
 
       <div className="skill-markdown-scroll max-h-[36rem] space-y-4 overflow-y-auto pr-1">
@@ -151,6 +164,12 @@ export function ExternalSourceAgentGroups({
                 <div className="space-y-3">
                   {group.variants.map((variant) => {
                     const variantKey = `${group.agentKey}:${variant.agentKey}:${variant.variantPath}`;
+                    const sameContentVariants = variantsWithSameContent(variant, variants);
+                    const sameContentPaths = sameContentVariants
+                      .slice(0, 3)
+                      .map((item) => item.variantPath)
+                      .join(", ");
+                    const hiddenSameContentCount = Math.max(sameContentVariants.length - 3, 0);
                     const selectedTarget = selectedTargets[variantKey] ?? "";
                     const targetAgent = fixedTarget ?? selectedTarget;
                     const isImported = targetAgent
@@ -188,6 +207,16 @@ export function ExternalSourceAgentGroups({
                               {t("sources.variants.sourceOfTruth", {
                                 path: variant.sourceOfTruthPath,
                               })}
+                            </p>
+                          ) : null}
+                          {sameContentVariants.length ? (
+                            <p className="text-xs text-emerald-200">
+                              {t("sources.variants.sameContent", { paths: sameContentPaths })}
+                              {hiddenSameContentCount
+                                ? t("sources.variants.sameContentMore", {
+                                    count: hiddenSameContentCount,
+                                  })
+                                : null}
                             </p>
                           ) : null}
                           <div className="space-y-2 text-xs text-slate-500">

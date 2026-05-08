@@ -30,7 +30,7 @@ Provides the public desktop-facing orchestration layer for source records, sourc
 
 For destructive source removal, the service now preflights every imported mirror first, then deletes the cache directory before committing the source/import snapshot mutation so a cache-removal failure cannot leave app state already removed.
 
-Runtime integrity warnings are still computed late during listing so the UI can surface broken live mirrors without first mutating `external-sources.json`. Variant snapshots now also include parsed `name` and `description` metadata, direct child-directory and child-file previews for the variant folder itself, plus detection metadata (`detectionClass`, `suggestedTargetAgents`, `detectedAgentHint`) so the frontend can distinguish exact-supported imports from alias-compatible or fully manual fallback candidates. Source records may carry an optional `subpath`; the service keeps that value in the structured add/fetch/list flow while leaving the visible UI form unchanged for now.
+Runtime integrity warnings are still computed late during listing so the UI can surface broken live mirrors without first mutating `external-sources.json`. Variant snapshots now also include parsed `name` and `description` metadata, a stable `contentFingerprint` for equivalent-variant display, direct child-directory and child-file previews for the variant folder itself, plus detection metadata (`detectionClass`, `suggestedTargetAgents`, `detectedAgentHint`) so the frontend can distinguish exact-supported imports from alias-compatible or fully manual fallback candidates. Source records may carry an optional `subpath`; the service keeps that value in the structured add/fetch/list flow while leaving the visible UI form unchanged for now.
 
 ## Interactions
 

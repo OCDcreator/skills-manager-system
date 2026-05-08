@@ -28,6 +28,7 @@ pub struct AddExternalSourceInput {
 pub struct ExternalVariantSnapshot {
     pub agent_key: String,
     pub variant_path: String,
+    pub content_fingerprint: Option<String>,
     pub source_of_truth_path: Option<String>,
     pub metadata_path: Option<String>,
     pub child_directories: Vec<String>,

@@ -73,6 +73,10 @@ test("ExternalSourceCard defaults to a collapsed summary with clickable repo acc
   assert.doesNotMatch(source, /xl:grid-cols-\[1\.15fr_0\.85fr\]/);
   assert.match(groupsSource, /t\("sources\.variants\.childDirectories"\)/);
   assert.match(groupsSource, /t\("sources\.variants\.childFiles"\)/);
+  assert.match(groupsSource, /variantsWithSameContent/);
+  assert.match(groupsSource, /equivalentContentGroupCount/);
+  assert.match(groupsSource, /t\("sources\.variants\.sameContent"/);
+  assert.match(groupsSource, /t\("sources\.variants\.equivalentGroups"/);
   assert.match(groupsSource, /variant\.childFiles\.length/);
   assert.match(groupsSource, /items\.slice\(0, 5\)/);
   assert.match(groupsSource, /variant\.childDirectories/);
@@ -123,6 +127,9 @@ test("Sources surface strings are backed by real i18n keys", () => {
     "sources.variants.manualGroup",
     "sources.variants.groupCounts",
     "sources.variants.groupImportsTitle",
+    "sources.variants.equivalentGroups",
+    "sources.variants.sameContent",
+    "sources.variants.sameContentMore",
     "sources.variants.childDirectories",
     "sources.variants.childFiles",
     "sources.variants.none",
@@ -161,6 +168,8 @@ test("Sources surface strings are backed by real i18n keys", () => {
   assert.match(groupsSource, /t\("sources\.variants\.hint"/);
   assert.match(groupsSource, /t\("sources\.variants\.childDirectories"\)/);
   assert.match(groupsSource, /t\("sources\.variants\.childFiles"\)/);
+  assert.match(groupsSource, /t\("sources\.variants\.sameContent"/);
+  assert.match(groupsSource, /t\("sources\.variants\.equivalentGroups"/);
   assert.match(cardSource, /shortCommit\(record\.lastFetchedCommit, unknownLabel\)/);
   assert.match(cardSource, /record\.branch \?\? record\.defaultBranch/);
   assert.match(cardSource, /record\.subpath \?\? t\("sources\.meta\.rootSubpath"\)/);
@@ -280,6 +289,39 @@ test("external source helpers group variants and imports by resolved target agen
   assert.deepEqual(groups[1].imports.map((item) => item.importId), ["imp-claude"]);
   assert.deepEqual(groups[2].variants.map((variant) => variant.variantPath), ["common"]);
   assert.deepEqual(groups[3].variants.map((variant) => variant.variantPath), ["manual-only"]);
+});
+
+test("external source helpers detect variants with equivalent content", async () => {
+  const module = await loadExternalSourcesModule();
+  const variants = [
+    {
+      agentKey: "codex",
+      variantPath: ".agents/skills/impeccable",
+      contentFingerprint: "sha256:same",
+      suggestedTargetAgents: ["codex"],
+      detectedAgentHint: "codex",
+    },
+    {
+      agentKey: "claude_code",
+      variantPath: ".claude/skills/impeccable",
+      contentFingerprint: "sha256:same",
+      suggestedTargetAgents: ["claude_code"],
+      detectedAgentHint: "claude_code",
+    },
+    {
+      agentKey: "opencode",
+      variantPath: ".opencode/skills/impeccable",
+      contentFingerprint: "sha256:other",
+      suggestedTargetAgents: ["opencode"],
+      detectedAgentHint: "opencode",
+    },
+  ];
+
+  assert.deepEqual(
+    module.variantsWithSameContent(variants[0], variants).map((variant) => variant.variantPath),
+    [".claude/skills/impeccable"],
+  );
+  assert.equal(module.equivalentContentGroupCount(variants), 1);
 });
 
 test("refreshSkills reloads the selected document when the selected skill survives the refresh", () => {

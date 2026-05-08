@@ -156,6 +156,7 @@ export interface ExternalSourceRecord {
 export interface ExternalVariantSnapshot {
   agentKey: ExternalVariantKey;
   variantPath: string;
+  contentFingerprint: string | null;
   sourceOfTruthPath: string | null;
   metadataPath: string | null;
   childDirectories: string[];

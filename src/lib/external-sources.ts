@@ -89,6 +89,30 @@ export function sourceAgentLabels(variants: ExternalVariantSnapshot[]) {
   return [...labels];
 }
 
+export function variantsWithSameContent(
+  variant: ExternalVariantSnapshot,
+  variants: ExternalVariantSnapshot[],
+) {
+  if (!variant.contentFingerprint) return [];
+  return variants.filter(
+    (item) =>
+      item.variantPath !== variant.variantPath
+      && item.contentFingerprint === variant.contentFingerprint,
+  );
+}
+
+export function equivalentContentGroupCount(variants: ExternalVariantSnapshot[]) {
+  const counts = new Map<string, number>();
+  for (const variant of variants) {
+    if (!variant.contentFingerprint) continue;
+    counts.set(
+      variant.contentFingerprint,
+      (counts.get(variant.contentFingerprint) ?? 0) + 1,
+    );
+  }
+  return [...counts.values()].filter((count) => count > 1).length;
+}
+
 export type ExternalVariantAgentGroupKey = AgentKey | "manual";
 
 export interface ExternalVariantAgentGroup {

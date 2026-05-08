@@ -15,6 +15,7 @@ pub mod service;
 mod source_snapshot;
 mod source_sync;
 pub mod store;
+mod variant_fingerprint;
 
 pub use detect::{detect_external_source_variants, DetectedExternalVariant, DetectionResult};
 pub use git_repo::normalize_github_repo_url;

@@ -15,6 +15,7 @@ use crate::core::skills::metadata::{
 
 use super::service::ExternalVariantSnapshot;
 use super::source_sync::cache_repo_absolute_path;
+use super::variant_fingerprint::load_variant_fingerprint;
 
 pub(super) fn load_variants_for_source(
     config_dir: &Path,
@@ -45,6 +46,11 @@ pub(super) fn load_variants_for_source(
                             ExternalVariantSnapshot {
                                 agent_key: variant.agent_key,
                                 variant_path: variant_path.clone(),
+                                content_fingerprint: load_variant_fingerprint(
+                                    &repo_dir,
+                                    git_ref.as_deref(),
+                                    &variant_path,
+                                ),
                                 source_of_truth_path,
                                 metadata_path,
                                 child_directories: load_variant_child_directories(
@@ -148,7 +154,11 @@ fn load_variant_child_directories(
     directories
 }
 
-fn load_variant_child_files(repo_dir: &Path, git_ref: Option<&str>, variant_path: &str) -> Vec<String> {
+fn load_variant_child_files(
+    repo_dir: &Path,
+    git_ref: Option<&str>,
+    variant_path: &str,
+) -> Vec<String> {
     if let Some(git_ref) = git_ref {
         if let Ok(files) = list_direct_child_files_at_ref(repo_dir, git_ref, variant_path) {
             return files;
