@@ -46,6 +46,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_SIGNING_IDENTITY: ${{ matrix.platform == 'macos-latest' && '-' || '' }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Skills Manager System ${{ github.ref_name }}'
