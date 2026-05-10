@@ -17,6 +17,8 @@ Page-level scene management view for creating, editing, configuring, and drag-re
 
 Owns scene CRUD form state, loads `SceneConfigSnapshot` through a deferred initial refresh, updates scene skills through `src/lib/scenes.ts`, and computes drag-drop reorder payloads via `src/lib/scene-skill-order.ts`. Scene editing is configuration-only; applying toolkits to filesystem targets belongs to Agent Sync or Projects.
 
+The create form now uses an adaptive grid: below `900px` the ID field, name field, and create action stack cleanly, and from `900px` upward they settle into a two-field-plus-action row without reintroducing cramped horizontal compression.
+
 ## Data Flow
 
 - `useAppContext()` provides repo path, scanned skills, and refresh callbacks.

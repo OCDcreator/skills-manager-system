@@ -22,7 +22,9 @@ Downstream: src/lib/skills/filters.ts, src/i18n/index.ts
 
 ## Core Logic
 
-The component receives current search text, selected source/status filters, source/status counts, refresh state, and first-scan loading state. It renders a search input, refresh button, and one button per filter summary. During the first scan it labels counts as scanning instead of showing the empty initial snapshot as zero. Source and status filters share one compact wrapping row, with each group keeping its label inline with its filter pills instead of stacking the groups vertically.
+The component receives current search text, selected source/status filters, source/status counts, refresh state, and first-scan loading state. It renders a search input, refresh button, and one button per filter summary. During the first scan it labels counts as scanning instead of showing the empty initial snapshot as zero.
+
+The top control row is now explicitly wrap-safe for the compact workbench band: the search input keeps a `min-w-[16rem]` floor, the refresh button remains a peer control instead of dropping into a separate toolbar, and the pair can wrap without overflowing when the page narrows below the full desktop layout. Source and status filters still share one compact wrapping row, with each group keeping its label inline with its filter pills instead of stacking the groups vertically.
 
 ## Data Flow
 

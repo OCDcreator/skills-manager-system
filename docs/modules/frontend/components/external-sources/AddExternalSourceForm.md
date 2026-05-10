@@ -5,7 +5,7 @@
 
 ## Overview
 
-Owns the repo-URL entry form for adding one external GitHub source from the dedicated sources page.
+Owns the add-source form for one external repository record on the dedicated sources page.
 
 ## Public Surface
 
@@ -15,8 +15,10 @@ Owns the repo-URL entry form for adding one external GitHub source from the dedi
 
 ## Core Logic
 
-The form keeps only local input state plus a transient submit-failed flag. It trims the entered URL before submit, passes optional branch/subpath as nullable fields, ignores empty URL values, clears all fields after a successful add, and leaves persistence plus backend validation to the parent callback. The branch and subpath inputs are intentionally optional so the existing default-branch/root-repo flow remains unchanged.
+The form keeps only local draft state plus a transient `submitFailed` flag. It trims the entered URL before submit, passes optional branch/subpath as nullable fields, ignores empty URL values, clears all fields after a successful add, and leaves persistence plus backend validation to the parent callback. If submit fails, the current draft stays intact so the user can correct or retry without retyping.
+
+The layout follows the compact workbench baseline: below `lg` the inputs and submit button stack naturally; at `lg` the form becomes one dense grid row with repo URL, branch, subpath, and action aligned together. There is no special `900px-1279px` branch beyond that shared stacked behavior.
 
 ## Interactions
 
-Used only by `ExternalSourcesView`. Error copy and labels come from `sources.form.*` i18n keys, while real add/fetch behavior comes from `AppContext.addExternalSource()`.
+Used only by `ExternalSourcesView`. Error copy and labels come from `sources.form.*` i18n keys, while real add behavior comes from `AppContext.addExternalSource()`.

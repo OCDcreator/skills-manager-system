@@ -9,7 +9,9 @@ test('Project assistant launcher hint stays collapsed until the robot is hovered
     'utf8',
   );
 
-  assert.match(source, /className="fixed bottom-6 right-6 z-40 group"/);
+  assert.match(source, /className="fixed bottom-6 right-6 z-40 group/);
+  assert.match(source, /max-\[1279px\]:bottom-4/);
+  assert.match(source, /max-\[1279px\]:right-4/);
   assert.match(source, /opacity-0/);
   assert.match(source, /group-hover:opacity-100/);
   assert.match(source, /group-focus-within:opacity-100/);

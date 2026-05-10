@@ -15,7 +15,7 @@ Owns the top-level React composition for the desktop shell and routes the active
 
 ## Core Logic
 
-`AppBody` reads `activeView` from `AppContext`, selects the matching page component, and passes a width policy into `AppShell`. `skills`, `agents`, `projects`, and `sources` use the wider `max-w-[min(96vw,1800px)]` container so their multi-column layouts do not collapse early. Non-default pages are wrapped in `Suspense` with a localized lightweight shell-level fallback, which keeps the top-level layout stable while the requested view chunk loads.
+`AppBody` reads `activeView` from `AppContext`, selects the matching page component, and passes a width policy into `AppShell`. `skills`, `agents`, `projects`, and `sources` opt into a named wide-workbench width policy so their multi-column layouts do not collapse early, while the shell itself decides how much navigation chrome is persistent at each breakpoint. Non-default pages are wrapped in `Suspense` with a localized lightweight shell-level fallback, which keeps the top-level layout stable while the requested view chunk loads.
 
 ## Interactions
 

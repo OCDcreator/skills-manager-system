@@ -51,6 +51,14 @@ test("ExternalSourcesView renders the add form and list surfaces", () => {
   assert.match(source, /t\("sources\.title"\)/);
 });
 
+test("External sources stays stacked until the xl breakpoint", () => {
+  const viewSource = readIfExists("src/views/ExternalSourcesView.tsx");
+  const listSource = readIfExists("src/components/external-sources/ExternalSourceList.tsx");
+
+  assert.match(viewSource, /xl:flex-row/);
+  assert.match(listSource, /grid gap-4/);
+});
+
 test("ExternalSourceCard defaults to a collapsed summary with clickable repo access and guidance tags", () => {
   const source = readIfExists("src/components/external-sources/ExternalSourceCard.tsx");
   const groupsSource = readIfExists("src/components/external-sources/ExternalSourceAgentGroups.tsx");

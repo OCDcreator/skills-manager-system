@@ -152,6 +152,13 @@ test("projects view keeps the right summary as a natural sticky inspector", () =
   assert.match(fs.readFileSync(summaryPath, "utf8"), /min-\[1380px\]:absolute min-\[1380px\]:inset-0/);
 });
 
+test("project layer workbench stays stacked until the wide inspector breakpoint", () => {
+  const workbenchSource = fs.readFileSync(workbenchPath, "utf8");
+
+  assert.match(workbenchSource, /min-\[1380px\]:grid-cols-\[minmax\(0,1fr\)_clamp\(22rem,28vw,34rem\)\]/);
+  assert.match(workbenchSource, /max-\[1379px\]:space-y-6/);
+});
+
 test("project skill external filter uses the scene-style group popover", () => {
   const toolbarSource = fs.readFileSync(filterToolbarPath, "utf8");
   const viewSource = fs.readFileSync(projectsViewPath, "utf8");

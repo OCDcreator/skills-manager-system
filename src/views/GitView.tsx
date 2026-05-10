@@ -140,7 +140,7 @@ export function GitView() {
         status={status}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[280px_1fr]">
         <GitFileList
           onSelect={handleSelectFile}
           selectedPath={selectedPath}

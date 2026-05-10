@@ -5,7 +5,7 @@
 
 ## Overview
 
-Provides the shared desktop workbench chrome: left navigation rail, compact mobile navigation header, global error banner, main content frame, project-assistant launcher, and pending-navigation dialog host.
+Provides the shared desktop workbench chrome: wide left navigation rail, compact icon-only rail, narrow mobile navigation header, global error banner, main content frame, project-assistant launcher, and pending-navigation dialog host.
 
 ## Public Surface
 
@@ -15,7 +15,13 @@ Provides the shared desktop workbench chrome: left navigation rail, compact mobi
 
 ## Core Logic
 
-The shell reads `activeView`, guarded navigation actions, and `pendingNavigation` from `AppContext`. It owns one icon-backed nav configuration for all seven top-level views, renders it as a desktop left rail and as a horizontal mobile nav through CSS-controlled layout classes, gives those two nav landmarks distinct accessible names, forwards all route changes through guarded `setActiveView`, and mounts `UnsavedChangesDialog` whenever the current view registered dirty-state protection.
+The shell reads `activeView`, guarded navigation actions, and `pendingNavigation` from `AppContext`. It owns one icon-backed nav configuration for all seven top-level views, renders that configuration through three shell states, gives the desktop and mobile nav landmarks distinct accessible names, forwards all route changes through guarded `setActiveView`, and mounts `UnsavedChangesDialog` whenever the current view registered dirty-state protection.
+
+The three shell states are:
+
+- `<900px`: mobile header plus horizontally scrollable nav rail
+- `900px-1279px`: compact icon-only left rail
+- `>=1280px`: full left rail with labels and subtitle restored
 
 `contentWidthClassName` is still applied to the main workbench content region so wide surfaces can opt out of the default `max-w-7xl` frame without changing navigation chrome.
 

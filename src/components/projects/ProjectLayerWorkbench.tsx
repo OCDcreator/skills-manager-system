@@ -70,7 +70,7 @@ export function ProjectLayerWorkbench(props: ProjectLayerWorkbenchProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="grid gap-6 min-[1380px]:items-stretch min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
+    <div className="grid gap-6 max-[1379px]:space-y-6 min-[1380px]:items-stretch min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
       <div className="space-y-4">
         <ProjectIdentityPanel
           canBrowseProjectPath={props.draft.mode === "create"}

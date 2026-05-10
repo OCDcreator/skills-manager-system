@@ -17,6 +17,7 @@ import { AgentGlobalSkillList } from "./AgentGlobalSkillList";
 import { AgentTargetCard } from "./AgentTargetCard";
 
 interface AgentTargetsSectionProps {
+  activeAgentKey: string | null;
   actionKey: string | null;
   agents: AgentInventoryItem[];
   canImport: boolean;
@@ -77,6 +78,7 @@ interface AgentTargetsSectionProps {
 }
 
 export function AgentTargetsSection({
+  activeAgentKey,
   actionKey,
   agents,
   canImport,
@@ -111,6 +113,7 @@ export function AgentTargetsSection({
     <div className="grid gap-4">
       {agents.map((agent) => {
         const draft = drafts[agent.key] ?? draftFromAgent(agent);
+        const isCompactActive = activeAgentKey === null || activeAgentKey === agent.key;
         const preview = resolveAgentSelectionPreview(
           draft,
           skills,
@@ -120,7 +123,11 @@ export function AgentTargetsSection({
         );
 
         return (
-          <div id={`agent-sync-target-${agent.key}`} className="scroll-mt-8" key={agent.key}>
+          <div
+            id={`agent-sync-target-${agent.key}`}
+            className={`${isCompactActive ? "block" : "hidden"} scroll-mt-8 min-[1280px]:block`}
+            key={agent.key}
+          >
             <div className="grid gap-4 min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
               <AgentTargetCard
                 agent={agent}

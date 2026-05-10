@@ -65,3 +65,14 @@ test("scene external group menu floats above its filter button", () => {
   assert.match(source, /absolute bottom-full left-0 z-50 mb-2/);
   assert.doesNotMatch(source, /absolute left-0 top-full/);
 });
+
+test("ScenesView stacks the create form before inputs become cramped", () => {
+  const viewSource = fs.readFileSync(path.resolve("src/views/ScenesView.tsx"), "utf8");
+  const cardSource = fs.readFileSync(path.resolve("src/components/scenes/SceneCard.tsx"), "utf8");
+
+  assert.match(
+    viewSource,
+    /grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 min-\[900px\]:grid-cols-\[minmax\(0,1fr\)_minmax\(0,1fr\)_auto\]/,
+  );
+  assert.match(cardSource, /data-scene-active-config/);
+});

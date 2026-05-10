@@ -350,3 +350,23 @@ test("AppShell render harness uses the system temp directory", () => {
   assert.match(source, /path\.join\(os\.tmpdir\(\), "skills-manager-system-app-shell-"\)/);
   assert.doesNotMatch(source, /path\.resolve\("node_modules\/\.cache"\)/);
 });
+
+test("foundation defines the compact rail breakpoint map", () => {
+  const source = readSource("src/styles/foundation.css");
+
+  assert.match(source, /@media\s*\(min-width:\s*900px\)/);
+  assert.match(source, /@media\s*\(min-width:\s*1280px\)/);
+  assert.match(source, /grid-template-columns:\s*4\.5rem minmax\(0, 1fr\)/);
+  assert.match(source, /grid-template-columns:\s*16\.5rem minmax\(0, 1fr\)/);
+  assert.match(source, /\.app-shell__nav-label\s*\{/);
+  assert.match(source, /display:\s*none;/);
+});
+
+test("shell launcher and unsaved dialog stay viewport-safe in compact mode", () => {
+  const launcherSource = readSource("src/components/assistant/ProjectAssistantLauncher.tsx");
+  const dialogSource = readSource("src/components/UnsavedChangesDialog.tsx");
+
+  assert.match(launcherSource, /max-\[1279px\]:bottom-4/);
+  assert.match(launcherSource, /max-\[1279px\]:right-4/);
+  assert.match(dialogSource, /max-w-\[min\(32rem,calc\(100vw-2rem\)\)\]/);
+});

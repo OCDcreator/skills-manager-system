@@ -29,7 +29,7 @@ export function ExternalSourceList(props: ExternalSourceListProps) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="grid gap-4">
       {props.sources.map((source) => (
         <ExternalSourceCard
           key={source.record.id}

@@ -39,16 +39,16 @@ export function RepoPathForm() {
       <label className="block text-sm font-medium text-slate-200" htmlFor="repo-path">
         {t("settings.pathLabel")}
       </label>
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <input
           id="repo-path"
-          className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400"
+          className="min-w-0 flex-1 overflow-x-auto rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400"
           onChange={(event) => setDraftPath(event.target.value)}
           placeholder={t("settings.pathPlaceholder")}
           value={effectiveDraftPath}
         />
         <button
-          className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-100"
+          className="shrink-0 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-100"
           onClick={handleBrowse}
           title={t("tooltip.settings.browse")}
           type="button"

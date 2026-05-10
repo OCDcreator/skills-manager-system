@@ -146,7 +146,7 @@ export function SceneCard({
       </div>
 
       {isConfiguring ? (
-        <div className="mt-4">
+        <section className="mt-4" data-scene-active-config="true">
           <SceneSkillChooser
             onReorderSkill={onReorderSkill}
             onToggleSkill={onToggleSkill}
@@ -154,7 +154,7 @@ export function SceneCard({
             skills={skills}
             t={t}
           />
-        </div>
+        </section>
       ) : null}
 
       <div className="mt-3">

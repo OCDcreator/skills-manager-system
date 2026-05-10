@@ -64,7 +64,7 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
         title={t(`tooltip.nav.${item.view}`)}
       >
         <Icon className="app-shell__nav-icon" aria-hidden="true" />
-        <span>{t(`nav.${item.view}`)}</span>
+        <span className="app-shell__nav-label">{t(`nav.${item.view}`)}</span>
       </button>
     );
   };
@@ -74,7 +74,7 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
       <aside className="app-shell__sidebar" data-app-shell-sidebar>
         <div className="app-shell__brand">
           <div className="app-shell__brand-mark">{BRAND_MARK_TEXT}</div>
-          <div>
+          <div className="app-shell__brand-copy">
             <h1 className="app-shell__title">{appTitle}</h1>
             <p className="app-shell__subtitle">{t("app.subtitle")}</p>
           </div>
@@ -88,7 +88,7 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
         <header className="app-shell__mobile-header" data-app-shell-mobile-header>
           <div className="app-shell__brand app-shell__brand--mobile">
             <div className="app-shell__brand-mark">{BRAND_MARK_TEXT}</div>
-            <div>
+            <div className="app-shell__brand-copy">
               <h1 className="app-shell__title">{appTitle}</h1>
               <p className="app-shell__subtitle">{t("app.subtitle")}</p>
             </div>

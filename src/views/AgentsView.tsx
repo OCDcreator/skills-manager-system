@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AgentApplyResults } from "../components/agents/AgentApplyResults";
+import { AgentCompactTabs } from "../components/agents/AgentCompactTabs";
 import { AgentFloatingNav } from "../components/agents/AgentFloatingNav";
 import { AgentOrderModal } from "../components/agents/AgentOrderModal";
 import { AgentSyncSummary } from "../components/agents/AgentSyncSummary";
@@ -63,6 +64,7 @@ export function AgentsView() {
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isSavingAgentOrder, setIsSavingAgentOrder] = useState(false);
+  const [activeAgentKey, setActiveAgentKey] = useState<string | null>(null);
   const [showEnabledOnlyInSideNav, setShowEnabledOnlyInSideNav] = useState(readAgentSideNavEnabledOnlyPreference);
 
   const disabledSkillIdSet = useMemo(() => new Set(disabledSkillIds), [disabledSkillIds]);
@@ -119,6 +121,22 @@ export function AgentsView() {
   useEffect(() => {
     writeAgentSideNavEnabledOnlyPreference(showEnabledOnlyInSideNav);
   }, [showEnabledOnlyInSideNav]);
+
+  useEffect(() => {
+    if (sortedAgentInventory.length === 0) {
+      if (activeAgentKey !== null) {
+        setActiveAgentKey(null);
+      }
+      return;
+    }
+
+    if (
+      activeAgentKey === null ||
+      !sortedAgentInventory.some((agent) => agent.key === activeAgentKey)
+    ) {
+      setActiveAgentKey(sortedAgentInventory[0].key);
+    }
+  }, [activeAgentKey, sortedAgentInventory]);
 
   const dirtyAgentKeys = useMemo(
     () =>
@@ -239,7 +257,7 @@ export function AgentsView() {
   );
 
   return (
-    <div className="space-y-6 pr-12">
+    <div className="space-y-6 min-[1280px]:pr-12">
       <AgentFloatingNav agents={floatingNavAgents} onOpenOrderModal={() => setIsOrderModalOpen(true)} />
 
       <div id="agent-sync-overview" className="scroll-mt-8">
@@ -274,12 +292,19 @@ export function AgentsView() {
       <section id="agent-sync-targets" className="scroll-mt-8 space-y-4">
         <div><h2 className="text-lg font-semibold text-slate-100">{t("agents.targets.title")}</h2><p className="mt-1 text-sm text-slate-500">{t("agents.targets.description")}</p></div>
 
+        <AgentCompactTabs
+          activeAgentKey={activeAgentKey}
+          agents={sortedAgentInventory}
+          onSelect={setActiveAgentKey}
+        />
+
         {isLoadingAgents ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-400">
             {t("agents.targets.loading")}
           </div>
         ) : (
           <AgentTargetsSection
+            activeAgentKey={activeAgentKey}
             actionKey={targetActionId}
             agents={sortedAgentInventory}
             batchDeleteTargetSkills={batchDeleteTargetSkills}

@@ -19,6 +19,8 @@ Builds a compact vertical anchor list from one action node plus top/bottom jump 
 
 Each anchor keeps a narrow right-aligned hit area (`w-14`) instead of stretching across the whole rail so hover/focus only activates once the pointer is actually near the icon. The transparent rail wrapper stays non-interactive, each list row opts out of pointer events, and only the real button/link hit targets opt back in; labels still expand leftward via absolutely positioned overflow without blocking the page behind them. Agent-specific bubble colors are keyed locally so new brand entries such as Kimi Code CLI can join the rail without changing the shared icon renderer. The rail itself is positioned with viewport-centered fixed placement (`top-1/2` plus `-translate-y-1/2`), while the list owns a `max-h-[calc(100vh-2rem)]` internal scroll region so short windows can still reach the last icon without showing a visible scrollbar.
 
+The responsive contract is explicit: the rail is hidden below `1280px` and only returns at `>=1280px`. Compact navigation is handled separately by `AgentCompactTabs`, so this component should stay focused on the wide workbench viewport overlay rather than trying to cover both layouts.
+
 ## Data Flow
 
 Receives ordered agent keys and display names plus an `onOpenOrderModal` callback from `AgentsView`; all section IDs are owned by the same view so anchors remain local to the Agent Sync page while the first rail node opens the ordering modal instead of scrolling.

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { SkillFilters } from "../components/skills/SkillFilters";
 import { SkillList } from "../components/skills/SkillList";
 import { useAppContext } from "../context/AppContext";
+import type { SkillSummary } from "../lib/tauri";
 import {
   buildSourceSummaries,
   buildStatusSummaries,
@@ -45,6 +46,7 @@ export function SkillsView() {
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [statusFilter, setStatusFilter] = useState<SkillStatusFilter>("all");
+  const [isCompactDetailOpen, setIsCompactDetailOpen] = useState(false);
 
   const disabledSkillIdSet = useMemo(
     () => new Set(disabledSkillIds),
@@ -85,6 +87,25 @@ export function SkillsView() {
       await setSkillEnabled(skillId, enabled);
     }
   }
+
+  async function handleSelectSkill(skill: SkillSummary) {
+    await selectSkill(skill);
+    setIsCompactDetailOpen(true);
+  }
+
+  const detailPanel = selectedSkill ? (
+    <Suspense fallback={<SkillDetailPlaceholder message={t("skills.detail.loadingDocument")} />}>
+      <SkillDetailPanel
+        document={selectedDocument}
+        isEnabled={selectedSkillEnabled}
+        skill={selectedSkill}
+      />
+    </Suspense>
+  ) : (
+    <SkillDetailPlaceholder
+      message={isInitialSkillLoad ? t("skills.detail.loadingInitial") : t("skills.selectPrompt")}
+    />
+  );
 
   return (
     <>
@@ -133,7 +154,7 @@ export function SkillsView() {
                 <SkillList
                   key={source}
                   disabledSkillIds={disabledSkillIdSet}
-                  onSelect={(skill) => void selectSkill(skill)}
+                  onSelect={(skill) => void handleSelectSkill(skill)}
                   onSetManyEnabled={handleSetManySkillsEnabled}
                   onToggleEnabled={setSkillEnabled}
                   isLoading={isInitialSkillLoad}
@@ -150,21 +171,46 @@ export function SkillsView() {
             </div>
           </div>
 
-          {selectedSkill ? (
-            <Suspense fallback={<SkillDetailPlaceholder message={t("skills.detail.loadingDocument")} />}>
-              <SkillDetailPanel
-                document={selectedDocument}
-                isEnabled={selectedSkillEnabled}
-                skill={selectedSkill}
-              />
-            </Suspense>
-          ) : (
-            <SkillDetailPlaceholder
-              message={isInitialSkillLoad ? t("skills.detail.loadingInitial") : t("skills.selectPrompt")}
-            />
-          )}
+          <aside
+            className="hidden min-[1280px]:block"
+            data-skills-detail-wide
+          >
+            {detailPanel}
+          </aside>
         </div>
       )}
+
+      {selectedSkill ? (
+        <div
+          className={`hidden min-[900px]:max-[1279px]:block ${isCompactDetailOpen ? "" : "pointer-events-none opacity-0"}`}
+          data-skills-detail-drawer
+        >
+          <div className="fixed inset-y-0 right-0 z-40 w-[min(30rem,calc(100vw-2rem))] border-l border-slate-800 bg-slate-950/98 p-4 shadow-2xl">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="min-w-0 truncate text-sm font-semibold text-slate-100">
+                {selectedSkill.name}
+              </h2>
+              <button
+                className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-200"
+                onClick={() => setIsCompactDetailOpen(false)}
+                type="button"
+              >
+                {t("skills.detail.close")}
+              </button>
+            </div>
+            {detailPanel}
+          </div>
+        </div>
+      ) : null}
+
+      {selectedSkill ? (
+        <section
+          className="min-[900px]:hidden"
+          data-skills-detail-stacked
+        >
+          {detailPanel}
+        </section>
+      ) : null}
     </>
   );
 }

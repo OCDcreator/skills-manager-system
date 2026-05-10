@@ -182,8 +182,8 @@ export function ScenesView() {
         </div>
       ) : null}
 
-      <div className="flex items-end gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4">
-        <div className="flex-1">
+      <div className="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 min-[900px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+        <div className="min-w-0">
           <label className="mb-1 block text-xs text-slate-400">
             {t("scenes.create.idLabel")}
           </label>
@@ -194,7 +194,7 @@ export function ScenesView() {
             value={newId}
           />
         </div>
-        <div className="flex-1">
+        <div className="min-w-0">
           <label className="mb-1 block text-xs text-slate-400">
             {t("scenes.create.nameLabel")}
           </label>
@@ -209,7 +209,7 @@ export function ScenesView() {
           />
         </div>
         <button
-          className="flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-500 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-500 disabled:opacity-50 max-[899px]:w-full min-[900px]:self-end"
           disabled={creating || !newId.trim() || !newName.trim()}
           onClick={() => void handleCreate()}
           title={t("tooltip.scenes.create")}

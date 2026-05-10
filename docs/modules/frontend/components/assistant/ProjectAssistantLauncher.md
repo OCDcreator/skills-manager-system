@@ -30,6 +30,11 @@ in while the floating launcher group is hovered or keyboard-focused. The fixed
 wrapper also exposes a stable `data-*` anchor so other floating UI can keep
 clear of the launcher instead of overlapping it.
 
+Responsive shell rules keep the launcher inset tighter below the wide desktop
+band so the floating button does not cover the densest part of compact page
+content. The compact shell also reduces the button footprint slightly instead of
+preserving the full desktop size at every width.
+
 The panel module itself is loaded through `React.lazy(...)`. The launcher no
 longer prefetches retrieval status because the assistant surface now opens into
 the terminal-launcher workflow instead of the older document-chat prototype.

@@ -18,3 +18,10 @@ test('Git diff viewer caps panel height and keeps diff body scrollable', () => {
   assert.match(source, /skill-markdown-scroll/);
   assert.match(source, /min-h-0 flex-1 overflow-auto/);
 });
+
+test("GitView defers the two-column split until the xl breakpoint", () => {
+  const source = fs.readFileSync(path.resolve("src/views/GitView.tsx"), "utf8");
+
+  assert.match(source, /grid gap-6 xl:grid-cols-\[280px_1fr\]/);
+  assert.doesNotMatch(source, /lg:grid-cols-\[280px_1fr\]/);
+});

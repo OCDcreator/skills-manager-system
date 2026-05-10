@@ -20,6 +20,23 @@ test('Agent global skill sidecar matches the adjacent agent card height', () => 
   assert.doesNotMatch(listSource, /max-h-44/);
 });
 
+test('AgentsView switches from floating rail padding to compact tab focus below 1280px', () => {
+  const viewSource = fs.readFileSync(path.resolve('src/views/AgentsView.tsx'), 'utf8');
+  const navSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentFloatingNav.tsx'),
+    'utf8',
+  );
+  const sectionSource = fs.readFileSync(
+    path.resolve('src/components/agents/AgentTargetsSection.tsx'),
+    'utf8',
+  );
+
+  assert.match(viewSource, /min-\[1280px\]:pr-12/);
+  assert.match(viewSource, /AgentCompactTabs/);
+  assert.match(navSource, /max-\[1279px\]:hidden/);
+  assert.match(sectionSource, /activeAgentKey/);
+});
+
 test('Agent floating nav only reacts inside the icon hit area', () => {
   const navSource = fs.readFileSync(
     path.resolve('src/components/agents/AgentFloatingNav.tsx'),

@@ -37,13 +37,14 @@ function ViewLoadingFallback() {
 
 function AppBody() {
   const { activeView } = useAppContext();
-  const contentWidthClassName =
+  const useWideWorkbenchWidth =
     activeView === "skills" ||
     activeView === "agents" ||
     activeView === "projects" ||
-    activeView === "sources"
-      ? "max-w-[min(96vw,1800px)]"
-      : "max-w-7xl";
+    activeView === "sources";
+  const contentWidthClassName = useWideWorkbenchWidth
+    ? "max-w-[min(96vw,1800px)]"
+    : "max-w-7xl";
 
   const view = activeView === "skills" ? (
     <SkillsView />

@@ -40,9 +40,9 @@ export function SkillFilters(props: SkillFiltersProps) {
 
   return (
     <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-4">
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <input
-          className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400"
+          className="min-w-[16rem] flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400"
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder={t("skills.search")}
           value={search}
