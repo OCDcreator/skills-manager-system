@@ -1,6 +1,6 @@
 [package]
 name = "skills-manager-system"
-version = "0.2.1"
+version = "0.2.2"
 description = "Skills Manager System"
 authors = ["lt"]
 edition = "2021"
