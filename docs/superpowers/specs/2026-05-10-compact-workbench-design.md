@@ -65,7 +65,7 @@ At `900px`, the product should use a **balanced** strategy:
 ## 4. Scope
 
 - **Fidelity:** implementation-ready product UI direction
-- **Breadth:** app shell plus the first responsive rules for `Skills`, `Agents`, and `Scenes`
+- **Breadth:** app shell plus the first responsive rules for `Skills`, `Agents`, and `Scenes`, with baseline compact expectations for `Git`, `Projects`, `Sources`, and `Settings`
 - **Behavior:** responsive structure, disclosure rules, and layout priority, not a visual rebrand
 - **Target form factor:** smaller desktop windows, especially the `900px` to `1279px` range
 - **Out of scope:** touch-first mobile redesign, feature removal, new business logic, or a new global state system for responsiveness
@@ -108,6 +108,21 @@ This band accepts stronger stacking behavior.
 - top-level navigation may become a horizontal rail
 - core page state and actions should still appear near the top
 - only deliberate regions such as code, diff, path values, or nav rails may rely on horizontal scrolling
+
+### D. Breakpoint migration strategy
+
+The current shell already switches from the mobile header to the left sidebar at `768px`. This feature must replace that single handoff with a four-band shell map:
+
+- **`>= 1280px`:** keep the existing full left rail behavior, including the current wide navigation treatment
+- **`900px` to `1279px`:** use a **compact left icon rail** as the single approved compact-shell pattern
+- **`768px` to `899px`:** keep the header-plus-horizontal-nav shell pattern, tightened for smaller desktop or tablet-like widths
+- **`< 768px`:** continue using the same header-plus-horizontal-nav pattern with the smallest spacing budget
+
+Important implementation rule:
+
+- the existing `768px` desktop-sidebar breakpoint should migrate upward to `900px`
+- the new `1280px` breakpoint expands the compact icon rail into the existing full rail
+- the spec does **not** leave `900px` to `1279px` open as “icon rail or top nav”; the chosen design is the compact left icon rail
 
 ## 6. Global Layout Strategy
 
@@ -171,15 +186,28 @@ Do not solve crowding by simply shrinking text across the board.
 The shell should provide three navigation states:
 
 - **wide:** full left rail with brand, subtitle, and text labels
-- **compact:** reduced-width rail or compact top navigation that keeps page switching obvious without consuming a large fixed column
+- **compact:** reduced-width **icon-only left rail** that keeps page switching obvious without consuming a large fixed column
 - **narrow:** top brand plus horizontally scrollable nav rail
 
 Rules:
 
 - the current `16.5rem` fixed desktop sidebar should not continue unchanged down to `768px`
+- the compact rail should become the default shell between `900px` and `1279px`
+- the compact rail should rely on icons, hover titles, and active-state clarity instead of trying to squeeze bilingual text labels into a narrow column
 - error banners must still be visible without stealing excessive vertical space
 - the first content region should land closer to the top on compact widths
 - focus outlines for mobile or compact navigation must remain unclipped
+
+Compact component scheme:
+
+- `>= 1280px`: existing full rail
+- `900px` to `1279px`: icon-only rail, narrower than the full desktop rail, with the brand mark preserved but subtitle removed from persistent layout
+- `< 900px`: header plus horizontally scrollable nav row
+
+Auxiliary shell rules:
+
+- `ProjectAssistantLauncher` must retreat with the shell, not float over the densest part of page content
+- `UnsavedChangesDialog` remains modal, but its width must stay viewport-bounded on narrow widths and must not assume a wide desktop canvas
 
 ### B. Skills page
 
@@ -202,6 +230,19 @@ Compact concessions:
 
 At `900px` to `1279px`, a user should be able to scan many skills quickly without losing access to the selected skill’s detail when they explicitly ask for it.
 
+Compact component scheme:
+
+- `>= 1280px`: keep the current two-column pattern with a persistent detail region
+- `900px` to `1279px`: replace the persistent right detail column with a **page-local right-side detail drawer** opened from the selected skill
+- `< 900px`: selected skill detail becomes a **stacked full-width detail section** below the filters and list, not an always-open side column
+
+The compact drawer should:
+
+- open from the page workspace edge rather than as a blocking modal
+- preserve access to the main list
+- have a clear close action
+- allow long markdown content to scroll internally
+
 ### C. Agents page
 
 This page should preserve the “overview plus current editing workflow” while giving back space from auxiliary structure.
@@ -221,6 +262,26 @@ Compact concessions:
 
 The compact page should still feel like a workbench, but not like several desktop surfaces forced to coexist in one narrow viewport.
 
+Compact component scheme:
+
+- `>= 1280px`: keep the current overview plus floating-rail model
+- `900px` to `1279px`: replace the floating rail with a **page-top horizontally scrollable agent tab bar**
+- `< 900px`: keep the same tab-bar model, but allow stronger stacking and one-agent-at-a-time focus
+
+Compact focus behavior:
+
+- the summary panel remains near the top
+- the selected agent becomes the primary editing surface
+- sidecar target lists should stack below the selected agent card instead of insisting on desktop-style side-by-side occupancy
+- non-selected agents may collapse to lighter summary rows or closed panels as long as switching remains obvious
+
+The replacement agent tab bar must be:
+
+- always visible near the top of the page
+- horizontally scrollable when needed
+- clear about the current active agent
+- usable without the floating rail ever reappearing in compact mode
+
 ### D. Scenes page
 
 The scenes screen should become structurally adaptive instead of relying on wide horizontal composition.
@@ -238,6 +299,62 @@ Compact concessions:
 - detailed skill configuration and ordering are secondary to the overview list and may stay behind the active scene expansion
 - helper text should tighten before inputs become cramped
 
+Compact component scheme:
+
+- `>= 1280px`: keep the current wider card and configuration rhythm
+- `900px` to `1279px`: use a **two-column adaptive create form** where the action button may wrap onto its own row when space tightens
+- `< 900px`: use a **single-column stacked create form**
+
+Scene configuration behavior:
+
+- only the currently configured scene should expose its dense configuration region by default in compact mode
+- non-active scenes should stay summary-first
+- long skill ordering or configuration blocks should appear inside the active scene expansion, not as always-open page clutter
+
+### E. Git page
+
+Minimum compact expectations:
+
+- the page should collapse toward a single dominant working column before it preserves side-by-side diff or log structures
+- status summary and primary Git actions stay near the top
+- file list, diff viewer, log, and operation log may stack vertically in compact mode
+- no compact Git layout may depend on a fixed-width secondary pane remaining visible
+
+### F. Projects page
+
+Minimum compact expectations:
+
+- the saved-project list and the active project workbench must remain readable at `900px`
+- wide statement panels or side-by-side assignment surfaces may stack
+- the current project being edited should dominate the workspace; non-active projects can remain lighter summary surfaces
+- per-agent project details may expand within the active project region rather than insisting on a wide two-column workstation
+
+### G. Sources page
+
+Minimum compact expectations:
+
+- the source list remains the dominant structure
+- add-source form and source detail regions may stack
+- import, repair, and update controls remain reachable without side-by-side dependency
+- no source-management action should require a wide persistent secondary panel
+
+### H. Settings page
+
+Minimum compact expectations:
+
+- the repo path form and related controls stack into a single readable column
+- long path values may wrap, truncate, or scroll within the field region, but not force whole-page overflow
+- settings sections must preserve clear grouping even when all controls are in one column
+
+### I. Shared page rule for remaining views
+
+For any view not receiving a bespoke redesign in this phase:
+
+- prefer one dominant column in compact mode
+- do not depend on fixed-width companion panes
+- keep primary actions above secondary metadata
+- allow internal section stacking before text or controls become cramped
+
 ## 8. Interaction Model
 
 ### Shell flow
@@ -246,6 +363,11 @@ Compact concessions:
 2. The shell transitions from wide to compact behavior at the shared breakpoint.
 3. Navigation remains visible, but consumes less persistent width.
 4. Page content gets the newly recovered width first.
+
+Transition rule:
+
+- breakpoint transitions should be **immediate**, not animated layout choreography
+- this should match the current product’s calm, utility-first behavior and avoid visual jitter during desktop window resizing
 
 ### Page flow
 
@@ -272,6 +394,9 @@ Compact concessions:
 - labels may wrap where appropriate
 - path or code-like content may truncate or scroll only within a controlled region
 - no page should depend on unusually short English strings to stay usable
+- compact left navigation should avoid bilingual width pressure by using icon-only persistent items in the `900px` to `1279px` band
+- narrow horizontal nav rails may stay no-wrap and horizontally scroll
+- chips and filter controls should wrap to additional lines before text is reduced below normal body legibility
 
 ### Empty and loading states
 
@@ -292,6 +417,17 @@ Compact concessions:
 ### Floating controls
 
 - a floating affordance that overlaps meaningful content in compact mode is a responsive failure
+
+### Project assistant launcher
+
+- `ProjectAssistantLauncher` may remain floating, but in compact mode it must use a safe inset and footprint that does not cover the main page action area
+- if the default bottom-right position collides with compact page controls, the launcher should move or shrink before content is sacrificed
+
+### Unsaved changes dialog
+
+- `UnsavedChangesDialog` should remain centered and modal
+- its content width should remain bounded by viewport width with comfortable side margins
+- action buttons may wrap, but the action row must stay readable and tappable in narrow widths
 
 ## 10. Implementation Strategy
 
@@ -331,12 +467,25 @@ Required verification areas:
 - `Skills` compact layout contracts
 - `Agents` compact layout contracts, including floating-nav retreat
 - `Scenes` compact form and section stacking contracts
+- baseline compact contracts for `Git`, `Projects`, `Sources`, and `Settings` where this phase changes shared shell assumptions
 
 Required final verification:
 
 - targeted layout tests for the changed pages
 - `npm run build`
 - the repo’s current `npm run verify` gate before completion
+
+Test style requirement:
+
+- use the repo’s existing **source-contract** pattern, centered on DOM structure assertions, Tailwind or CSS contract assertions, and focused layout invariants
+- this phase does **not** require screenshot-based visual regression before implementation can proceed
+
+Concrete examples of acceptable responsive assertions:
+
+- assert `foundation.css` no longer applies the `16.5rem` full sidebar grid in the `900px` compact band
+- assert `AgentsView` does not keep right-side padding reserved for the floating rail when compact mode is active
+- assert `SkillsView` compact layout no longer depends on the persistent `min-[1280px]` detail-column contract for mid-width operation
+- assert compact navigation preserves focus ring padding and scroll safety
 
 ## 12. Non-Goals and Guardrails
 
