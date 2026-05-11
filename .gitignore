@@ -75,7 +75,8 @@ DESIGN.md
 
 # Documentation and internal tooling (not needed for public release)
 docs/
-scripts/
+scripts/*.test.mjs
+scripts/*.mjs
 !scripts/sync-version.mjs
 automation/
 module-docs.config.json
