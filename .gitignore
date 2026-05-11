@@ -36,30 +36,48 @@ Thumbs.db
 .cache/
 tmp/
 temp/
-automation/runtime/
-automation/**/__pycache__/
-automation/**/*.pyc
 .gitnexus
 
-# AI tool configs (platform-specific)
+# AI tool configs and generated files
 .opencode/
-.opencode/**
 .codex/
-.codex/**
+.claude/
+.impeccable/
+.aider*
+.continue/
+.windsurf/
+.amp/
+.goose/
+.cursor/
+.gemini/
+.agents/
+.playwright-mcp/
+.cursorrules
+.aiderignore
 
-# Local git hooks (platform-specific paths)
+# AI instruction files
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+COPILOT.md
+CURSOR.md
+WINDSURF.md
+CODEX.md
+PRODUCT.md
+DESIGN.md
+
+# Local git hooks
 .git/hooks/pre-commit
 
 # Syncthing internal files
 .stfolder
 .stignore.local
 
-# Claude Code local state
-.claude/
-.claude/**
-
-# Project-local AI skill installs
-.agents/
-.cursor/
-.gemini/
-.playwright-mcp/
+# Documentation and internal tooling (not needed for public release)
+docs/
+scripts/
+automation/
+module-docs.config.json
+.ignore
+.stignore
+*.code-workspace
