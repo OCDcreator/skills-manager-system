@@ -5,27 +5,60 @@
 
 ## Overview
 
-Project-layer editor for one selected agent at a time. Renders a compact agent strip, a primary project-skill work area, and a project-scene panel.
+Multi-agent project-layer editor. Renders a vertical agent card grid, a primary project-skill checklist with three-state indicators, and a project-scene panel. Skills and scenes can be toggled in batch for all selected agents at once.
+
+## Props
+
+| Prop | Type | Purpose |
+|---|---|---|
+| `skills` | `SkillSummary[]` | Pre-filtered skill list for the editor. |
+| `agents` | `AgentInventoryItem[]` | Pre-filtered agent list for the selector grid. |
+| `scenes` | `SceneEntry[]` | Available scenes. |
+| `agentDrafts` | `Record<string, ProjectAgentDraft>` | Per-agent draft state keyed by agent key. |
+| `selectedAgentKeys` | `string[]` | Currently selected agent keys. |
+| `skillQuery` / `agentQuery` | `string` | Free-text search state. |
+| `skillPathFilter` | `SkillPathFilter` | Repository-path bucket filter. |
+| `externalGroupFilter` | `ExternalGroupFilter` | External source group filter. |
+| `skillSelectionFilter` | `ProjectSkillSelectionFilter` | `all` / `selected` / `unselected`. |
+| `agentStatusFilter` | `ProjectAgentStatusFilter` | `all` / `enabled` / `disabled`. |
+| `skillPathSummaries` | `SkillPathSummary[]` | Bucket counts for the toolbar. |
+| `externalGroupSummaries` | `ExternalGroupSummary[]` | Group counts for the toolbar. |
+| `onSkillQueryChange` … `onAgentStatusFilterChange` | callbacks | Forward filter changes to parent. |
+| `onToggleAgent` | `(agentKey: string) => void` | Toggle an agent in/out of selection. |
+| `onToggleProjectSkill` | `(skillId: string) => void` | Batch-toggle a skill for all selected agents. |
+| `onToggleProjectScene` | `(sceneId: string) => void` | Batch-toggle a scene for all selected agents. |
 
 ## Responsibilities
 
 - receives already-filtered `skills`, `agents`, and `scenes`
-- keeps agent selection separate from the active agent layer being edited
-- renders project-skill toggles as a dense scene-style grid with visible relative-path labels
-- renders compact horizontal agent toggles with `projectSkillsDirRule` hints, not global sync paths
-- forwards local query and toggle events back to `ProjectLayerWorkbench`
+- renders a vertical grid of `AgentSelectorCard` components (click-to-select, not checkbox-based)
+- shows `all / enabled / disabled` pills for agent status filtering
+- displays selection count and contextual hint text above the agent grid
+- renders project-skill toggles as a dense grid with three-state indicators (`all` → solid check, `some` → minus, `none` → empty)
+- renders project-scene toggles with the same three-state pattern
+- disables skill and scene interaction when no agents are selected (reduced opacity)
 - delegates the skill search, path filters, selected-state filters, and external group popover to `ProjectSkillFilterToolbar`
-- renders agent enabled-state pills separately for agent filtering
-- gives agent and skill searches explicit placeholder text and a search icon so empty fields do not read as unlabeled boxes
-- renders project-scene toggles for the active agent draft
-- caps the two chooser panes with viewport-aware maximum heights so their content scrolls instead of stretching the page
-- lets the primary skill pane overflow vertically so the external group popover is not clipped by the panel shell
-- uses the shared `skill-markdown-scroll` surface for both chooser scroll areas
-- remembers each chooser pane's scroll position independently across remounts
-- weights the desktop workbench toward skills while keeping scenes in a narrow secondary column
+- gives agent and skill searches explicit placeholder text and a search icon
+- caps the agent grid and skill/scene panels with viewport-aware maximum heights
+- uses the shared `skill-markdown-scroll` surface for all scroll areas
+- remembers scroll positions independently across remounts via `useRememberedScrollPosition`
+- weights the desktop workbench toward skills (1.45fr) while keeping scenes in a narrow secondary column (0.75fr)
+
+## Internal Components
+
+| Component | Purpose |
+|---|---|
+| `AgentSelectorCard` | Single agent card with brand icon, name, `projectSkillsDirRule`, and selection indicator. |
+| `ProjectChecklistPanel` | Titled panel wrapper with primary/secondary overflow variants. |
+| `ProjectSkillList` | Three-state skill grid that reads `agentDrafts` to compute per-skill state. |
+| `SearchField` | Compact labeled search input with icon. |
+
+## Three-State Logic
+
+Both `getSkillCheckState` and `getSceneCheckState` return `"all" | "some" | "none"` by checking how many selected agents include the given ID. When no agents are selected, both return `"none"`.
 
 ## Interaction Notes
 
-The skill column uses repository-path buckets like `custom` and `external`, matching the app's broader skill vocabulary. Its skill list follows the Scene skill chooser's high-density grid pattern, but keeps each skill's relative path visible because project assignment often compares many external collections. When `external` is active, the delegated toolbar can open a scene-style group popover for large external source sets. It also supports selected-state filtering without typing. The agent strip exposes `all / enabled / disabled` pills and can receive a selected-first sorted list from the view when editing an existing assignment, which keeps already-configured agents near the start of the chooser. The project layer intentionally does not expose exclusions because project-local sync cannot prevent an agent from reading skills that still exist in its global skill directory.
+The agent selector uses a vertical responsive grid (`repeat(auto-fill, minmax(10rem, 1fr))`) instead of a horizontal scroll strip. Clicking an agent card toggles its membership in `selectedAgentKeys`. The skill and scene toggles operate in batch mode: clicking a skill/scene applies the toggle across all selected agents. If the item is already selected by all agents, clicking deselects it from all; if some or none have it, clicking selects it for all.
 
-Filter state types come from `src/lib/project-filters.ts`, while draft mutation types still come from `src/lib/project-draft.ts`. This keeps the editor aligned with the split between list filtering and draft state.
+Filter state types come from `src/lib/project-filters.ts`, while draft mutation types come from `src/lib/project-draft.ts`. The parent view uses `filterProjectSkillsForMultiAgent` and batch functions like `toggleProjectAgentSkillForAgents` to drive multi-agent state.

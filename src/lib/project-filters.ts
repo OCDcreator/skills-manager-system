@@ -45,6 +45,55 @@ export function filterProjectSkills(
   });
 }
 
+export function filterProjectSkillsForMultiAgent(
+  skills: SkillSummary[],
+  query: string,
+  pathFilter: SkillPathFilter = "all",
+  externalGroupFilter: ExternalGroupFilter = "all",
+  selectionFilter: ProjectSkillSelectionFilter = "all",
+  agents: Record<string, { selectedSkillIds: string[] }>,
+  agentKeys: string[],
+) {
+  const needle = query.trim().toLowerCase();
+  return skills.filter((skill) => {
+    if (!matchesSkillPathFilter(skill, pathFilter)) {
+      return false;
+    }
+    if (
+      pathFilter === "external" &&
+      externalGroupFilter !== "all" &&
+      getExternalGroupKey(skill) !== externalGroupFilter
+    ) {
+      return false;
+    }
+
+    if (agentKeys.length > 0) {
+      const state = getSkillFilterState(agents, agentKeys, skill.id);
+      if (selectionFilter === "selected" && state === "none") return false;
+      if (selectionFilter === "unselected" && state === "all") return false;
+    }
+
+    if (!needle) return true;
+    return `${skill.name} ${skill.description} ${skill.relativePath}`
+      .toLowerCase()
+      .includes(needle);
+  });
+}
+
+function getSkillFilterState(
+  agents: Record<string, { selectedSkillIds: string[] }>,
+  agentKeys: string[],
+  skillId: string,
+): "all" | "some" | "none" {
+  if (agentKeys.length === 0) return "none";
+  const withSkill = agentKeys.filter(
+    (key) => agents[key]?.selectedSkillIds.includes(skillId),
+  );
+  if (withSkill.length === 0) return "none";
+  if (withSkill.length === agentKeys.length) return "all";
+  return "some";
+}
+
 export function filterProjectAgents(
   agents: AgentInventoryItem[],
   query: string,

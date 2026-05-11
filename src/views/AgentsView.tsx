@@ -55,7 +55,7 @@ export function AgentsView() {
     updatingExternalImportId,
     updatingExternalSourceId,
   } = useAppContext();
-  const [syncMode, setSyncMode] = useState<AgentSyncMode>("copy");
+  const [syncMode, setSyncMode] = useState<AgentSyncMode>("symlink");
   const [isSavingSyncMode, setIsSavingSyncMode] = useState(false);
   const [syncModeError, setSyncModeError] = useState<string | null>(null);
   const [sceneConfig, setSceneConfig] = useState<SceneConfigSnapshot | null>(null);

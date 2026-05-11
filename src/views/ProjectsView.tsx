@@ -15,13 +15,13 @@ import {
   projectDraftToAgentAssignments,
   removeProjectAgentDraft,
   suggestProjectDisplayName,
-  toggleProjectAgentScene,
-  toggleProjectAgentSkill,
+  toggleProjectAgentSceneForAgents,
+  toggleProjectAgentSkillForAgents,
   type ProjectDraft,
 } from "../lib/project-draft";
 import {
   filterProjectAgents,
-  filterProjectSkills,
+  filterProjectSkillsForMultiAgent,
   sortProjectAgentsForEditor,
   type ProjectAgentStatusFilter,
   type ProjectSkillSelectionFilter,
@@ -50,7 +50,6 @@ export function ProjectsView() {
   const [externalGroupFilter, setExternalGroupFilter] = useState<ExternalGroupFilter>("all");
   const [skillSelectionFilter, setSkillSelectionFilter] = useState<ProjectSkillSelectionFilter>("all");
   const [agentStatusFilter, setAgentStatusFilter] = useState<ProjectAgentStatusFilter>("all");
-  const [selectedAgentKey, setSelectedAgentKey] = useState<string | null>(null);
   const [sessionProjectApplyFeedback, setSessionProjectApplyFeedback] =
     useState<Record<string, string>>({});
 
@@ -91,8 +90,6 @@ export function ProjectsView() {
   const projectList = config ? Object.values(config.projects) : [];
   const sceneList = useMemo(() => Object.values(sceneConfig?.scenes ?? {}), [sceneConfig]);
   const selectedAgentKeys = projectDraftAgentKeys(draft);
-  const activeAgentKey = selectedAgentKey && draft.agents[selectedAgentKey] ? selectedAgentKey : selectedAgentKeys[0] ?? null;
-  const activeAgentDraft = activeAgentKey ? draft.agents[activeAgentKey] : null;
   const inspectableAgentKeys = useMemo(
     () => sortedAgentInventory.map((agent) => agent.key),
     [sortedAgentInventory],
@@ -124,13 +121,14 @@ export function ProjectsView() {
     () => buildExternalGroupSummaries(scanResult.skills, t("projects.editor.externalGroups.all")),
     [scanResult.skills, t],
   );
-  const visibleSkills = filterProjectSkills(
+  const visibleSkills = filterProjectSkillsForMultiAgent(
     scanResult.skills,
     skillQuery,
     skillPathFilter,
     externalGroupFilter,
     skillSelectionFilter,
-    activeAgentDraft?.selectedSkillIds ?? [],
+    draft.agents,
+    selectedAgentKeys,
   );
   const visibleAgents = sortProjectAgentsForEditor(
     filterProjectAgents(sortedAgentInventory, agentQuery, agentStatusFilter),
@@ -145,9 +143,19 @@ export function ProjectsView() {
     disabledSkillIds,
     sceneConfig?.scenes ?? {},
   );
+
   const toggleSkill = (skillId: string) => {
-    if (!activeAgentKey) return;
-    setDraft((current) => toggleProjectAgentSkill(current, activeAgentKey, skillId));
+    if (selectedAgentKeys.length === 0) return;
+    setDraft((current) =>
+      toggleProjectAgentSkillForAgents(current, selectedAgentKeys, skillId),
+    );
+  };
+
+  const toggleScene = (sceneId: string) => {
+    if (selectedAgentKeys.length === 0) return;
+    setDraft((current) =>
+      toggleProjectAgentSceneForAgents(current, selectedAgentKeys, sceneId),
+    );
   };
 
   const toggleAgent = (agentKey: string) => {
@@ -155,11 +163,6 @@ export function ProjectsView() {
       const next = current.agents[agentKey]
         ? removeProjectAgentDraft(current, agentKey)
         : ensureProjectAgentDraft(current, agentKey);
-      if (!current.agents[agentKey]) {
-        setSelectedAgentKey(agentKey);
-      } else if (selectedAgentKey === agentKey) {
-        setSelectedAgentKey(projectDraftAgentKeys(next)[0] ?? null);
-      }
       return next;
     });
   };
@@ -221,7 +224,6 @@ export function ProjectsView() {
         );
         setConfig(snapshot);
         setDraft(emptyDraft);
-        setSelectedAgentKey(null);
         resetEditorFilters();
       }
       setLastResult(t("projects.saved.saveSuccess"));
@@ -257,11 +259,9 @@ export function ProjectsView() {
     resetEditorFilters();
     const nextDraft = projectDraftFromAssignment(project, sortedAgentInventory);
     setDraft(nextDraft);
-    setSelectedAgentKey(projectDraftAgentKeys(nextDraft)[0] ?? null);
   };
   const handleCancelEdit = () => {
     setDraft(emptyDraft);
-    setSelectedAgentKey(null);
     resetEditorFilters();
   };
   if (!repoPath) {
@@ -287,7 +287,6 @@ export function ProjectsView() {
       ) : null}
 
       <ProjectLayerWorkbench
-        activeAgentDraft={activeAgentDraft}
         agentQuery={agentQuery}
         agentStatusFilter={agentStatusFilter}
         agents={visibleAgents}
@@ -307,19 +306,14 @@ export function ProjectsView() {
         onDisplayNameChange={(value) => setDraft((current) => applyProjectDisplayNameToDraft(current, value))}
         onProjectPathChange={(value) => setDraft((current) => applyProjectPathToDraft(current, value))}
         onSave={() => void handleSaveDraft()}
-        onSelectAgent={setSelectedAgentKey}
         onExternalGroupFilterChange={setExternalGroupFilter}
         onSkillPathFilterChange={setSkillPathFilter}
         onSkillSelectionFilterChange={setSkillSelectionFilter}
         onSkillQueryChange={setSkillQuery}
         onToggleAgent={toggleAgent}
-        onToggleProjectScene={(sceneId) => {
-          if (!activeAgentKey) return;
-          setDraft((current) => toggleProjectAgentScene(current, activeAgentKey, sceneId));
-        }}
+        onToggleProjectScene={toggleScene}
         onToggleProjectSkill={toggleSkill}
         scenes={sceneList}
-        selectedAgentKey={activeAgentKey}
         selectedAgentKeys={selectedAgentKeys}
         skillPathFilter={skillPathFilter}
         skillPathSummaries={skillPathSummaries}

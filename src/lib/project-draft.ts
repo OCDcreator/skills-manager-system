@@ -138,6 +138,99 @@ export function toggleProjectAgentScene(draft: ProjectDraft, agentKey: string, s
   return toggleProjectAgentList(draft, agentKey, "selectedSceneIds", sceneId);
 }
 
+export function toggleProjectAgentSkillForAgents(
+  draft: ProjectDraft,
+  agentKeys: string[],
+  skillId: string,
+) {
+  const shouldSelect = !agentKeys.every((key) => {
+    const agent = draft.agents[key];
+    return agent && agent.selectedSkillIds.includes(skillId);
+  });
+
+  let next = draft;
+  for (const agentKey of agentKeys) {
+    if (shouldSelect) {
+      const ensured = ensureProjectAgentDraft(next, agentKey);
+      const agentDraft = ensured.agents[agentKey];
+      if (!agentDraft.selectedSkillIds.includes(skillId)) {
+        next = {
+          ...ensured,
+          agents: {
+            ...ensured.agents,
+            [agentKey]: {
+              ...agentDraft,
+              selectedSkillIds: normalizeIds([...agentDraft.selectedSkillIds, skillId]),
+              excludedSkillIds: removeId(agentDraft.excludedSkillIds, skillId),
+            },
+          },
+        };
+      }
+    } else {
+      const agent = next.agents[agentKey];
+      if (agent && agent.selectedSkillIds.includes(skillId)) {
+        next = {
+          ...next,
+          agents: {
+            ...next.agents,
+            [agentKey]: {
+              ...agent,
+              selectedSkillIds: removeId(agent.selectedSkillIds, skillId),
+            },
+          },
+        };
+      }
+    }
+  }
+  return next;
+}
+
+export function toggleProjectAgentSceneForAgents(
+  draft: ProjectDraft,
+  agentKeys: string[],
+  sceneId: string,
+) {
+  const shouldSelect = !agentKeys.every((key) => {
+    const agent = draft.agents[key];
+    return agent && agent.selectedSceneIds.includes(sceneId);
+  });
+
+  let next = draft;
+  for (const agentKey of agentKeys) {
+    if (shouldSelect) {
+      const ensured = ensureProjectAgentDraft(next, agentKey);
+      const agentDraft = ensured.agents[agentKey];
+      if (!agentDraft.selectedSceneIds.includes(sceneId)) {
+        next = {
+          ...ensured,
+          agents: {
+            ...ensured.agents,
+            [agentKey]: {
+              ...agentDraft,
+              selectedSceneIds: normalizeIds([...agentDraft.selectedSceneIds, sceneId]),
+            },
+          },
+        };
+      }
+    } else {
+      const agent = next.agents[agentKey];
+      if (agent && agent.selectedSceneIds.includes(sceneId)) {
+        next = {
+          ...next,
+          agents: {
+            ...next.agents,
+            [agentKey]: {
+              ...agent,
+              selectedSceneIds: removeId(agent.selectedSceneIds, sceneId),
+            },
+          },
+        };
+      }
+    }
+  }
+  return next;
+}
+
 export function toggleProjectAgentExclusion(
   draft: ProjectDraft,
   agentKey: string,

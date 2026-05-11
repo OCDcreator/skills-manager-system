@@ -11,7 +11,7 @@ Owns persistence for app settings stored in `settings.json` under the Tauri app 
 
 | Export | Purpose |
 |---|---|
-| `AgentSyncMode` | Persisted enum for `copy` vs `symlink`. |
+| `AgentSyncMode` | Persisted enum for `Copy` vs `Symlink`. Default is `Symlink`. |
 | `AppSettings` | Serializable payload with `repo_path`, `agent_sync_mode`, persisted `agent_order`, and the last assistant terminal working directory. |
 | `SettingsStore::load` | Reads settings or returns defaults when missing. |
 | `SettingsStore::save_repo_path` | Updates only the repository path while preserving other settings. |
@@ -21,8 +21,6 @@ Owns persistence for app settings stored in `settings.json` under the Tauri app 
 
 ## Core Logic
 
-Uses serde defaults so older `settings.json` files that only contain `repoPath` still load cleanly, defaulting `agentSyncMode` to `copy` and `agentOrder` to an empty array. Saved repo paths and assistant working directories are serialized through `platform_paths` so Windows and macOS share the same slash-normalized, trailing-separator-trimmed format.
+Uses serde defaults so older `settings.json` files that only contain `repoPath` still load cleanly, defaulting `agentSyncMode` to `Symlink` and `agentOrder` to an empty array. Saved repo paths and assistant working directories are serialized through `platform_paths` so Windows and macOS share the same slash-normalized, trailing-separator-trimmed format.
 
-## Current Note
-
-The current branch change for this module is formatting-only; runtime behavior is unchanged.
+The `Symlink` default is reflected on the frontend side: `AgentsView` initializes its `syncMode` state to `"symlink"`, matching the Rust default. Older settings files that explicitly stored `"copy"` continue to load correctly via serde deserialization.

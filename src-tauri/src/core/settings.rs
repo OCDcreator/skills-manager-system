@@ -8,8 +8,8 @@ use crate::core::platform_paths::portable_path_string;
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum AgentSyncMode {
-    #[default]
     Copy,
+    #[default]
     Symlink,
 }
 
@@ -99,7 +99,7 @@ mod tests {
 
         let settings = store.load().unwrap();
         assert_eq!(settings.repo_path, None);
-        assert_eq!(settings.agent_sync_mode, AgentSyncMode::Copy);
+        assert_eq!(settings.agent_sync_mode, AgentSyncMode::Symlink);
         assert!(settings.agent_order.is_empty());
         assert_eq!(settings.assistant_working_directory, None);
     }
@@ -115,7 +115,7 @@ mod tests {
 
         let settings = SettingsStore::new(dir.path().to_path_buf()).load().unwrap();
         assert_eq!(settings.repo_path.as_deref(), Some("/tmp/my-skills"));
-        assert_eq!(settings.agent_sync_mode, AgentSyncMode::Copy);
+        assert_eq!(settings.agent_sync_mode, AgentSyncMode::Symlink);
         assert!(settings.agent_order.is_empty());
         assert_eq!(settings.assistant_working_directory, None);
     }

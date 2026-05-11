@@ -2,10 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ProjectAssignmentEditor } from "./ProjectAssignmentEditor";
 import { ProjectAssignmentSummary } from "./ProjectAssignmentSummary";
 import { ProjectIdentityPanel } from "./ProjectIdentityPanel";
-import type {
-  ProjectAgentDraft,
-  ProjectDraft,
-} from "../../lib/project-draft";
+import type { ProjectDraft } from "../../lib/project-draft";
 import type {
   ProjectAgentStatusFilter,
   ProjectSkillSelectionFilter,
@@ -26,12 +23,10 @@ interface ProjectLayerWorkbenchProps {
   inspectionError: string | null;
   isInspecting: boolean;
   isSaving: boolean;
-  activeAgentDraft: ProjectAgentDraft | null;
   agentQuery: string;
   agentStatusFilter: ProjectAgentStatusFilter;
   agents: AgentInventoryItem[];
   scenes: SceneEntry[];
-  selectedAgentKey: string | null;
   selectedAgentKeys: string[];
   skillPathFilter: SkillPathFilter;
   externalGroupFilter: ExternalGroupFilter;
@@ -56,7 +51,6 @@ interface ProjectLayerWorkbenchProps {
   onDisplayNameChange: (value: string) => void;
   onProjectPathChange: (value: string) => void;
   onSave: () => void;
-  onSelectAgent: (agentKey: string | null) => void;
   onExternalGroupFilterChange: (value: ExternalGroupFilter) => void;
   onSkillPathFilterChange: (value: SkillPathFilter) => void;
   onSkillSelectionFilterChange: (value: ProjectSkillSelectionFilter) => void;
@@ -95,7 +89,7 @@ export function ProjectLayerWorkbench(props: ProjectLayerWorkbenchProps) {
           }
         />
         <ProjectAssignmentEditor
-          activeAgentDraft={props.activeAgentDraft}
+          agentDrafts={props.draft.agents}
           agentQuery={props.agentQuery}
           agentStatusFilter={props.agentStatusFilter}
           agents={props.agents}
@@ -104,7 +98,6 @@ export function ProjectLayerWorkbench(props: ProjectLayerWorkbenchProps) {
           onAgentQueryChange={props.onAgentQueryChange}
           onAgentStatusFilterChange={props.onAgentStatusFilterChange}
           onExternalGroupFilterChange={props.onExternalGroupFilterChange}
-          onSelectAgent={props.onSelectAgent}
           onSkillPathFilterChange={props.onSkillPathFilterChange}
           onSkillSelectionFilterChange={props.onSkillSelectionFilterChange}
           onSkillQueryChange={props.onSkillQueryChange}
@@ -112,7 +105,6 @@ export function ProjectLayerWorkbench(props: ProjectLayerWorkbenchProps) {
           onToggleProjectScene={props.onToggleProjectScene}
           onToggleProjectSkill={props.onToggleProjectSkill}
           scenes={props.scenes}
-          selectedAgentKey={props.selectedAgentKey}
           selectedAgentKeys={props.selectedAgentKeys}
           skillPathFilter={props.skillPathFilter}
           skillSelectionFilter={props.skillSelectionFilter}
