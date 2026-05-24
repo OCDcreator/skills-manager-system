@@ -24,7 +24,7 @@ export function ProjectAssignmentSummary(props: ProjectAssignmentSummaryProps) {
   const [expandedTargetSkillGroups, setExpandedTargetSkillGroups] = useState<Record<string, boolean>>({});
 
   return (
-    <aside className="flex h-full min-h-0 max-h-[clamp(22rem,calc(100vh-13rem),34rem)] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 min-[1380px]:absolute min-[1380px]:inset-0 min-[1380px]:max-h-none">
+    <aside className="flex min-h-0 max-h-[clamp(22rem,calc(100vh-13rem),34rem)] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 min-[1380px]:max-h-[calc(100vh-8rem)]">
       <div className="border-b border-slate-800 px-4 py-4">
         <h3 className="text-base font-semibold text-slate-100">{props.title}</h3>
         <p className="mt-2 text-sm text-slate-400">

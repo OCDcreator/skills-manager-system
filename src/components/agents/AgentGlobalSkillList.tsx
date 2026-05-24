@@ -103,7 +103,7 @@ export function AgentGlobalSkillList({
   }, [agent.targetSkillEntries]);
 
   return (
-    <section className="flex h-full min-h-0 overflow-hidden flex-col rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
+    <section className="flex h-full min-h-0 min-w-0 overflow-hidden flex-col rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
       <div className="shrink-0 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">

@@ -110,7 +110,7 @@ export function AgentTargetsSection({
   const { t } = useTranslation();
 
   return (
-    <div className="grid gap-4">
+    <div className="grid min-w-0 gap-4">
       {agents.map((agent) => {
         const draft = drafts[agent.key] ?? draftFromAgent(agent);
         const isCompactActive = activeAgentKey === null || activeAgentKey === agent.key;
@@ -125,10 +125,10 @@ export function AgentTargetsSection({
         return (
           <div
             id={`agent-sync-target-${agent.key}`}
-            className={`${isCompactActive ? "block" : "hidden"} scroll-mt-8 min-[1280px]:block`}
+            className={`${isCompactActive ? "block" : "hidden"} min-w-0 scroll-mt-8 min-[1280px]:block`}
             key={agent.key}
           >
-            <div className="grid gap-4 min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
+            <div className="grid min-w-0 gap-4 min-[1380px]:grid-cols-[minmax(0,1fr)_clamp(22rem,28vw,34rem)]">
               <AgentTargetCard
                 agent={agent}
                 disabledSkillIds={disabledSkillIds}
@@ -145,7 +145,7 @@ export function AgentTargetsSection({
                 scenes={scenes}
                 skills={skills}
               />
-              <div className="min-h-0 min-[1380px]:relative min-[1380px]:overflow-hidden">
+              <div className="min-h-0 min-w-0 min-[1380px]:relative min-[1380px]:overflow-hidden">
                 <div className="min-[1380px]:absolute min-[1380px]:inset-0">
                   <AgentGlobalSkillList
                     actionKey={actionKey}

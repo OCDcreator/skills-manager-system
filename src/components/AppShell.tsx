@@ -99,8 +99,10 @@ export function AppShell({ children, contentWidthClassName }: AppShellProps) {
         </header>
 
         {errorMessage ? (
-          <div className="app-shell__error" role="alert">
-            {errorMessage}
+          <div className="app-shell__error-shell mx-auto">
+            <div className="app-shell__error" role="alert">
+              {errorMessage}
+            </div>
           </div>
         ) : null}
 

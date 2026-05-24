@@ -39,16 +39,16 @@ export function ProjectCard({
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h3 className="font-semibold text-slate-100">
             {project.displayName}
           </h3>
-          <p className="mt-0.5 text-xs text-slate-500 font-mono truncate max-w-md">
+          <p className="mt-0.5 max-w-full truncate font-mono text-xs text-slate-500">
             {project.projectPath}
           </p>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1 self-start">
           <button
             className="rounded p-1.5 text-slate-400 hover:bg-rose-900/40 hover:text-rose-300"
             title={t("tooltip.projects.delete")}

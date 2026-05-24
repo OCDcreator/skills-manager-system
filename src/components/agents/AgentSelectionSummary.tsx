@@ -127,7 +127,7 @@ export function AgentSelectionSummary({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+    <div className="flex h-full min-h-0 min-w-0 flex-col rounded-xl border border-slate-800 bg-slate-950/50 p-3">
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
           <button

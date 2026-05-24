@@ -15,8 +15,11 @@ export function AgentCompactTabs({
   const { t } = useTranslation();
 
   return (
-    <nav className="min-[1280px]:hidden" aria-label={t("agents.compactTabs.label")}>
-      <div className="skill-markdown-scroll -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+    <nav
+      className="min-w-0 max-w-full overflow-hidden min-[1280px]:hidden"
+      aria-label={t("agents.compactTabs.label")}
+    >
+      <div className="skill-markdown-scroll flex max-w-full gap-2 overflow-x-auto pb-1">
         {agents.map((agent) => (
           <button
             key={agent.key}

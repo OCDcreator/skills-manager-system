@@ -110,11 +110,16 @@ export function SkillsView() {
   return (
     <>
       {!repoPath ? (
-        <section className="rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
-          <h2 className="text-xl font-semibold text-slate-100">
+        <section
+          className="mx-auto max-w-[52rem] rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-6 text-center shadow-[0_18px_60px_rgba(2,6,23,0.18)] sm:p-8"
+          data-skills-unconfigured
+        >
+          <h2 className="text-xl font-semibold text-slate-100 [text-wrap:balance]">
             {t("skills.unconfigured")}
           </h2>
-          <p className="mt-3 text-sm text-slate-400">{t("skills.unconfiguredBody")}</p>
+          <p className="mx-auto mt-3 max-w-[38rem] break-keep text-sm leading-6 text-slate-400">
+            {t("skills.unconfiguredBody")}
+          </p>
         </section>
       ) : (
         <div className="grid gap-6 min-[1280px]:grid-cols-[minmax(0,1fr)_clamp(24rem,30vw,42rem)]">
@@ -147,7 +152,7 @@ export function SkillsView() {
 
             <div
               className={`grid gap-6 ${
-                visibleSources.length === 2 ? "min-[1400px]:grid-cols-2" : ""
+                visibleSources.length === 2 ? "min-[1536px]:grid-cols-2" : ""
               }`}
             >
               {visibleSources.map((source) => (

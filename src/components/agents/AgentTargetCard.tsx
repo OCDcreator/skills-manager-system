@@ -39,16 +39,16 @@ export function AgentTargetCard({
 
   return (
     <article
-      className={`rounded-2xl border p-5 xl:flex xl:min-h-0 xl:flex-col ${
+      className={`min-w-0 rounded-2xl border p-5 xl:flex xl:min-h-0 xl:flex-col ${
         isDirty ? "border-sky-700 bg-sky-950/20" : "border-slate-800 bg-slate-900"
       }`}
     >
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
+      <header className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
           <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-slate-700 bg-slate-950">
             <AgentBrandIcon agentKey={agent.key} className="size-[70%]" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="text-lg font-semibold text-slate-100">{agent.displayName}</h3>
             <div className="mt-2 flex flex-wrap gap-2">
               <span
@@ -135,7 +135,7 @@ export function AgentTargetCard({
         </button>
       </div>
 
-      <div className="mt-4 grid gap-4 xl:max-h-[clamp(20rem,calc(100vh-38rem),30rem)] xl:min-h-0 xl:grid-cols-3">
+      <div className="mt-4 grid min-w-0 gap-4 xl:max-h-[clamp(20rem,calc(100vh-38rem),30rem)] xl:min-h-0 xl:grid-cols-3">
         <AgentSkillSelector
           disabledSkillIds={disabledSkillIds}
           draft={draft}

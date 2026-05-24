@@ -142,7 +142,7 @@ export function SkillList(props: SkillListProps) {
           className="skill-markdown-scroll -mr-3 mt-3 min-h-0 overflow-y-auto pr-3"
           ref={scrollRef}
         >
-          <div className="grid auto-rows-[13.5rem] gap-3 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))] max-[1279px]:auto-rows-[11rem] min-[1280px]:auto-rows-[13.5rem] [grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))] min-[1280px]:[grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
+          <div className="grid auto-rows-[13.5rem] gap-3 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))] max-[1279px]:auto-rows-[12.5rem] min-[1280px]:auto-rows-[13.5rem] [grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))] min-[1280px]:[grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
             {skills.map((skill) => {
               const isDisabled = disabledSkillIds.has(skill.id);
               const isUpdating = updatingSkillId === skill.id;

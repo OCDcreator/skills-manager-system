@@ -97,7 +97,7 @@ export function AgentSkillSelector({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+    <div className="flex h-full min-h-0 min-w-0 flex-col rounded-xl border border-slate-800 bg-slate-950/50 p-3">
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
           <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">

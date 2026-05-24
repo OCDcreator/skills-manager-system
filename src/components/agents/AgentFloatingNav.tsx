@@ -111,7 +111,7 @@ export function AgentFloatingNav({ agents, onOpenOrderModal }: AgentFloatingNavP
   return (
     <nav
       aria-label={t("agents.sideNav.label")}
-      className="pointer-events-none fixed right-3 top-1/2 z-50 w-96 max-w-[calc(100vw-1.5rem)] -translate-y-1/2 bg-transparent max-[1279px]:hidden min-[1280px]:block"
+      className="pointer-events-none fixed right-3 top-1/2 z-50 w-96 max-w-[calc(100vw-1.5rem)] -translate-y-1/2 bg-transparent max-[1999px]:hidden min-[2000px]:block"
     >
       {/* The rail is transparent; only the nodes and labels visibly float above the content. */}
       <div className="relative">
