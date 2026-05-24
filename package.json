@@ -12,6 +12,7 @@
     "check:lean-ctx": "node scripts/check-lean-ctx.mjs",
     "update:gitnexus": "node scripts/update-gitnexus.mjs",
     "test:architecture": "node --test scripts/check-architecture.test.mjs",
+    "test:module-doc-guard": "node --test scripts/module-doc-guard-ignored-docs.test.mjs",
     "test:git-layout": "node --test scripts/git-layout.test.mjs",
     "test:agent-layout": "node --test scripts/agent-layout.test.mjs",
     "test:agent-brand-icon": "node --test scripts/agent-brand-icon.test.mjs",
@@ -28,6 +29,8 @@
     "test:external-sources-ui": "node --test scripts/external-sources-ui.test.mjs",
     "test:settings-layout": "node --test scripts/settings-layout.test.mjs",
     "test:app-shell-design": "node --test scripts/app-shell-design.test.mjs",
+    "test:browser-preview-bridge": "node --test scripts/browser-preview-bridge.test.mjs",
+    "test:real-layout-regression": "node --test scripts/real-layout-regression.test.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -35,7 +38,7 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
     "tauri:build": "tauri build",
-    "verify": "npm run check:gitnexus-freshness && npm run check:lean-ctx && npm run check:module-docs && npm run check:architecture && npm run test:architecture && npm run test:git-layout && npm run test:agent-layout && npm run test:agent-brand-icon && npm run test:bundle-splitting && npm run test:assistant-layout && npm run test:assistant-terminal && npm run test:agent-order && npm run test:skills-layout && npm run test:skills-filters && npm run test:scene-layout && npm run test:project-draft && npm run test:project-assignment-layout && npm run test:scroll-memory && npm run test:external-sources-ui && npm run test:settings-layout && npm run test:app-shell-design && npm run build && cargo check --manifest-path src-tauri/Cargo.toml && cargo test --manifest-path src-tauri/Cargo.toml"
+    "verify": "npm run check:gitnexus-freshness && npm run check:lean-ctx && npm run check:module-docs && npm run check:architecture && npm run test:architecture && npm run test:module-doc-guard && npm run test:git-layout && npm run test:agent-layout && npm run test:agent-brand-icon && npm run test:bundle-splitting && npm run test:assistant-layout && npm run test:assistant-terminal && npm run test:agent-order && npm run test:skills-layout && npm run test:skills-filters && npm run test:scene-layout && npm run test:project-draft && npm run test:project-assignment-layout && npm run test:scroll-memory && npm run test:external-sources-ui && npm run test:settings-layout && npm run test:app-shell-design && npm run test:browser-preview-bridge && npm run test:real-layout-regression && npm run build && cargo check --manifest-path src-tauri/Cargo.toml && cargo test --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.10.1",
